@@ -1,0 +1,27 @@
+openapi: '3.0.'
+info:
+  title: test
+  version: '1.0'
+paths: {}
+components:
+  schemas:
+    Object:
+      type: object
+      properties:
+        s:
+          type: string
+        i:
+          type: integer
+          format: int32
+        b:
+          type: boolean
+        l:
+          type: integer
+          format: int64
+        t:
+          type: string
+          format: date-time
+        d:
+          type: object
+      required:
+        - s

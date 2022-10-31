@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package demo;
+
+import "demo/hello_request.proto";
+
+import "demo/hello_response.proto";
+
+import "google/protobuf/empty.proto";
+
+service Hello {
+  rpc SayHello(demo.HelloRequest) returns (demo.HelloResponse);
+  rpc Greet(google.protobuf.Empty) returns (demo.HelloResponse);
+}
+
