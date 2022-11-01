@@ -59,6 +59,8 @@ Throughout smithy-translate you will see references to [alloy](https://github.co
 
 ### Installation
 
+You will need to [install coursier](https://get-coursier.io/docs/cli-installation), an artifact fetching library, in order to install the CLI.
+
 ```
 coursier install --channel https://disneystreaming.github.io/coursier.json smithytranslate
 ```
