@@ -639,6 +639,58 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
+  test("cycle") {
+    val source = """|$version: "2"
+                    |
+                    |namespace avoid.cyclic.in.namespace
+                    |
+                    |structure One {
+                    |    twos: TwoList
+                    |}
+                    |
+                    |list TwoList {
+                    |    member: Two
+                    |}
+                    |
+                    |structure Two {
+                    |    one: One
+                    |}""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package avoid.cyclic.in.namespace;
+                      |
+                      |message One {
+                      |  repeated avoid.cyclic.in.namespace.Two twos = 1;
+                      |}
+                      |
+                      |message Two {
+                      |  avoid.cyclic.in.namespace.One one = 1;
+                      |}""".stripMargin
+    convertCheck(source, Map("avoid/cyclic/in/namespace.proto" -> expected))
+  }
+
+  test("multiple namespaces") {
+    def src(ns: String) = s"""|namespace com.$ns
+                              |
+                              |string SomeString
+                              |""".stripMargin
+    def expected(ns: String) = s"""|syntax = "proto3";
+                                   |
+                                   |package com.$ns;
+                                   |
+                                   |message SomeString {
+                                   |  string value = 1;
+                                   |}
+                                   |""".stripMargin
+    convertChecks(
+      Map("ns1.smithy" -> src("ns1"), "ns2.smithy" -> src("ns2")),
+      Map(
+        "com/ns1.proto" -> expected("ns1"),
+        "com/ns2.proto" -> expected("ns2")
+      )
+    )
+  }
+
   /** Perform the same check as convertCheck but include the smithytranslate
     * namespace. To do so it prepends the proto api to your `expected` value.
     */
@@ -673,18 +725,36 @@ class CompilerRendererSuite extends FunSuite {
       expected: Map[String, String],
       excludeProtoApi: Boolean = true
   )(implicit loc: Location): Unit = {
-    def render(src: String): List[(String, String)] = {
-      val m = Model
-        .assembler()
-        .discoverModels()
-        .addShapes(
-          smithytranslate.BigInteger.shape,
-          smithytranslate.BigDecimal.shape,
-          smithytranslate.Timestamp.shape
-        )
-        .addUnparsedModel("inlined-in-test.smithy", src)
-        .assemble()
-        .unwrap()
+    convertChecks(
+      Map("inlined-in-test.smithy" -> source),
+      expected,
+      excludeProtoApi
+    )
+  }
+
+  private def convertChecks(
+      sources: Map[String, String],
+      expected: Map[String, String],
+      excludeProtoApi: Boolean = true
+  )(implicit loc: Location): Unit = {
+    def render(srcs: Map[String, String]): List[(String, String)] = {
+      val m = {
+        val assembler = Model
+          .assembler()
+          .discoverModels()
+          .addShapes(
+            smithytranslate.BigInteger.shape,
+            smithytranslate.BigDecimal.shape,
+            smithytranslate.Timestamp.shape
+          )
+        srcs.foreach { case (name, src) =>
+          assembler.addUnparsedModel(name, src)
+        }
+
+        assembler
+          .assemble()
+          .unwrap()
+      }
       val c = new Compiler()
       val res = c.compile(m)
       if (res.isEmpty) { fail("Expected compiler output") }
@@ -694,7 +764,7 @@ class CompilerRendererSuite extends FunSuite {
       }
     }
 
-    val actual = render(source).sortWith { case ((name1, _), (_, _)) =>
+    val actual = render(sources).sortWith { case ((name1, _), (_, _)) =>
       name1.startsWith("smithytranslate")
     }
     ProtoValidator.run(actual: _*)
