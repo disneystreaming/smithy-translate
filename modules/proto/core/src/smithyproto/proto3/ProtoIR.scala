@@ -70,66 +70,88 @@ object ProtoIR {
 
   final case class Service(name: String, rpcs: List[Rpc])
 
+  final case class RpcMessage(fqn: Fqn, importFqn: Fqn)
+
   final case class Rpc(
       name: String,
       streamingRequest: Boolean,
-      requestFqn: Fqn,
+      request: RpcMessage,
       streamingResponse: Boolean,
-      responseFqn: Fqn
+      response: RpcMessage
   )
 
-  sealed trait Type
+  sealed trait Type {
+    def importFqn: Set[Fqn]
+  }
   object Type {
     private def protobufFqn(last: String) =
       Fqn(Some(List("google", "protobuf")), last)
 
-    case object Double extends Type
-    case object Float extends Type
-    case object Int32 extends Type
-    case object Int64 extends Type
-    case object Uint32 extends Type
-    case object Uint64 extends Type
-    case object Sint32 extends Type
-    case object Sint64 extends Type
-    case object Fixed32 extends Type
-    case object Fixed64 extends Type
-    case object Sfixed32 extends Type
-    case object Sfixed64 extends Type
-    case object Bool extends Type
-    case object String extends Type
-    case object Bytes extends Type
+    sealed trait PrimitiveType extends Type {
+      def importFqn: Set[Fqn] = Set.empty
+    }
+
+    case object Double extends PrimitiveType
+    case object Float extends PrimitiveType
+    case object Int32 extends PrimitiveType
+    case object Int64 extends PrimitiveType
+    case object Uint32 extends PrimitiveType
+    case object Uint64 extends PrimitiveType
+    case object Sint32 extends PrimitiveType
+    case object Sint64 extends PrimitiveType
+    case object Fixed32 extends PrimitiveType
+    case object Fixed64 extends PrimitiveType
+    case object Sfixed32 extends PrimitiveType
+    case object Sfixed64 extends PrimitiveType
+    case object Bool extends PrimitiveType
+    case object String extends PrimitiveType
+    case object Bytes extends PrimitiveType
     final case class MapType(
         keyType: Either[Type.Int32.type, Type.String.type],
         valueType: Type
     ) extends Type {
       val foldedKeyType: Type = keyType.fold(identity, identity)
+      def importFqn: Set[Fqn] =
+        keyType.fold(_.importFqn, _.importFqn) ++ valueType.importFqn
     }
-    final case class ListType(valueType: Type) extends Type
-    final case class MessageType(fqn: Fqn) extends Type
-    final case class EnumType(fqn: Fqn) extends Type
+    final case class ListType(valueType: Type) extends Type {
+      def importFqn: Set[Fqn] = valueType.importFqn
+    }
+    final case class MessageType(fqn: Fqn, _importFqn: Fqn) extends Type {
+      def importFqn: Set[Fqn] = Set(_importFqn)
+    }
+    final case class EnumType(fqn: Fqn, _importFqn: Fqn) extends Type {
+      def importFqn: Set[Fqn] = Set(_importFqn)
+    }
     case object Any extends Type {
-      def importFqn = protobufFqn("any")
+      def importFqn = Set(protobufFqn("any"))
       val fqn: Fqn = protobufFqn("Any")
     }
     case object Empty extends Type {
-      def importFqn = protobufFqn("empty")
+      def importFqn = Set(protobufFqn("empty"))
       val fqn: Fqn = protobufFqn("Empty")
     }
 
+    private val smithyTranslateImportFqn =
+      Namespacing.namespaceToFqn("smithytranslate")
+
     val BigInteger = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigInteger")
+      Fqn(Some(List("smithytranslate")), "BigInteger"),
+      smithyTranslateImportFqn
     )
     val BigDecimal = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigDecimal")
+      Fqn(Some(List("smithytranslate")), "BigDecimal"),
+      smithyTranslateImportFqn
     )
     val Timestamp = MessageType(
-      Fqn(Some(List("smithytranslate")), "Timestamp")
+      Fqn(Some(List("smithytranslate")), "Timestamp"),
+      smithyTranslateImportFqn
     )
 
     // https://github.com/protocolbuffers/protobuf/blob/178ebc179ede26bcaa85b39db127ebf099be3ef8/src/google/protobuf/wrappers.proto
 
     trait Wrappers extends Type {
-      def importFqn = protobufFqn("wrappers")
+      def importFqn = Set(protobufFqn("wrappers"))
       def fqn: Fqn
     }
     object Wrappers {
