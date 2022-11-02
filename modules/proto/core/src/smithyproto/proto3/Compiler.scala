@@ -80,7 +80,6 @@ class Compiler() {
               Statement.ImportStatement(filePath(fqn).mkString("/"))
             }
             .distinct
-          // val packageName = shape.getId.getNamespace
           val unit = CompilationUnit(Some(ns), imports ++ mappings)
           List(OutputFile(filePath(currentFqn), unit))
         } else Nil
@@ -123,9 +122,9 @@ class Compiler() {
       }
     def resolveOneof(oneof: Oneof): Set[Fqn] =
       oneof.fields.map(resolveField).foldLeft[Set[Fqn]](Set.empty)(_ ++ _)
-    def resolveField(field: Field): Set[Fqn] = {
-      field.ty.importFqn
-    }
+
+    def resolveField(field: Field): Set[Fqn] = field.ty.importFqn
+
     def resolveService(service: Service): Set[Fqn] =
       service.rpcs
         .map(s => Set(s.request.importFqn, s.response.importFqn))
