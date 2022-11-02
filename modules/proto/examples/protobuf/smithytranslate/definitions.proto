@@ -2,6 +2,14 @@ syntax = "proto3";
 
 package smithytranslate;
 
+message BigDecimal {
+  string value = 1;
+}
+
 message BigInteger {
   string value = 1;
+}
+
+message Timestamp {
+  int64 value = 1;
 }
