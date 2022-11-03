@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package demo;
+
+import "google/protobuf/empty.proto";
+
+import "google/protobuf/wrappers.proto";
+
+import "smithytranslate/definitions.proto";
+
+service Hello {
+  rpc SayHello(demo.HelloRequest) returns (demo.HelloResponse);
+  rpc Greet(google.protobuf.Empty) returns (demo.HelloResponse);
+}
+
+enum Language {
+  FRENCH = 0;
+  ENGLISH = 1;
+}
+
+message HelloRequest {
+  reserved 3;
+  string name = 1;
+  demo.Language lang = 2;
+  int32 requiredInt = 4;
+  google.protobuf.Int32Value int = 5;
+}
+
+message HelloResponse {
+  string message = 1;
+  google.protobuf.UInt64Value size = 2;
+  demo.UseApiStruct apiStruct = 3;
+}
+
+message UseApiStruct {
+  smithytranslate.BigInteger bigInt = 1;
+  smithytranslate.BigDecimal bigDec = 2;
+  smithytranslate.Timestamp ts = 3;
+}

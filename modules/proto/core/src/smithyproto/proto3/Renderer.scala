@@ -128,13 +128,12 @@ object Renderer {
     many(
       line(s"service ${service.name} {"),
       indent(service.rpcs.map(renderRpc)),
-      line("}"),
-      emptyLine
+      line("}")
     )
 
   def renderRpc(rpc: Rpc): Text =
     statement(
-      s"rpc ${rpc.name}(${rpc.requestFqn.render}) returns (${rpc.responseFqn.render})"
+      s"rpc ${rpc.name}(${rpc.request.fqn.render}) returns (${rpc.response.fqn.render})"
     )
 
   def renderType(ty: Type): String = {
@@ -158,8 +157,8 @@ object Renderer {
       case ty @ MapType(_, valueType) =>
         s"map<${renderType(ty.foldedKeyType)}, ${renderType(valueType)}>"
       case ListType(valueType) => s"repeated ${renderType(valueType)}"
-      case MessageType(fqn)    => fqn.render
-      case EnumType(fqn)       => fqn.render
+      case MessageType(fqn, _) => fqn.render
+      case EnumType(fqn, _)    => fqn.render
       case Any                 => Any.fqn.render
       case Empty               => Empty.fqn.render
       case w: Wrappers         => w.fqn.render

@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package smithytranslate;
-
-message Timestamp {
-  int64 value = 1;
-}
