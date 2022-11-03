@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package smithytranslate;
-
-message BigDecimal {
-  string value = 1;
-}

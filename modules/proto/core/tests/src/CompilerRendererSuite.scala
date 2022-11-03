@@ -39,7 +39,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("my_union" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - document") {
@@ -57,7 +57,7 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |document SomeDoc
                     |""".stripMargin
-    convertCheck(source, Map("some_doc" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - string") {
@@ -73,7 +73,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  string value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_string" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - int") {
@@ -89,7 +89,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int32 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_int" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - long") {
@@ -105,7 +105,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int64 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_long" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - double") {
@@ -122,7 +122,7 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
 
-    convertCheck(source, Map("some_double" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - float") {
@@ -138,7 +138,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  float value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_float" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
 
   }
 
@@ -155,7 +155,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int32 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_short" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - bool") {
@@ -171,7 +171,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  bool value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_bool" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - bytes") {
@@ -187,7 +187,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  bytes value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_blob" -> someBlob))
+    convertCheck(source, Map("com/example.proto" -> someBlob))
   }
 
   test("top level - big integer") {
@@ -199,13 +199,13 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |package com.example;
                     |
-                    |import "smithytranslate/big_integer.proto";
+                    |import "smithytranslate/definitions.proto";
                     |
                     |message SomeBigInt {
                     |  smithytranslate.BigInteger value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("some_big_int" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - big decimal") {
@@ -217,13 +217,13 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |package com.example;
                     |
-                    |import "smithytranslate/big_decimal.proto";
+                    |import "smithytranslate/definitions.proto";
                     |
                     |message SomeBigDec {
                     |  smithytranslate.BigDecimal value = 1;
                     |}
                     |""".stripMargin
-    convertWithApiCheck(source, Map("some_big_dec" -> expected))
+    convertWithApiCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - timestamp") {
@@ -235,13 +235,13 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |package com.example;
                     |
-                    |import "smithytranslate/timestamp.proto";
+                    |import "smithytranslate/definitions.proto";
                     |
                     |message SomeTs {
                     |  smithytranslate.Timestamp value = 1;
                     |}
                     |""".stripMargin
-    convertWithApiCheck(source, Map("some_ts" -> expected))
+    convertWithApiCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("protoNumType") {
@@ -314,63 +314,42 @@ class CompilerRendererSuite extends FunSuite {
                   |}
                   |""".stripMargin
 
-    val longNumbers = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "google/protobuf/wrappers.proto";
-                    |
-                    |message LongNumbers {
-                    |  google.protobuf.Int64Value signed = 1;
-                    |  google.protobuf.UInt64Value unsigned = 2;
-                    |  google.protobuf.Int64Value fixed = 3;
-                    |  google.protobuf.Int64Value FIXED_SIGNED = 4;
-                    |}
-                    |""".stripMargin
-
-    val intNumbers = """
-                    |syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "google/protobuf/wrappers.proto";
-                    |
-                    |message IntNumbers {
-                    |  google.protobuf.Int32Value signed = 1;
-                    |  google.protobuf.UInt32Value unsigned = 2;
-                    |  google.protobuf.Int32Value fixed = 3;
-                    |  google.protobuf.Int32Value FIXED_SIGNED = 4;
-                    |}""".stripMargin
-
-    val requiredLongNumbers = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message RequiredLongNumbers {
-                    |  sint64 signed = 1;
-                    |  uint64 unsigned = 2;
-                    |  fixed64 fixed = 3;
-                    |  sfixed64 FIXED_SIGNED = 4;
-                    |}""".stripMargin
-
-    val requiredIntNumbers = """syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message RequiredIntNumbers {
-                    |  sint32 signed = 1;
-                    |  uint32 unsigned = 2;
-                    |  fixed32 fixed = 3;
-                    |  sfixed32 FIXED_SIGNED = 4;
-                    |}""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/wrappers.proto";
+                      |
+                      |message LongNumbers {
+                      |  google.protobuf.Int64Value signed = 1;
+                      |  google.protobuf.UInt64Value unsigned = 2;
+                      |  google.protobuf.Int64Value fixed = 3;
+                      |  google.protobuf.Int64Value FIXED_SIGNED = 4;
+                      |}
+                      |
+                      |message IntNumbers {
+                      |  google.protobuf.Int32Value signed = 1;
+                      |  google.protobuf.UInt32Value unsigned = 2;
+                      |  google.protobuf.Int32Value fixed = 3;
+                      |  google.protobuf.Int32Value FIXED_SIGNED = 4;
+                      |}
+                      |
+                      |message RequiredLongNumbers {
+                      |  sint64 signed = 1;
+                      |  uint64 unsigned = 2;
+                      |  fixed64 fixed = 3;
+                      |  sfixed64 FIXED_SIGNED = 4;
+                      |}
+                      |
+                      |message RequiredIntNumbers {
+                      |  sint32 signed = 1;
+                      |  uint32 unsigned = 2;
+                      |  fixed32 fixed = 3;
+                      |  sfixed32 FIXED_SIGNED = 4;
+                      |}""".stripMargin
     convertCheck(
       source,
-      Map(
-        "long_numbers" -> longNumbers,
-        "int_numbers" -> intNumbers,
-        "required_long_numbers" -> requiredLongNumbers,
-        "required_int_numbers" -> requiredIntNumbers
-      )
+      Map("com/example.proto" -> expected)
     )
   }
 
@@ -397,7 +376,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  map<string, google.protobuf.StringValue> object = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("foo" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("inlined maps message") {
@@ -417,25 +396,19 @@ class CompilerRendererSuite extends FunSuite {
                   |   values: Map
                   |}
                   |""".stripMargin
-    val foo = """syntax = "proto3";
-                   |
-                   |package com.example;
-                   |
-                   |import "com/example/map_item.proto";
-                   |
-                   |message Foo {
-                   |  map<string, com.example.MapItem> values = 1;
-                   |}
-                   |""".stripMargin
-    val mapItem = """|syntax = "proto3";
-                   |
-                   |package com.example;
-                   |
-                   |message MapItem {
-                   |  string name = 1;
-                   |}
-                   |""".stripMargin
-    convertCheck(source, Map("foo" -> foo, "map_item" -> mapItem))
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message MapItem {
+                      |  string name = 1;
+                      |}
+                      |
+                      |message Foo {
+                      |  map<string, com.example.MapItem> values = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("inlined maps") {
@@ -458,7 +431,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  map<string, int32> strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("foo" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("inlined lists") {
@@ -480,7 +453,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  repeated string strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("foo" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("inlined sparse lists") {
@@ -505,7 +478,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  repeated google.protobuf.StringValue strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("foo" -> expected))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("inlined lists message") {
@@ -525,25 +498,19 @@ class CompilerRendererSuite extends FunSuite {
                   |}
                   |""".stripMargin
 
-    val list = """|syntax = "proto3";
+    val expected = """|syntax = "proto3";
                    |
                    |package com.example;
                    |
                    |message ListItem {
                    |  string name = 1;
-                   |}""".stripMargin
-
-    val foo = """|syntax = "proto3";
-                   |
-                   |package com.example;
-                   |
-                   |import "com/example/list_item.proto";
+                   |}
                    |
                    |message Foo {
                    |  repeated com.example.ListItem strings = 1;
                    |}
                    |""".stripMargin
-    convertCheck(source, Map("list_item" -> list, "foo" -> foo))
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("transitive structure with protoEnabled") {
@@ -560,27 +527,21 @@ class CompilerRendererSuite extends FunSuite {
                   |  s: String
                   |}
                   |""".stripMargin
-    val test = """|syntax = "proto3";
-                    |
-                    |package test;
-                    |
-                    |import "test/other.proto";
-                    |
-                    |message Test {
-                    |  test.Other o = 1;
-                    |}
-                    |""".stripMargin
-    val other = """|syntax = "proto3";
+    val expected = """|syntax = "proto3";
                     |
                     |package test;
                     |
                     |import "google/protobuf/wrappers.proto";
                     |
+                    |message Test {
+                    |  test.Other o = 1;
+                    |}
+                    |
                     |message Other {
                     |  google.protobuf.StringValue s = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("test" -> test, "other" -> other))
+    convertCheck(source, Map("test/definitions.proto" -> expected))
   }
 
   test("service with protoEnabled") {
@@ -608,27 +569,22 @@ class CompilerRendererSuite extends FunSuite {
                   |  operations: [Op]
                   |}
                   |""".stripMargin
-    val struct = """|syntax = "proto3";
-                    |
-                    |package test;
-                    |
-                    |import "google/protobuf/wrappers.proto";
-                    |
-                    |message Struct {
-                    |  google.protobuf.StringValue s = 1;
-                    |}""".stripMargin
-    val test = """|syntax = "proto3";
-                    |
-                    |package test;
-                    |
-                    |import "test/struct.proto";
-                    |
-                    |service Test {
-                    |  rpc Op(test.Struct) returns (test.Struct);
-                    |}
-                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "google/protobuf/wrappers.proto";
+                      |
+                      |service Test {
+                      |  rpc Op(test.Struct) returns (test.Struct);
+                      |}
+                      |
+                      |message Struct {
+                      |  google.protobuf.StringValue s = 1;
+                      |}
+                      |""".stripMargin
 
-    convertCheck(source, Map("struct" -> struct, "test" -> test))
+    convertCheck(source, Map("test/definitions.proto" -> expected))
   }
 
   test("enum with protoIndex") {
@@ -660,39 +616,78 @@ class CompilerRendererSuite extends FunSuite {
                     |  NO
                     |}
                     |""".stripMargin
-    val struct = """|syntax = "proto3";
-                   |
-                   |package test;
-                   |
-                   |import "test/love_proto.proto";
-                   |
-                   |message Struct {
-                   |  test.LoveProto s = 1;
-                   |}
-                   |""".stripMargin
-    val test = """|syntax = "proto3";
-                  |
-                  |package test;
-                  |
-                  |import "test/struct.proto";
-                  |
-                  |service Test {
-                  |  rpc Op(test.Struct) returns (test.Struct);
-                  |}
-                  |""".stripMargin
-    val loveProto = """|syntax = "proto3";
+    val expected = """|syntax = "proto3";
                       |
                       |package test;
+                      |
+                      |service Test {
+                      |  rpc Op(test.Struct) returns (test.Struct);
+                      |}
+                      |
+                      |message Struct {
+                      |  test.LoveProto s = 1;
+                      |}
                       |
                       |enum LoveProto {
                       |  YES = 0;
                       |  NO = 2;
-                      |}
-                      |""".stripMargin
+                      |}""".stripMargin
 
     convertCheck(
       source,
-      Map("struct" -> struct, "test" -> test, "love_proto" -> loveProto)
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("cycle") {
+    val source = """|$version: "2"
+                    |
+                    |namespace avoid.cyclic.in.namespace
+                    |
+                    |structure One {
+                    |    twos: TwoList
+                    |}
+                    |
+                    |list TwoList {
+                    |    member: Two
+                    |}
+                    |
+                    |structure Two {
+                    |    one: One
+                    |}""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package avoid.cyclic.in.namespace;
+                      |
+                      |message One {
+                      |  repeated avoid.cyclic.in.namespace.Two twos = 1;
+                      |}
+                      |
+                      |message Two {
+                      |  avoid.cyclic.in.namespace.One one = 1;
+                      |}""".stripMargin
+    convertCheck(source, Map("avoid/cyclic/in/namespace.proto" -> expected))
+  }
+
+  test("multiple namespaces") {
+    def src(ns: String) = s"""|namespace com.$ns
+                              |
+                              |string SomeString
+                              |""".stripMargin
+    def expected(ns: String) = s"""|syntax = "proto3";
+                                   |
+                                   |package com.$ns;
+                                   |
+                                   |message SomeString {
+                                   |  string value = 1;
+                                   |}
+                                   |""".stripMargin
+    convertChecks(
+      Map("ns1.smithy" -> src("ns1"), "ns2.smithy" -> src("ns2")),
+      Map(
+        "com/ns1.proto" -> expected("ns1"),
+        "com/ns2.proto" -> expected("ns2")
+      )
     )
   }
 
@@ -703,36 +698,24 @@ class CompilerRendererSuite extends FunSuite {
       source: String,
       expected: Map[String, String]
   )(implicit loc: Location): Unit = {
-    val timestamp = s"""|syntax = "proto3";
-                        |
-                        |package smithytranslate;
-                        |
-                        |message Timestamp {
-                        |  int64 value = 1;
-                        |}
-                        |
-                        |
-                        """.stripMargin
-    val bigint = """|syntax = "proto3";
-                    |
-                    |package smithytranslate;
-                    |
-                    |message BigInteger {
-                    |  string value = 1;
-                    |}
-                  """.stripMargin
-    val bigDecimal = """|syntax = "proto3";
-                        |
-                        |package smithytranslate;
-                        |
-                        |message BigDecimal {
-                        |  string value = 1;
-                        |}
-                        |""".stripMargin
+    val expectedApi = s"""|syntax = "proto3";
+                          |
+                          |package smithytranslate;
+                          |
+                          |message BigDecimal {
+                          |  string value = 1;
+                          |}
+                          |
+                          |message BigInteger {
+                          |  string value = 1;
+                          |}
+                          |
+                          |message Timestamp {
+                          |  int64 value = 1;
+                          |}
+                          |""".stripMargin
     val newExpected = Map(
-      "timestamp" -> timestamp,
-      "big_integer" -> bigint,
-      "big_decimal" -> bigDecimal
+      "smithytranslate/definitions.proto" -> expectedApi
     ) ++ expected
     convertCheck(source, newExpected, excludeProtoApi = false)
   }
@@ -742,18 +725,36 @@ class CompilerRendererSuite extends FunSuite {
       expected: Map[String, String],
       excludeProtoApi: Boolean = true
   )(implicit loc: Location): Unit = {
-    def render(src: String): List[(String, String)] = {
-      val m = Model
-        .assembler()
-        .discoverModels()
-        .addShapes(
-          smithytranslate.BigInteger.shape,
-          smithytranslate.BigDecimal.shape,
-          smithytranslate.Timestamp.shape
-        )
-        .addUnparsedModel("inlined-in-test.smithy", src)
-        .assemble()
-        .unwrap()
+    convertChecks(
+      Map("inlined-in-test.smithy" -> source),
+      expected,
+      excludeProtoApi
+    )
+  }
+
+  private def convertChecks(
+      sources: Map[String, String],
+      expected: Map[String, String],
+      excludeProtoApi: Boolean = true
+  )(implicit loc: Location): Unit = {
+    def render(srcs: Map[String, String]): List[(String, String)] = {
+      val m = {
+        val assembler = Model
+          .assembler()
+          .discoverModels()
+          .addShapes(
+            smithytranslate.BigInteger.shape,
+            smithytranslate.BigDecimal.shape,
+            smithytranslate.Timestamp.shape
+          )
+        srcs.foreach { case (name, src) =>
+          assembler.addUnparsedModel(name, src)
+        }
+
+        assembler
+          .assemble()
+          .unwrap()
+      }
       val c = new Compiler()
       val res = c.compile(m)
       if (res.isEmpty) { fail("Expected compiler output") }
@@ -763,23 +764,17 @@ class CompilerRendererSuite extends FunSuite {
       }
     }
 
-    val actual = render(source).sortWith { case ((name1, _), (_, _)) =>
+    val actual = render(sources).sortWith { case ((name1, _), (_, _)) =>
       name1.startsWith("smithytranslate")
     }
     ProtoValidator.run(actual: _*)
     val exclude =
       if (excludeProtoApi)
-        Set(
-          "smithytranslate/big_integer.proto",
-          "smithytranslate/big_decimal.proto",
-          "smithytranslate/timestamp.proto"
-        )
+        Set("smithytranslate/definitions.proto")
       else Set.empty[String]
 
-    def simple(path: String) = path.split('/').last.dropRight(".proto".size)
-
     val finalFiles = actual.collect {
-      case (name, contents) if !exclude(name) => (simple(name), contents)
+      case (name, contents) if !exclude(name) => (name, contents)
     }.toMap
 
     // Checking that we get the same keyset as expected

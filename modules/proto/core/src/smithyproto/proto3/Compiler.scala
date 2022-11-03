@@ -63,21 +63,28 @@ class Compiler() {
   def compile(model: Model): List[OutputFile] = {
     model.toShapeSet.toList
       .filterNot(ShapeFiltering.exclude)
-      .flatMap { shape =>
-        val mappings = shape
-          .accept(compileVisitor(model))
-          .map(m => Statement.TopLevelStatement(m))
+      .groupBy(_.getId().getNamespace())
+      .flatMap { case (ns, shapes) =>
+        val mappings = shapes.flatMap { shape =>
+          shape
+            .accept(compileVisitor(model))
+            .map(m => Statement.TopLevelStatement(m))
+        }
         if (mappings.nonEmpty) {
+          val currentFqn = Namespacing.namespaceToFqn(ns)
           val imports = mappings
             .map(resolveImports)
             .flatMap(_.toList)
-            .filter(_.packageName.isDefined)
-            .map(fqn => Statement.ImportStatement(filePath(fqn).mkString("/")))
-          val packageName = shape.getId.getNamespace
-          val unit = CompilationUnit(Some(packageName), imports ++ mappings)
-          List(OutputFile(filePath(shapeIdToFqn(shape.getId)), unit))
+            .filter(_ != currentFqn)
+            .map { case fqn =>
+              Statement.ImportStatement(filePath(fqn).mkString("/"))
+            }
+            .distinct
+          val unit = CompilationUnit(Some(ns), imports ++ mappings)
+          List(OutputFile(filePath(currentFqn), unit))
         } else Nil
       }
+      .toList
   }
 
   private def filePath(fqn: Fqn): List[String] = {
@@ -115,25 +122,12 @@ class Compiler() {
       }
     def resolveOneof(oneof: Oneof): Set[Fqn] =
       oneof.fields.map(resolveField).foldLeft[Set[Fqn]](Set.empty)(_ ++ _)
-    def resolveField(field: Field): Set[Fqn] = {
-      def resolveType(ty: Type): Set[Fqn] = {
-        ty match {
-          case Type.MessageType(fqn) => Set(fqn)
-          case Type.EnumType(fqn)    => Set(fqn)
-          case Type.Any              => Set(Type.Any.importFqn)
-          case Type.Empty            => Set(Type.Empty.importFqn)
-          case Type.ListType(vt)     => resolveType(vt)
-          case m @ Type.MapType(_, vt) =>
-            resolveType(vt) ++ resolveType(m.foldedKeyType)
-          case f: Type.Wrappers => Set(f.importFqn)
-          case _                => Set.empty
-        }
-      }
-      resolveType(field.ty)
-    }
+
+    def resolveField(field: Field): Set[Fqn] = field.ty.importFqn
+
     def resolveService(service: Service): Set[Fqn] =
       service.rpcs
-        .map(s => Set(s.requestFqn, s.responseFqn))
+        .map(s => Set(s.request.importFqn, s.response.importFqn))
         .foldLeft[Set[Fqn]](Set.empty)(_ ++ _)
     def resolveTopLevelDef(topLevelDef: TopLevelDef): Set[Fqn] =
       topLevelDef match {
@@ -342,32 +336,24 @@ class Compiler() {
       override def operationShape(shape: OperationShape): Option[Rpc] = {
         val maybeInputShapeId = shape.getInput()
         val outputShapeId = shape.getOutput().get()
-        val requestFqn = maybeInputShapeId.toScala
+        val request = maybeInputShapeId.toScala
           .map { inputShapeId =>
-            Fqn(
-              Some(namespaceToPackage(inputShapeId.getNamespace())),
-              inputShapeId.getName()
+            RpcMessage(
+              Namespacing.shapeIdToFqn(inputShapeId),
+              Namespacing.namespaceToFqn(inputShapeId.getNamespace())
             )
           }
           .getOrElse {
-            Type.Empty.fqn
+            RpcMessage(Type.Empty.fqn, Type.Empty.fqn)
           }
 
-        val responseFqn =
-          Fqn(
-            Some(namespaceToPackage(outputShapeId.getNamespace())),
-            outputShapeId.getName()
-          )
-        Some(Rpc(shape.getId.getName, false, requestFqn, false, responseFqn))
+        val response = RpcMessage(
+          Namespacing.shapeIdToFqn(outputShapeId),
+          Namespacing.namespaceToFqn(outputShapeId.getNamespace())
+        )
+        Some(Rpc(shape.getId.getName, false, request, false, response))
       }
     }
-
-  private def namespaceToPackage(namespace: String): List[String] =
-    namespace.split("\\.").toList
-
-  // TODO: what if namespace is empty?
-  private def shapeIdToFqn(id: ShapeId): Fqn =
-    Fqn(Some(namespaceToPackage(id.getNamespace)), id.getName)
 
   private def extractNumType(
       shape: Shape
@@ -404,14 +390,20 @@ class Compiler() {
         if (Prelude.isPreludeShape(shape.getId())) {
           Type.BigDecimal
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       })
       def bigIntegerShape(shape: BigIntegerShape): Option[Type] = Some({
         if (Prelude.isPreludeShape(shape.getId())) {
           Type.BigInteger
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       })
       def blobShape(shape: BlobShape): Option[Type] = Some(
@@ -420,7 +412,10 @@ class Compiler() {
         } else if (Prelude.isPreludeShape(shape.getId())) {
           Type.Wrappers.Bytes
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       )
       def booleanShape(shape: BooleanShape): Option[Type] = Some(
@@ -429,14 +424,22 @@ class Compiler() {
         } else if (Prelude.isPreludeShape(shape.getId())) {
           Type.Wrappers.Bool
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       )
       def byteShape(shape: ByteShape): Option[Type] =
         if (Prelude.isPreludeShape(shape.getId())) {
           Some(NumberType.resolveInt(isRequired, numType))
         } else {
-          Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
         }
       def documentShape(shape: DocumentShape): Option[Type] =
         Some(Type.Any)
@@ -445,18 +448,35 @@ class Compiler() {
           Some(Type.Double)
         else if (Prelude.isPreludeShape(shape.getId()))
           Some(Type.Wrappers.Double)
-        else Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+        else
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
       def floatShape(shape: FloatShape): Option[Type] =
         if (isRequired && Prelude.isPreludeShape(shape.getId()))
           Some(Type.Float)
         else if (Prelude.isPreludeShape(shape.getId()))
           Some(Type.Wrappers.Float)
-        else Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+        else
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
       def integerShape(shape: IntegerShape): Option[Type] = {
         if (Prelude.isPreludeShape(shape.getId())) {
           Some(NumberType.resolveInt(isRequired, numType))
         } else {
-          Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
         }
       }
       def listShape(shape: ListShape): Option[Type] = {
@@ -472,7 +492,12 @@ class Compiler() {
         if (Prelude.isPreludeShape(shape.getId())) {
           Some(NumberType.resolveLong(isRequired, numType))
         } else {
-          Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
         }
       }
       def mapShape(shape: MapShape): Option[Type] = {
@@ -488,13 +513,21 @@ class Compiler() {
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
       override def setShape(shape: SetShape): Option[Type] = Some(
-        Type.MessageType(shapeIdToFqn(shape.getId))
+        Type.MessageType(
+          Namespacing.shapeIdToFqn(shape.getId),
+          Namespacing.shapeIdToImportFqn(shape.getId())
+        )
       )
       def shortShape(shape: ShortShape): Option[Type] =
         if (Prelude.isPreludeShape(shape.getId())) {
           Some(NumberType.resolveInt(isRequired, numType))
         } else {
-          Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
         }
       // TODO: we are diverging from the spec here
       def stringShape(shape: StringShape): Option[Type] = Some(
@@ -503,31 +536,51 @@ class Compiler() {
         } else if (Prelude.isPreludeShape(shape.getId())) {
           Type.Wrappers.String
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       )
       override def enumShape(shape: EnumShape): Option[Type] = Some(
-        Type.EnumType(shapeIdToFqn(shape.getId()))
+        Type.EnumType(
+          Namespacing.shapeIdToFqn(shape.getId()),
+          Namespacing.shapeIdToImportFqn(shape.getId())
+        )
       )
       override def intEnumShape(shape: IntEnumShape): Option[Type] = Some(
-        Type.EnumType(shapeIdToFqn(shape.getId()))
+        Type.EnumType(
+          Namespacing.shapeIdToFqn(shape.getId()),
+          Namespacing.shapeIdToImportFqn(shape.getId())
+        )
       )
       def structureShape(shape: StructureShape): Option[Type] = {
         if (isUnit(shape)) {
           Some(Type.Empty)
         } else {
-          Some(Type.MessageType(shapeIdToFqn(shape.getId)))
+          Some(
+            Type.MessageType(
+              Namespacing.shapeIdToFqn(shape.getId),
+              Namespacing.shapeIdToImportFqn(shape.getId())
+            )
+          )
         }
       }
       def timestampShape(shape: TimestampShape): Option[Type] = Some(
         if (Prelude.isPreludeShape(shape.getId())) {
           Type.Timestamp
         } else {
-          Type.MessageType(shapeIdToFqn(shape.getId))
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
+          )
         }
       )
       def unionShape(shape: UnionShape): Option[Type] = Some(
-        Type.MessageType(shapeIdToFqn(shape.getId))
+        Type.MessageType(
+          Namespacing.shapeIdToFqn(shape.getId),
+          Namespacing.shapeIdToImportFqn(shape.getId())
+        )
       )
     }
 

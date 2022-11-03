@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package demo;
-
-enum Language {
-  FRENCH = 0;
-  ENGLISH = 1;
-}

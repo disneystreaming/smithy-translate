@@ -37,8 +37,7 @@ class CompilerSuite extends FunSuite {
       OutputFile(
         List(
           "com",
-          "example",
-          "some_string.proto"
+          "example.proto"
         ),
         CompilationUnit(
           Some(
