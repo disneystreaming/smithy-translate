@@ -19,13 +19,15 @@ object ProtoIR {
 
   final case class CompilationUnit(
       packageName: Option[String],
-      statements: List[Statement]
+      statements: List[Statement],
+      options: List[TopLevelOption]
   )
+
+  final case class TopLevelOption(key: String, value: String)
 
   sealed trait Statement
   object Statement {
     final case class ImportStatement(path: String) extends Statement
-    final case object OptionStatement extends Statement
     final case class TopLevelStatement(s: TopLevelDef) extends Statement
   }
 
@@ -189,5 +191,4 @@ object ProtoIR {
     def render: String =
       packageName.map(_.mkString(".")).map(_ + ".").getOrElse("") + name
   }
-
 }

@@ -62,7 +62,8 @@ class CompilerSuite extends FunSuite {
                 )
               )
             )
-          )
+          ),
+          List.empty
         )
       )
     )

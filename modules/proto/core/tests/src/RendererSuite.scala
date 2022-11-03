@@ -38,7 +38,8 @@ class RendererSuite extends FunSuite {
             )
           )
         )
-      )
+      ),
+      List.empty
     )
 
     val result = Renderer.render(unit)
@@ -131,7 +132,8 @@ class RendererSuite extends FunSuite {
             )
           )
         )
-      )
+      ),
+      List.empty
     )
 
     val result = Renderer.render(unit)
@@ -194,7 +196,8 @@ class RendererSuite extends FunSuite {
             )
           )
         )
-      )
+      ),
+      List.empty
     )
 
     val result = Renderer.render(unit)

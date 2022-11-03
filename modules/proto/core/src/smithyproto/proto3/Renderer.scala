@@ -25,6 +25,10 @@ object Renderer {
     val text = many(
       statement(s"""syntax = "proto3""""),
       emptyLine,
+      many(
+        compilationUnit.options.map(renderOption) ++
+          compilationUnit.options.headOption.toList.map(_ => emptyLine)
+      ),
       maybe(
         compilationUnit.packageName.map(packageName =>
           many(renderPackageName(packageName), emptyLine)
@@ -43,10 +47,12 @@ object Renderer {
   def renderPackageName(packageName: String): Text =
     statement(s"package ${packageName}")
 
+  def renderOption(opt: TopLevelOption): Text =
+    statement(s"""option ${opt.key} = ${opt.value}""")
+
   def renderStatement(st: Statement): Text =
     st match {
       case Statement.ImportStatement(path)  => statement(s"""import "$path"""")
-      case Statement.OptionStatement        => Text.emptyLine
       case Statement.TopLevelStatement(tld) => renderTopLevelDef(tld)
     }
 

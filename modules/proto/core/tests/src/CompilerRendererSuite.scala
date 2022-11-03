@@ -691,6 +691,34 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
+  test("proto options as metadata") {
+    val source = """|$version: "2"
+                    |
+                    |metadata "proto_options" = [{
+                    |  "another.namespace": {
+                    |    "java_multiple_files": "true",
+                    |    "java_package": "\"demo.hello\""
+                    |  }
+                    |}]
+                    |
+                    |namespace another.namespace
+                    |
+                    |string SomeString
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |option java_multiple_files = true;
+                      |option java_package = "demo.hello";
+                      |
+                      |package another.namespace;
+                      |
+                      |message SomeString {
+                      |  string value = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("another/namespace.proto" -> expected))
+  }
+
   /** Perform the same check as convertCheck but include the smithytranslate
     * namespace. To do so it prepends the proto api to your `expected` value.
     */
