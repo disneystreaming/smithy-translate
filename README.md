@@ -1205,48 +1205,27 @@ structure TestInput {
 }
 ```
 
-test200.proto:
+definitions.proto:
 ```proto
-import "foo/output_body.proto";
-
-message Test200 {
-  foo.OutputBody body = 1;
-}
-```
-
-test_input.proto:
-```proto
-import "foo/input_body.proto";
-
-message TestInput {
-  foo.InputBody body = 1;
-}
-```
-
-service.proto:
-```proto
-import "foo/test_input.proto";
-
-import "foo/test200.proto";
+import "google/protobuf/wrappers.proto";
 
 service FooService {
   rpc Test(foo.TestInput) returns (foo.Test200);
 }
 
-```
-
-output_body.proto:
-```proto
-import "google/protobuf/wrappers.proto";
+message InputBody {
+  string s = 1;
+}
 
 message OutputBody {
   google.protobuf.Int32Value sNum = 1;
 }
-```
 
-input_body.proto:
-```proto
-message InputBody {
-  string s = 1;
+message Test200 {
+  foo.OutputBody body = 1;
+}
+
+message TestInput {
+  foo.InputBody body = 1;
 }
 ```
