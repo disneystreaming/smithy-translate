@@ -15,9 +15,9 @@
 
 package smithyproto.scalapb.demo
 
-import demo.hello.HelloGrpc
-import demo.hello_request.HelloRequest
-import demo.hello_response.HelloResponse
+import demo.definitions.HelloGrpc
+import demo.definitions.HelloRequest
+import demo.definitions.HelloResponse
 import scala.concurrent.Future
 import com.google.protobuf.empty.Empty
 

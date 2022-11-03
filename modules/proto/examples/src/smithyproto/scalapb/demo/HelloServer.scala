@@ -16,10 +16,14 @@
 package smithyproto.scalapb.demo
 
 import io.grpc.ServerBuilder
-import demo.hello.HelloGrpc
+import demo.definitions.HelloGrpc
 import scala.concurrent.ExecutionContext
 import io.grpc.protobuf.services.ProtoReflectionService
 
+/** This code compiles because there are protobuf files in this project that are
+  * processed by ScalaPB. The files in `modules/proto/examples/smithy` are used
+  * to turn Smithy into proto definitions which are then processed by ScalaPB
+  */
 object HelloServer {
 
   def main(args: Array[String]): Unit = {
