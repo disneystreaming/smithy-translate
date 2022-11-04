@@ -36,7 +36,7 @@ object ReadmeParser {
   private val tripleTick = string("```")
 
   private def header(title: String, language: String): Parser[Unit] =
-    (Parser.ignoreCase(title) ~ lf ~ tripleTick ~ string(language)).void
+    (Parser.ignoreCase(title) ~ lf ~ tripleTick ~ string(language) ~ lf).void
 
   private def part(
       header: Parser[Unit],
