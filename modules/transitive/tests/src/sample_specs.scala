@@ -15,7 +15,11 @@
 
 object sample_specs {
   val sampleSpec =
-    """namespace example.weather
+    """|$version: "2"
+      |
+      |metadata "some_key" = "some value"
+      |
+      |namespace example.weather
       |
       |/// Provides weather forecasts.
       |@paginated(inputToken: "nextToken", outputToken: "nextToken",
