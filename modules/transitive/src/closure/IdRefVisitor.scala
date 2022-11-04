@@ -95,6 +95,7 @@ final class IdRefVisitor(
               model,
               shapes.map(_.getId),
               captureTraits,
+              captureMetadata = false,
               validateModel
             )
             .toSet()

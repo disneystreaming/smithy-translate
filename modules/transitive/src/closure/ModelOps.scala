@@ -52,9 +52,16 @@ object ModelOps {
     def transitiveClosure(
         shapeIds: List[ShapeId],
         captureTraits: Boolean = false,
+        captureMetadata: Boolean = false,
         validateModel: Boolean = true
     ): Model = {
-      TransitiveModel.compute(model, shapeIds, captureTraits, validateModel)
+      TransitiveModel.compute(
+        model,
+        shapeIds,
+        captureTraits,
+        captureMetadata,
+        validateModel
+      )
     }
   }
 }

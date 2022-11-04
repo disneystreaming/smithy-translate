@@ -32,9 +32,19 @@ class ClosureSpec extends munit.FunSuite {
   test("when root shape id is passed in ,expect to retain entire model") {
     val model1 = inLineModel(sampleSpec)
     val result = model1
-      .transitiveClosure(List(ShapeId.from("example.weather#Weather")), true)
+      .transitiveClosure(
+        List(ShapeId.from("example.weather#Weather")),
+        captureTraits = true,
+        captureMetadata = true
+      )
       .check()
 
+    assertEquals(
+      result
+        .getMetadataProperty("some_key")
+        .flatMap(_.asStringNode().map(_.getValue)),
+      java.util.Optional.of("some value")
+    )
     assertEquals(result.prettyPrint, model1.prettyPrint)
   }
 
