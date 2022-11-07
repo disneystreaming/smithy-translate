@@ -39,6 +39,7 @@ import smithytranslate.NullableTrait
 import cats.syntax.all._
 import smithytranslate.NullFormatTrait
 import smithytranslate.openapi.internals.Hint.Header
+import smithytranslate.openapi.internals.Hint.QueryParam
 
 final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
@@ -54,8 +55,12 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
             case Header(_) => true
             case _         => false
           }
+          val isQuery = hints.exists {
+            case QueryParam(_) => true
+            case _             => false
+          }
           val jsonNameHint =
-            if (!isHeader && nameWillNeedChange)
+            if (!isHeader && !isQuery && nameWillNeedChange)
               List(Hint.JsonName(memName))
             else List.empty
           MemberShape

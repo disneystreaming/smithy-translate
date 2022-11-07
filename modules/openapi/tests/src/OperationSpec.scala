@@ -315,7 +315,7 @@ final class OperationSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
-  test("operation - query") {
+  test("operation - query".only) {
     val openapiString = """|openapi: '3.0.'
                      |info:
                      |  title: test
@@ -327,6 +327,18 @@ final class OperationSpec extends munit.FunSuite {
                      |      parameters:
                      |        - in: query
                      |          name: userId
+                     |          schema:
+                     |            type: integer
+                     |        - in: query
+                     |          name: some_id
+                     |          schema:
+                     |            type: integer
+                     |        - in: query
+                     |          name: other-id
+                     |          schema:
+                     |            type: integer
+                     |        - in: query
+                     |          name: 12-twelve
                      |          schema:
                      |            type: integer
                      |      responses:
@@ -369,6 +381,12 @@ final class OperationSpec extends munit.FunSuite {
                       |structure TestOperationIdInput {
                       |    @httpQuery("userId")
                       |    userId: Integer,
+                      |    @httpQuery("some_id")
+                      |    some_id: Integer,
+                      |    @httpQuery("other-id")
+                      |    other_id: Integer
+                      |    @httpQuery("12-twelve")
+                      |    n12_twelve: Integer
                       |}
                       |
                       |structure Object {
