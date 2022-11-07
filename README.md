@@ -170,7 +170,7 @@ structure Testing {
 
 Required properties and nested structures are both supported.
 
-Any properties in the input structure that begin with a number will be prefixed by the letter `n`. This is because smithy does not allow for member names to begin with a number. You can change this is with post-processing if you want a different change to be made to names of this nature. Note that this extra `n` will not impact JSON encoding/decoding because we also attach the [JsonName Smithy trait](https://awslabs.github.io/smithy/2.0/spec/protocol-traits.html#jsonname-trait) to these properties. The same thing happens if the member name contains a hyphen. In this case, hyphens are replaced with underscores and a `jsonName` trait is once again added.
+Any properties in the input structure that begin with a number will be prefixed by the letter `n`. This is because smithy does not allow for member names to begin with a number. You can change this is with post-processing if you want a different change to be made to names of this nature. Note that this extra `n` will not impact JSON encoding/decoding because we also attach the [JsonName Smithy trait](https://awslabs.github.io/smithy/2.0/spec/protocol-traits.html#jsonname-trait) to these properties. The same thing happens if the member name contains a hyphen. In this case, hyphens are replaced with underscores and a `jsonName` trait is once again added. Note that if the field is a header, the `jsonName` annotation is not added since `httpHeader` is used instead.
 
 OpenAPI:
 ```yaml
