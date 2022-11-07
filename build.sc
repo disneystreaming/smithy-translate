@@ -1,9 +1,10 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.1`
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.1`
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
+import io.kipp.mill.ci.release.SonatypeHost
 import mill.contrib.scalapblib.ScalaPBModule
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill._
@@ -42,10 +43,8 @@ trait BaseModule extends Module with HeaderModule {
 trait BasePublishModule extends BaseModule with CiReleaseModule {
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
-  
-  override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
-  override def sonatypeSnapshotUri =
-    "https://s01.oss.sonatype.org/content/repositories/snapshots"
+
+  override def sonatypeHost = Some(SonatypeHost.s01)
 
   def pomSettings = PomSettings(
     description = "A smithy-translation toolkit",
@@ -315,7 +314,7 @@ object Deps {
     ivy"org.slf4j:slf4j-nop:2.0.3" // needed since swagger-parser relies on slf4j-api
   object swagger {
     val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.7",
+      ivy"io.swagger.parser.v3:swagger-parser:2.1.8",
       // included to override the version brought in by swagger-parser which has a vulnerability
       ivy"org.mozilla:rhino:1.7.14"
     )
