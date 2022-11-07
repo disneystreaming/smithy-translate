@@ -339,4 +339,49 @@ final class StructureSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("structures - retain property member casing") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        number_one:
+                           |          type: string
+                           |        numberTwo:
+                           |          type: string
+                           |        NumberThree:
+                           |          type: string
+                           |        NUMBER_FOUR:
+                           |          type: string
+                           |        nUMbeR_FiVE:
+                           |          type: string
+                           |        12_twelve:
+                           |          type: string
+                           |        X-something:
+                           |          type: string
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Object {
+                            | number_one: String
+                            | numberTwo: String
+                            | NumberThree: String
+                            | NUMBER_FOUR: String
+                            | nUMbeR_FiVE: String
+                            | @jsonName("12_twelve")
+                            | n12_twelve: String
+                            | @jsonName("X-something")
+                            | X_something: String
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
 }
