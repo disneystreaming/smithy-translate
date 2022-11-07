@@ -42,7 +42,7 @@ trait BaseModule extends Module with HeaderModule {
 trait BasePublishModule extends BaseModule with CiReleaseModule {
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
-  
+
   override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
   override def sonatypeSnapshotUri =
     "https://s01.oss.sonatype.org/content/repositories/snapshots"
