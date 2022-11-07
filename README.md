@@ -153,6 +153,8 @@ components:
       properties:
         myString:
           type: string
+        my_int:
+          type: integer
       required:
         - myString
 ```
@@ -162,10 +164,41 @@ Smithy:
 structure Testing {
  @required
  myString: String
+ my_int: Integer
 }
 ```
 
 Required properties and nested structures are both supported.
+
+Any properties in the input structure that begin with a number will be prefixed by the letter `n`. This is because smithy does not allow for member names to begin with a number. You can change this is with post-processing if you want a different change to be made to names of this nature. Note that this extra `n` will not impact JSON encoding/decoding because we also attach the [JsonName Smithy trait](https://awslabs.github.io/smithy/2.0/spec/protocol-traits.html#jsonname-trait) to these properties. The same thing happens if the member name contains a hyphen. In this case, hyphens are replaced with underscores and a `jsonName` trait is once again added.
+
+OpenAPI:
+```yaml
+openapi: '3.0.'
+info:
+  title: doc
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Testing:
+      type: object
+      properties:
+        12_twelve:
+          type: string
+        X-something:
+          type: string
+```
+
+Smithy:
+```kotlin
+structure Testing {
+ @jsonName("12_twelve")
+ n12_twelve: String
+ @jsonName("X-something")
+ X_something: String
+}
+```
 
 ##### Untagged Union
 
@@ -698,7 +731,7 @@ operation TestOperationId {
 
 structure TestOperationIdInput {
     @httpHeader("X-username")
-    XUsername: String
+    X_username: String
 }
 
 structure Object {
@@ -712,7 +745,7 @@ structure TestOperationId200 {
     @contentType("application/json")
     body: Object,
     @httpHeader("X-RateLimit-Limit")
-    XRateLimitLimit: Integer
+    X_RateLimit_Limit: Integer
 }
 ```
 

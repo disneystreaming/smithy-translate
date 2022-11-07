@@ -38,6 +38,7 @@ import smithytranslate.DefaultValueTrait
 import smithytranslate.NullableTrait
 import cats.syntax.all._
 import smithytranslate.NullFormatTrait
+import smithytranslate.openapi.internals.Hint.Header
 
 final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
@@ -46,11 +47,22 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     val shapes = iModel.definitions.map[Shape] {
       case Structure(id, fields, _, structHints) =>
         val members = fields.map { case Field(id, tpe, hints) =>
+          val memName = id.memberName.value.toString
+          val nameWillNeedChange =
+            memName.headOption.exists(_.isDigit) || memName.contains("-")
+          val isHeader = hints.exists {
+            case Header(_) => true
+            case _         => false
+          }
+          val jsonNameHint =
+            if (!isHeader && nameWillNeedChange)
+              List(Hint.JsonName(memName))
+            else List.empty
           MemberShape
             .builder()
             .id(id.toSmithy)
             .target(tpe.toSmithy)
-            .addHints(hints)
+            .addHints(hints ++ jsonNameHint)
             .build()
         }
         val builder = StructureShape
@@ -206,7 +218,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         ShapeId.fromParts(
           sanitizeNamespace(modelId.namespace.show),
           sanitizeName(modelId.name.segments.mkString_("")),
-          sanitizeName(memberName.value.toString)
+          sanitizeForDigitStart(memberName.value.toString).replaceAll("-", "_")
         )
     }
   }
@@ -260,6 +272,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.DefaultValue(value)     => List(new DefaultValueTrait(value))
     case Hint.UniqueItems             => List(new UniqueItemsTrait())
     case Hint.Nullable                => List(new NullableTrait())
+    case Hint.JsonName(value)         => List(new JsonNameTrait(value))
     case Hint.Auth(schemes) =>
       val shapeIds = schemes.map {
         case _: SecurityScheme.ApiKey     => HttpApiKeyAuthTrait.ID
