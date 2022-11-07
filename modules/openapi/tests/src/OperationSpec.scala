@@ -733,9 +733,9 @@ final class OperationSpec extends munit.FunSuite {
                             |
                             |structure TestOperationInput {
                             |    @httpHeader("X-Request-Id")
-                            |    XRequestId: String,
+                            |    X_Request_Id: String,
                             |    @httpHeader("X-Forwarded-For")
-                            |    XForwardedFor: String,
+                            |    X_Forwarded_For: String,
                             |    @httpPayload
                             |    @required
                             |    @contentType("application/json")
