@@ -329,6 +329,18 @@ final class OperationSpec extends munit.FunSuite {
                      |          name: userId
                      |          schema:
                      |            type: integer
+                     |        - in: query
+                     |          name: some_id
+                     |          schema:
+                     |            type: integer
+                     |        - in: query
+                     |          name: other-id
+                     |          schema:
+                     |            type: integer
+                     |        - in: query
+                     |          name: 12-twelve
+                     |          schema:
+                     |            type: integer
                      |      responses:
                      |        '200':
                      |          content:
@@ -369,6 +381,12 @@ final class OperationSpec extends munit.FunSuite {
                       |structure TestOperationIdInput {
                       |    @httpQuery("userId")
                       |    userId: Integer,
+                      |    @httpQuery("some_id")
+                      |    some_id: Integer,
+                      |    @httpQuery("other-id")
+                      |    other_id: Integer
+                      |    @httpQuery("12-twelve")
+                      |    n12_twelve: Integer
                       |}
                       |
                       |structure Object {
@@ -733,9 +751,9 @@ final class OperationSpec extends munit.FunSuite {
                             |
                             |structure TestOperationInput {
                             |    @httpHeader("X-Request-Id")
-                            |    XRequestId: String,
+                            |    X_Request_Id: String,
                             |    @httpHeader("X-Forwarded-For")
-                            |    XForwardedFor: String,
+                            |    X_Forwarded_For: String,
                             |    @httpPayload
                             |    @required
                             |    @contentType("application/json")
