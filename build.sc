@@ -4,6 +4,7 @@ import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.1`
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
+import io.kipp.mill.ci.release.SonatypeHost
 import mill.contrib.scalapblib.ScalaPBModule
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill._
@@ -43,9 +44,7 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
-  override def sonatypeUri = "https://s01.oss.sonatype.org/service/local"
-  override def sonatypeSnapshotUri =
-    "https://s01.oss.sonatype.org/content/repositories/snapshots"
+  override def sonatypeHost = Some(SonatypeHost.s01)
 
   def pomSettings = PomSettings(
     description = "A smithy-translation toolkit",
