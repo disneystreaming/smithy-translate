@@ -315,7 +315,7 @@ final class OperationSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
-  test("operation - query".only) {
+  test("operation - query") {
     val openapiString = """|openapi: '3.0.'
                      |info:
                      |  title: test
