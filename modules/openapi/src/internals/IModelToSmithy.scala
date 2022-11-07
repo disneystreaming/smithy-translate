@@ -51,16 +51,13 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
           val memName = id.memberName.value.toString
           val nameWillNeedChange =
             memName.headOption.exists(_.isDigit) || memName.contains("-")
-          val isHeader = hints.exists {
-            case Header(_) => true
-            case _         => false
-          }
-          val isQuery = hints.exists {
+          def isHeaderOrQuery = hints.exists {
+            case Header(_)     => true
             case QueryParam(_) => true
             case _             => false
           }
           val jsonNameHint =
-            if (!isHeader && !isQuery && nameWillNeedChange)
+            if (nameWillNeedChange && !isHeaderOrQuery)
               List(Hint.JsonName(memName))
             else List.empty
           MemberShape
