@@ -236,8 +236,12 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     StringUtil.toCamelCase(sanitizeForDigitStart(id))
   }
 
-  /** Used to replace things like `/path/{camel_case}/rest with
-    * `/path/{camelCase}/rest`. This ensures the memberName matches the uri
+  private def sanitizeMemberName(id: String): String = {
+    sanitizeForDigitStart(id).replaceAll("-", "_")
+  }
+
+  /** Used to replace things like `/path/{some-case}/rest with
+    * `/path/{some_case}/rest`. This ensures the memberName matches the uri
     * segment.
     */
   private def sanitizedUriPath(uriPath: String): String = {
@@ -249,7 +253,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         .filter(_.trim.nonEmpty)
         .map { part =>
           if (part.startsWith("{") && part.endsWith("}")) {
-            val safe = sanitizeName(part.drop(1).dropRight(1))
+            val safe = sanitizeMemberName(part.drop(1).dropRight(1))
             s"{$safe}"
           } else {
             part

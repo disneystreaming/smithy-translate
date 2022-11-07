@@ -115,7 +115,7 @@ final class ParameterSpec extends munit.FunSuite {
                             |structure GenerateActivationTokenInput {
                             |    @httpHeader("X-Header-Test")
                             |    @required
-                            |    XHeaderTest: String,
+                            |    X_Header_Test: String,
                             |}""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
@@ -152,7 +152,7 @@ final class ParameterSpec extends munit.FunSuite {
                             |
                             |@http(
                             |    method: "GET",
-                            |    uri: "/content-providers/{contentProvider}/activation-token",
+                            |    uri: "/content-providers/{content_provider}/activation-token",
                             |    code: 200,
                             |)
                             |operation GenerateActivationToken {
@@ -163,7 +163,7 @@ final class ParameterSpec extends munit.FunSuite {
                             |structure GenerateActivationTokenInput {
                             |    @httpLabel
                             |    @required
-                            |    contentProvider: String,
+                            |    content_provider: String,
                             |}""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)

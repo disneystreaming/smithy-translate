@@ -70,7 +70,7 @@ final class OperationHeaderSpec extends munit.FunSuite {
                       |
                       |structure TestOperationIdInput {
                       |    @httpHeader("X-username")
-                      |    XUsername: String,
+                      |    X_username: String,
                       |}
                       |
                       |structure Object {
@@ -149,7 +149,7 @@ final class OperationHeaderSpec extends munit.FunSuite {
                       |    @contentType("application/json")
                       |    body: Object,
                       |    @httpHeader("X-RateLimit-Limit")
-                      |    XRateLimitLimit: Integer,
+                      |    X_RateLimit_Limit: Integer,
                       |}
                       |""".stripMargin
 
@@ -216,7 +216,7 @@ final class OperationHeaderSpec extends munit.FunSuite {
                       |
                       |structure TestOperationIdInput {
                       |    @httpHeader("X-username")
-                      |    XUsername: String,
+                      |    X_username: String,
                       |    @httpPayload
                       |    @documentation("Optional description in *Markdown*")
                       |    @contentType("application/json")
@@ -303,7 +303,7 @@ final class OperationHeaderSpec extends munit.FunSuite {
                       |    @contentType("application/json")
                       |    body: Object,
                       |    @httpHeader("X-Test-Header")
-                      |    XTestHeader: Integer
+                      |    X_Test_Header: Integer
                       |}
                       |""".stripMargin
 
@@ -378,7 +378,7 @@ final class OperationHeaderSpec extends munit.FunSuite {
                     |    @contentType("application/json")
                     |    body: Body,
                     |    @httpHeader("X-Test-Header")
-                    |    XTestHeader: Integer,
+                    |    X_Test_Header: Integer,
                     |}
                     |
                     |structure Body {
