@@ -1243,7 +1243,7 @@ There are a few importing things to notice
 2. The value is an array. This is because Smithy will concatenate the arrays if the model contains multiple entries
 3. Each entry of the array is an object where the keys are the namespace and the values are objects that represent the options
 4. Entries for other namespaces are ignored (for example, `demo` in the example below)
-5. The object that represent an option can only use `String` as value (see the example below). More detail below.
+5. The object that represents an option can only use `String` as value (see the example below). More detail below.
 
 #### Stringly typed options
 
