@@ -31,7 +31,8 @@ object TransitiveModel {
       model: Model,
       entryPoints: List[ShapeId],
       captureTraits: Boolean,
-      validateModel: Boolean = true
+      captureMetadata: Boolean,
+      validateModel: Boolean
   ): Model = {
     val walker = new Walker(
       if (captureTraits)
@@ -64,15 +65,29 @@ object TransitiveModel {
        else allShapes.map(clearTraitsFromShape)) ++ idRefShapes
 
     if (validateModel) {
-      Model
-        .assembler()
+      val assembler = Model.assembler()
+      assembler
         .addShapes(
           allShapesFinal.toList: _*
         )
+      if (captureMetadata) {
+        model.getMetadata().forEach { case (k, v) =>
+          val _ = assembler.putMetadata(k, v)
+        }
+      }
+
+      assembler
         .assemble()
         .unwrap()
     } else {
-      Model.builder().addShapes(allShapesFinal.toList: _*).build()
+      Model
+        .builder()
+        .addShapes(allShapesFinal.toList: _*)
+        .metadata(
+          if (captureMetadata) model.getMetadata()
+          else java.util.Collections.emptyMap()
+        )
+        .build()
     }
   }
 

@@ -61,6 +61,8 @@ class Compiler() {
   }
 
   def compile(model: Model): List[OutputFile] = {
+    val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
+
     model.toShapeSet.toList
       .filterNot(ShapeFiltering.exclude)
       .groupBy(_.getId().getNamespace())
@@ -71,6 +73,13 @@ class Compiler() {
             .map(m => Statement.TopLevelStatement(m))
         }
         if (mappings.nonEmpty) {
+          val options =
+            allProtocOptions
+              .getOrElse(ns, Map.empty)
+              .map { case (key, value) =>
+                TopLevelOption(key, value)
+              }
+              .toList
           val currentFqn = Namespacing.namespaceToFqn(ns)
           val imports = mappings
             .map(resolveImports)
@@ -80,7 +89,7 @@ class Compiler() {
               Statement.ImportStatement(filePath(fqn).mkString("/"))
             }
             .distinct
-          val unit = CompilationUnit(Some(ns), imports ++ mappings)
+          val unit = CompilationUnit(Some(ns), imports ++ mappings, options)
           List(OutputFile(filePath(currentFqn), unit))
         } else Nil
       }
