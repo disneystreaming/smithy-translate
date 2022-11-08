@@ -41,6 +41,7 @@ object ModelPreProcessor {
                 .filter(id => allowedNamespace.forall(_ == id.getNamespace()))
                 .toList,
               captureTraits = true,
+              captureMetadata = true,
               validateModel =
                 false // model may be in invalid state since it is in a transient/intermediary state of the proto conversion
             )

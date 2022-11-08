@@ -34,10 +34,13 @@ object Validator {
       override def getMessage(): String = {
         s"""|
             |EXPECTED:
+            |```
             |${expected.mkString("\n")}
-            |
+            |```
             |FOUND:
+            |```
             |${found.mkString("\n")}
+            |```
             |""".stripMargin
       }
     }
@@ -165,17 +168,33 @@ object Validator {
       smithy: String,
       protoInputs: NonEmptyList[String]
   ): List[ValidationError] = {
-    val namespace = "foo"
-    val actualSmithy = s"""|$$version: "2"
-                           |
-                           |namespace $namespace
-                           |
-                           |$smithy""".stripMargin
-    val getActualProto: String => String =
-      proto => s"""|syntax = "proto3";
-                   |
-                   |package $namespace;
-                   |$proto""".stripMargin
+    val lines = smithy.split("\n")
+    val maybeNamespace =
+      lines.find(_.contains("namespace ")).map(_.split(" ")(1))
+
+    val (namespace, actualSmithy) = maybeNamespace
+      .map { ns => ns -> smithy }
+      .getOrElse {
+        val ns = "foo"
+        ns ->
+          s"""|$$version: "2"
+            |
+            |namespace $ns
+            |
+            |$smithy""".stripMargin
+      }
+    val getActualProto: String => String = { proto =>
+      val lines = proto.split("\n")
+      if (lines.exists(_.contains("syntax = "))) {
+        proto
+      } else {
+        s"""|syntax = "proto3";
+            |
+            |package $namespace;
+            |
+            |$proto""".stripMargin
+      }
+    }
     val ActualProto = protoInputs.map(getActualProto).toList.sorted
     val compiler = new ProtoCompiler()
     val inputModel = Model
