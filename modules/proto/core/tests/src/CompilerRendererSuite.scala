@@ -43,6 +43,10 @@ class CompilerRendererSuite extends FunSuite {
   }
 
   test("top level - document") {
+    val source = """|namespace com.example
+                    |
+                    |document SomeDoc
+                    |""".stripMargin
     val expected = """|syntax = "proto3";
                     |
                     |package com.example;
@@ -52,10 +56,6 @@ class CompilerRendererSuite extends FunSuite {
                     |message SomeDoc {
                     |  google.protobuf.Any value = 1;
                     |}
-                    |""".stripMargin
-    val source = """|namespace com.example
-                    |
-                    |document SomeDoc
                     |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
   }
