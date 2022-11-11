@@ -144,7 +144,7 @@ class RendererSuite extends FunSuite {
                     List(
                       Field(
                         repeated = false,
-                        deprecated = true,
+                        deprecated = false,
                         Type.Int32,
                         "a",
                         1
@@ -177,7 +177,7 @@ class RendererSuite extends FunSuite {
       |message Foo {
       |  oneof foo_oneof {
       |    int32 a = 1;
-      |    repeated string b = 2;
+      |    repeated string b = 2 [deprecated = true];
       |  }
       |}
       |""".stripMargin
