@@ -76,6 +76,25 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("com/example.proto" -> expected))
   }
 
+  test("top level - structure") {
+    val source = """|namespace com.example
+                  |
+                  |structure MyStruct {
+                  |  @required
+                  |  value: String
+                  |}
+                  |""".stripMargin
+    val expected = """|syntax = "proto3";
+                    |
+                    |package com.example;
+                    |
+                    |message MyStruct {
+                    |  string value = 1;
+                    |}
+                    |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
+  }
+
   test("top level - int") {
     val source = """|namespace com.example
                   |
