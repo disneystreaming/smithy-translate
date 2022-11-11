@@ -53,7 +53,13 @@ object ProtoIR {
 
   final case class Oneof(name: String, fields: List[Field])
 
-  final case class Field(repeated: Boolean, ty: Type, name: String, number: Int)
+  final case class Field(
+      repeated: Boolean,
+      deprecated: Boolean,
+      ty: Type,
+      name: String,
+      number: Int
+  )
 
   sealed trait Reserved
   object Reserved {
