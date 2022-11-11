@@ -124,10 +124,9 @@ class Compiler() {
         .foldLeft[Set[Fqn]](Set.empty)(_ ++ _)
     def resolveMessageElement(elem: MessageElement): Set[Fqn] =
       elem match {
-        case MessageElement.FieldElement(field)    => resolveField(field)
-        case MessageElement.MessageDefElement(msg) => resolveMessage(msg)
-        case MessageElement.OneofElement(oneof)    => resolveOneof(oneof)
-        case _                                     => Set.empty
+        case MessageElement.FieldElement(field) => resolveField(field)
+        case MessageElement.OneofElement(oneof) => resolveOneof(oneof)
+        case _                                  => Set.empty
       }
     def resolveOneof(oneof: Oneof): Set[Fqn] =
       oneof.fields.map(resolveField).foldLeft[Set[Fqn]](Set.empty)(_ ++ _)

@@ -95,10 +95,9 @@ object Renderer {
 
   def renderMessageElement(element: MessageElement): Text =
     element match {
-      case MessageElement.FieldElement(field)        => renderField(field)
-      case MessageElement.EnumDefElement(enumDef)    => renderEnum(enumDef)
-      case MessageElement.MessageDefElement(message) => renderMessage(message)
-      case MessageElement.OneofElement(oneof)        => renderOneof(oneof)
+      case MessageElement.FieldElement(field)     => renderField(field)
+      case MessageElement.EnumDefElement(enumDef) => renderEnum(enumDef)
+      case MessageElement.OneofElement(oneof)     => renderOneof(oneof)
     }
 
   // collapses into a few reserved statements

@@ -48,7 +48,6 @@ object ProtoIR {
   object MessageElement {
     final case class FieldElement(field: Field) extends MessageElement
     final case class EnumDefElement(enumValue: Enum) extends MessageElement
-    final case class MessageDefElement(message: Message) extends MessageElement
     final case class OneofElement(oneof: Oneof) extends MessageElement
   }
 
