@@ -263,6 +263,47 @@ class CompilerRendererSuite extends FunSuite {
     convertWithApiCheck(source, Map("com/example.proto" -> expected))
   }
 
+  test("proto top-level deprecated") {
+    val source = """|$version: "2"
+                    |
+                    |namespace another.namespace
+                    |
+                    |@deprecated
+                    |string SomeString
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package another.namespace;
+                      |
+                      |message SomeString {
+                      |  string value = 1 [deprecated = true];
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("another/namespace.proto" -> expected))
+  }
+
+  test("proto structure deprecated") {
+    val source = """|$version: "2"
+                    |
+                    |namespace another.namespace
+                    |
+                    |structure MyStruct {
+                    |  @required
+                    |  @deprecated
+                    |  value: String
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package another.namespace;
+                      |
+                      |message MyStruct {
+                      |  string value = 1 [deprecated = true];
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("another/namespace.proto" -> expected))
+  }
+
   test("protoNumType") {
     val source = """|namespace com.example
                   |

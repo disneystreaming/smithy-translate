@@ -31,8 +31,24 @@ class RendererSuite extends FunSuite {
             Message(
               "Foo",
               List(
-                MessageElement.FieldElement(Field(false, Type.Int32, "a", 1)),
-                MessageElement.FieldElement(Field(true, Type.String, "b", 2))
+                MessageElement.FieldElement(
+                  Field(
+                    repeated = false,
+                    deprecated = false,
+                    Type.Int32,
+                    "a",
+                    1
+                  )
+                ),
+                MessageElement.FieldElement(
+                  Field(
+                    repeated = true,
+                    deprecated = false,
+                    Type.String,
+                    "b",
+                    2
+                  )
+                )
               ),
               Nil
             )
@@ -61,8 +77,12 @@ class RendererSuite extends FunSuite {
     val node = Message(
       "Foo",
       List(
-        MessageElement.FieldElement(Field(false, Type.Int32, "a", 1)),
-        MessageElement.FieldElement(Field(true, Type.String, "b", 2))
+        MessageElement.FieldElement(
+          Field(repeated = false, deprecated = false, Type.Int32, "a", 1)
+        ),
+        MessageElement.FieldElement(
+          Field(repeated = true, deprecated = false, Type.String, "b", 2)
+        )
       ),
       List(
         Reserved.Number(3),
@@ -122,8 +142,20 @@ class RendererSuite extends FunSuite {
                   Oneof(
                     "foo_oneof",
                     List(
-                      Field(false, Type.Int32, "a", 1),
-                      Field(true, Type.String, "b", 2)
+                      Field(
+                        repeated = false,
+                        deprecated = true,
+                        Type.Int32,
+                        "a",
+                        1
+                      ),
+                      Field(
+                        repeated = true,
+                        deprecated = true,
+                        Type.String,
+                        "b",
+                        2
+                      )
                     )
                   )
                 )

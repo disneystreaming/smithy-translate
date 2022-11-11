@@ -20,6 +20,7 @@ import smithytranslate.closure.ModelOps._
 import software.amazon.smithy.model.loader.Prelude
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes._
+import software.amazon.smithy.model.traits.DeprecatedTrait
 import software.amazon.smithy.model.traits.EnumTrait
 import software.amazon.smithy.model.traits.RequiredTrait
 import software.amazon.smithy.model.traits.SparseTrait
@@ -155,7 +156,9 @@ class Compiler() {
     new ShapeVisitor.Default[Mappings] {
       private def topLevelMessage(shape: Shape, ty: Type) = {
         val name = shape.getId.getName
-        val field = Field(false, ty, "value", 1)
+        val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
+        val field =
+          Field(repeated = false, deprecated = isDeprecated, ty, "value", 1)
         val message =
           Message(name, List(MessageElement.FieldElement(field)), Nil)
         List(TopLevelDef.MessageDef(message))
@@ -287,7 +290,14 @@ class Compiler() {
             val numType = extractNumType(m)
             val fieldType =
               targetShape.accept(typeVisitor(model, isBoxed, numType)).get
-            Field(false, fieldType, fieldName, fieldIndex)
+            val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
+            Field(
+              repeated = false,
+              deprecated = isDeprecated,
+              fieldType,
+              fieldName,
+              fieldIndex
+            )
         }
 
         val messageElements = fields.map(f => MessageElement.FieldElement(f))
@@ -310,7 +320,14 @@ class Compiler() {
               targetShape
                 .accept(typeVisitor(model, isRequired = true, numType))
                 .get
-            Field(false, fieldType, fieldName, fieldIndex)
+            val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
+            Field(
+              repeated = false,
+              deprecated = isDeprecated,
+              fieldType,
+              fieldName,
+              fieldIndex
+            )
         }
 
         val message =

@@ -126,7 +126,8 @@ object Renderer {
   def renderField(field: Field): Text = {
     val repeated = if (field.repeated) "repeated " else ""
     val ty = renderType(field.ty)
-    statement(s"$repeated$ty ${field.name} = ${field.number}")
+    val deprecated = if (field.deprecated) " [deprecated = true]" else ""
+    statement(s"$repeated$ty ${field.name} = ${field.number}$deprecated")
   }
 
   def renderService(service: Service): Text =
