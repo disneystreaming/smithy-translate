@@ -95,10 +95,9 @@ object Renderer {
 
   def renderMessageElement(element: MessageElement): Text =
     element match {
-      case MessageElement.FieldElement(field)        => renderField(field)
-      case MessageElement.EnumDefElement(enumDef)    => renderEnum(enumDef)
-      case MessageElement.MessageDefElement(message) => renderMessage(message)
-      case MessageElement.OneofElement(oneof)        => renderOneof(oneof)
+      case MessageElement.FieldElement(field)     => renderField(field)
+      case MessageElement.EnumDefElement(enumDef) => renderEnum(enumDef)
+      case MessageElement.OneofElement(oneof)     => renderOneof(oneof)
     }
 
   // collapses into a few reserved statements
@@ -127,7 +126,8 @@ object Renderer {
   def renderField(field: Field): Text = {
     val repeated = if (field.repeated) "repeated " else ""
     val ty = renderType(field.ty)
-    statement(s"$repeated$ty ${field.name} = ${field.number}")
+    val deprecated = if (field.deprecated) " [deprecated = true]" else ""
+    statement(s"$repeated$ty ${field.name} = ${field.number}$deprecated")
   }
 
   def renderService(service: Service): Text =
