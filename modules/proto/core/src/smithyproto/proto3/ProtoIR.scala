@@ -48,13 +48,18 @@ object ProtoIR {
   object MessageElement {
     final case class FieldElement(field: Field) extends MessageElement
     final case class EnumDefElement(enumValue: Enum) extends MessageElement
-    final case class MessageDefElement(message: Message) extends MessageElement
     final case class OneofElement(oneof: Oneof) extends MessageElement
   }
 
   final case class Oneof(name: String, fields: List[Field])
 
-  final case class Field(repeated: Boolean, ty: Type, name: String, number: Int)
+  final case class Field(
+      repeated: Boolean,
+      deprecated: Boolean,
+      ty: Type,
+      name: String,
+      number: Int
+  )
 
   sealed trait Reserved
   object Reserved {

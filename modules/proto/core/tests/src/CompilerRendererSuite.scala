@@ -43,6 +43,10 @@ class CompilerRendererSuite extends FunSuite {
   }
 
   test("top level - document") {
+    val source = """|namespace com.example
+                    |
+                    |document SomeDoc
+                    |""".stripMargin
     val expected = """|syntax = "proto3";
                     |
                     |package com.example;
@@ -52,10 +56,6 @@ class CompilerRendererSuite extends FunSuite {
                     |message SomeDoc {
                     |  google.protobuf.Any value = 1;
                     |}
-                    |""".stripMargin
-    val source = """|namespace com.example
-                    |
-                    |document SomeDoc
                     |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
   }
@@ -70,6 +70,25 @@ class CompilerRendererSuite extends FunSuite {
                     |package com.example;
                     |
                     |message SomeString {
+                    |  string value = 1;
+                    |}
+                    |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
+  }
+
+  test("top level - structure") {
+    val source = """|namespace com.example
+                  |
+                  |structure MyStruct {
+                  |  @required
+                  |  value: String
+                  |}
+                  |""".stripMargin
+    val expected = """|syntax = "proto3";
+                    |
+                    |package com.example;
+                    |
+                    |message MyStruct {
                     |  string value = 1;
                     |}
                     |""".stripMargin
@@ -242,6 +261,47 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
     convertWithApiCheck(source, Map("com/example.proto" -> expected))
+  }
+
+  test("proto top-level deprecated") {
+    val source = """|$version: "2"
+                    |
+                    |namespace another.namespace
+                    |
+                    |@deprecated
+                    |string SomeString
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package another.namespace;
+                      |
+                      |message SomeString {
+                      |  string value = 1 [deprecated = true];
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("another/namespace.proto" -> expected))
+  }
+
+  test("proto structure deprecated") {
+    val source = """|$version: "2"
+                    |
+                    |namespace another.namespace
+                    |
+                    |structure MyStruct {
+                    |  @required
+                    |  @deprecated
+                    |  value: String
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package another.namespace;
+                      |
+                      |message MyStruct {
+                      |  string value = 1 [deprecated = true];
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("another/namespace.proto" -> expected))
   }
 
   test("protoNumType") {
