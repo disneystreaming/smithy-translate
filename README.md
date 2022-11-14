@@ -1123,6 +1123,11 @@ message Testing {
 
 Smithy:
 ```kotlin
+structure Union {
+  @required
+  value: TestUnion
+}
+
 union TestUnion {
     num: Integer,
     txt: String
@@ -1131,8 +1136,8 @@ union TestUnion {
 
 Proto:
 ```proto
-message TestUnion {
-  oneof TestUnionOneof {
+message Union {
+  oneof value {
     int32 num = 1;
     string txt = 2;
   }
