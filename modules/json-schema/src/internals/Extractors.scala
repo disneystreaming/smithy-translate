@@ -27,7 +27,6 @@ import smithytranslate.openapi.internals.Hint
 import smithytranslate.openapi.internals.GetExtensions
 import scala.jdk.CollectionConverters._
 import cats.syntax.all._
-import scala.collection.immutable.VectorImpl
 
 object Extractors {
 
