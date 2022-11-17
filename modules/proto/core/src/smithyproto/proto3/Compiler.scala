@@ -61,11 +61,10 @@ class Compiler() {
       excludeInternal(s) || Prelude.isPreludeShape(s)
   }
 
-  /** Union shape can be used zero time, in which case they're exported in a top
-    * level message with one `value` member of type `oneOf`.
+  /** Unused union shape are not exported.
     *
-    * They can be used one time, in which case they're exported within the
-    * structure that uses them.
+    * Union shapes used exactly once are exported within the structure that uses
+    * them.
     *
     * If they're used more than once, this function will throw.
     */
