@@ -18,6 +18,7 @@ package smithytranslate.cli.opts
 import com.monovore.decline._
 import cats.data.NonEmptyList
 import cats.syntax.all._
+import smithytranslate.cli.opts.SmithyTranslateCommand.ProtoTranslate
 
 case class ProtoOpts(
     inputFiles: NonEmptyList[os.Path],
@@ -53,5 +54,5 @@ object ProtoOpts {
     header =
       "Take Smithy definitions as input and produce Proto files as output."
   ) { opts }
-  val smithyToProto = Opts.subcommand(smithyToProtoCmd)
+  val smithyToProto = Opts.subcommand(smithyToProtoCmd).map(ProtoTranslate)
 }
