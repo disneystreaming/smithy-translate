@@ -58,10 +58,24 @@ structure HelloResponse {
 
     @protoIndex(3)
     apiStruct: UseApiStruct
+
+    @required
+    apiUnion: ApiUnion
+
+    @protoIndex(6)
+    @required
+    anotherLong: Long,
 }
 
 structure UseApiStruct {
   bigInt: BigInteger,
   bigDec: BigDecimal,
   ts: Timestamp
+}
+
+union ApiUnion {
+  @protoIndex(4)
+  version: String,
+  @protoIndex(5)
+  id: Integer
 }

@@ -30,6 +30,11 @@ message HelloResponse {
   string message = 1;
   google.protobuf.UInt64Value size = 2;
   demo.UseApiStruct apiStruct = 3;
+  oneof apiUnion {
+    string version = 4;
+    int32 id = 5;
+  }
+  int64 anotherLong = 6;
 }
 
 message UseApiStruct {
