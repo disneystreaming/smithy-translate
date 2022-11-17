@@ -15,9 +15,10 @@
 
 package smithytranslate.cli.opts
 
-import com.monovore.decline._
-import cats.syntax.all._
+import com.monovore.decline.*
+import cats.syntax.all.*
 import cats.data.NonEmptyList
+import smithytranslate.cli.opts.SmithyTranslateCommand.OpenApiTranslate
 
 final case class OpenAPIJsonSchemaOpts(
     isOpenapi: Boolean,
@@ -74,12 +75,14 @@ object OpenAPIJsonSchemaOpts {
     name = "openapi-to-smithy",
     header = "Take Open API specs as input and produce Smithy files as output."
   ) { getOpts(isOpenapi = true) }
-  val openApiToSmithy = Opts.subcommand(openApiToSmithyCmd)
+  val openApiToSmithy =
+    Opts.subcommand(openApiToSmithyCmd).map(OpenApiTranslate)
 
   private val jsonSchemaToSmithyCmd = Command(
     name = "json-schema-to-smithy",
     header =
       "Take Json Schema specs as input and produce Smithy files as output."
   ) { getOpts(isOpenapi = false) }
-  val jsonSchemaToSmithy = Opts.subcommand(jsonSchemaToSmithyCmd)
+  val jsonSchemaToSmithy =
+    Opts.subcommand(jsonSchemaToSmithyCmd).map(OpenApiTranslate)
 }

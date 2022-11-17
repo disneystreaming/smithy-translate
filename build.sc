@@ -1,3 +1,4 @@
+import $file.scalablytyped
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
@@ -10,9 +11,13 @@ import mill.scalalib.scalafmt.ScalafmtModule
 import mill._
 import mill.modules.Jvm
 import mill.scalalib._
+import mill.scalajslib.api.ModuleKind
+import mill.scalajslib.ScalaJSModule
 import mill.scalalib.api.Util._
 import mill.scalalib.publish._
+import mill.define.Sources
 import os._
+
 
 import scala.Ordering.Implicits._
 import coursier.maven.MavenRepository
@@ -114,6 +119,11 @@ trait BaseScalaNoPublishModule extends BaseModule with ScalaVersionModule {
 }
 
 trait BaseScalaModule extends BaseScalaNoPublishModule with BasePublishModule
+trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
+  def scalaJSVersion = "1.11.0"
+  def moduleKind = ModuleKind.CommonJSModule
+}
+
 
 trait BaseJavaNoPublishModule extends BaseModule with JavaModule {}
 
@@ -176,7 +186,7 @@ object cli extends BaseScalaModule {
     Deps.smithy.build
   )
 
-  def moduleDeps = Seq(openapi, proto.core, `json-schema`)
+  def moduleDeps = Seq(openapi, proto.core, `json-schema`,formatter.jvm)
 
   def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
     val inputArgs = inputs.flatMap { p =>
@@ -190,6 +200,28 @@ object cli extends BaseScalaModule {
       runClasspath().map(_.path),
       mainArgs = args
     )
+  }
+}
+
+object formatter extends BaseModule { outer =>
+  val deps = Agg(
+    ivy"org.typelevel::cats-parse::0.3.8"
+  )
+
+  object jvm extends BaseScalaModule {
+    override def ivyDeps = T { super.ivyDeps() ++ deps }
+    override def millSourcePath = outer.millSourcePath
+  }
+
+  object js extends BaseScalaJSModule {
+    override def ivyDeps = T { super.ivyDeps() ++ deps }
+    override def millSourcePath = outer.millSourcePath
+
+    def jsSources = T.sources { millSourcePath / "src-js" }
+
+    override def sources: Sources = T.sources {
+      super.sources() ++ jsSources()
+    }
   }
 }
 
