@@ -17,16 +17,17 @@ package smithytranslate.cli.opts
 import cats.data.NonEmptyList
 import cats.implicits.catsSyntaxTuple2Semigroupal
 import com.monovore.decline.{Command, Opts}
+import smithytranslate.cli.opts.CommonOpts.osPathArg
 import smithytranslate.cli.opts.SmithyTranslateCommand.Format
 
-import java.nio.file.Path
-
 object FormatterOpts {
-  case class FormatOpts(smithyFile: NonEmptyList[Path], noClobber: Boolean)
+  case class FormatOpts(smithyFile: NonEmptyList[os.Path], noClobber: Boolean)
   val header = "validates and formats smithy files"
 
-  val smithyFile: Opts[NonEmptyList[Path]] =
-    Opts.arguments[Path]("path to smithy file")
+  val smithyFile: Opts[NonEmptyList[os.Path]] =
+    Opts.arguments[os.Path](
+      "path to Smithy file or directory containing Smithy files"
+    )
   val noClobber: Opts[Boolean] = Opts
     .flag(
       "no-clobber",

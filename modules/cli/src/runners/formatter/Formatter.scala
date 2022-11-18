@@ -17,52 +17,78 @@ package cli
 package runners
 package formatter
 
-import software.amazon.smithy.model.Model
-import java.nio.file.Path
+import cats.data.Validated
+import os.Path
+import smithytranslate.cli.runners.formatter.FormatterError.{InvalidModel, UnableToParse}
 import smithytranslate.formatter.parsers.SmithyParserLive
-import smithytranslate.formatter.writers.Writer.WriterOps
 import smithytranslate.formatter.writers.IdlWriter.idlWriter
+import smithytranslate.formatter.writers.Writer.WriterOps
+import software.amazon.smithy.model.Model
+
+import scala.util.Try
 
 object Formatter {
 
-  def reformat(smithyFilePath: Path, noClobber: Boolean): Unit = {
-    val basePath = os.pwd / os.RelPath(smithyFilePath)
-    val contents: String = os.read(basePath)
-    if (validator.validate(contents))
-      SmithyParserLive
-        .parse(contents)
-        .fold(
-          message =>
-            println(
-              s"unable to parse file at ${smithyFilePath.getFileName} because of ${message}"
-            ),
-          idl => {
-            val newPath =
-              if (noClobber) {
-                val newFile = basePath
-                  .getSegment(basePath.segmentCount - 1)
-                  .split("\\.")
-                  .mkString("_formatted.")
-                os.Path(basePath.wrapped.getParent) / s"$newFile"
-              } else basePath
+  def reformat(
+      smithyFilePath: os.Path,
+      noClobber: Boolean
+  ): List[Validated[FormatterError, Path]] = {
 
-            os.write.over(newPath, idl.write)
-          }
+    val filesAndContent: List[(Path, String)] = discoverFiles(smithyFilePath)
+
+    filesAndContent.map { case (basePath, contents) =>
+      if (validator.validate(contents))
+        SmithyParserLive
+          .parse(contents)
+          .fold(
+            message => Validated.Invalid(UnableToParse(message)),
+            idl => {
+              val newPath =
+                if (noClobber) {
+                  val newFile = basePath
+                    .getSegment(basePath.segmentCount - 1).split("\\.").mkString("_formatted.")
+                  os.Path(basePath.wrapped.getParent) / s"$newFile"
+                } else basePath
+
+              os.write.over(newPath, idl.write)
+              Validated.Valid(newPath)
+            }
+          )
+      else {
+        Validated.Invalid(
+          InvalidModel(basePath.toNIO.getFileName.toString)
         )
-    else {
-      println("Invalid Smithy file")
-    }
+      }
 
+    }
+  }
+
+  def discoverFiles(smithyFilePath: os.Path): List[(Path, String)] = {
+    if (os.isDir(smithyFilePath)) {
+      val smithyFiles = os.walk(smithyFilePath).filter(p => p.ext == "smithy")
+      smithyFiles.map { discoveredPath =>
+        discoveredPath -> os.read(discoveredPath)
+      }.toList
+    } else {
+      List(smithyFilePath -> os.read(smithyFilePath))
+    }
   }
 }
 
+sealed trait FormatterError extends Throwable
+object FormatterError {
+  case class UnableToParse(cause: String) extends FormatterError
+  case class InvalidModel(fileName: String) extends FormatterError
+}
 object validator {
   def validate(smithy: String): Boolean = {
-    Model
-      .assembler()
-      .addUnparsedModel("formatter.smithy", smithy)
-      .assemble()
-      .validate()
-      .isPresent
+    Try {
+      Model
+        .assembler()
+        .addUnparsedModel("formatter.smithy", smithy)
+        .assemble()
+        .validate()
+        .isPresent
+    }.getOrElse(false)
   }
 }

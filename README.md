@@ -53,6 +53,8 @@ _Note: this library is published to work on Java 8 and above. However, you will 
   - [Options](#options)
     - [Stringly typed options](#stringly-typed-options)
     - [Example](#example)
+- [Formatter](#formatter)
+  - [CLI Usage](#cli-usage-3)
 
 ## Alloy
 
@@ -163,7 +165,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
  @required
  myString: String
@@ -194,7 +196,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
  @jsonName("12_twelve")
  n12_twelve: String
@@ -236,7 +238,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use alloy#untagged
 
 structure Cat {
@@ -292,7 +294,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Number {
     @required
     num: Integer,
@@ -353,7 +355,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use alloy#discriminated
 
 structure Cat {
@@ -389,7 +391,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 list StringArray {
     member: String
 }
@@ -414,7 +416,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 @uniqueItems
 list StringSet {
     member: String
@@ -439,7 +441,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 map StringStringMap {
     key: String,
     value: String
@@ -470,7 +472,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 enum Color {
   red
   green
@@ -480,7 +482,7 @@ enum Color {
 
 Or if using the `useEnumTraitSyntax` flag:
 
-```kotlin
+```smithy
 @enum([
  {value: "red"},
  {value: "green"},
@@ -506,7 +508,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 @pattern("^\\d{3}-\\d{2}-\\d{4}$")
 string MyString
 ```
@@ -562,7 +564,7 @@ to inform the naming of the operation and the various shapes it
 contains.
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -639,7 +641,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -719,7 +721,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -803,7 +805,7 @@ paths:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentTypeDiscriminated
 use smithytranslate#contentType
 
@@ -881,7 +883,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#openapiExtensions
 
 @openapiExtensions(
@@ -952,7 +954,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#defaultValue
 
 structure Person {
@@ -986,7 +988,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#nullable
 
 structure Foo {
@@ -1022,7 +1024,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 map TestMap {
  key: String,
  value: String
@@ -1102,7 +1104,7 @@ _Note: we can see from the table that the `@protoNumType` has no effect on non-r
 ##### Structure
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
   myString: String,
   myInt: Integer
@@ -1122,7 +1124,7 @@ message Testing {
 ##### Union
 
 Smithy:
-```kotlin
+```smithy
 union TestUnion {
     num: Integer,
     txt: String
@@ -1142,7 +1144,7 @@ message TestUnion {
 ##### List
 
 Smithy:
-```kotlin
+```smithy
 list StringArrayType {
     member: String
 }
@@ -1161,7 +1163,7 @@ message StringArray {
 ##### Map
 
 Smithy:
-```kotlin
+```smithy
 map StringStringMapType {
     key: String,
     value: String
@@ -1183,7 +1185,7 @@ message StringStringMap {
 ##### Enum
 
 Smithy:
-```kotlin
+```smithy
 enum Color {
     RED
     GREEN
@@ -1205,7 +1207,7 @@ enum Color {
 ##### Basic Service
 
 Smithy:
-```kotlin
+```smithy
 use alloy.proto#protoEnabled
 
 @protoEnabled
@@ -1287,7 +1289,7 @@ We used a `String` to represent the option such as `"true"` for a boolean and `"
 The following is an example:
 
 Smithy:
-```kotlin
+```smithy
 $version: "2"
 
 metadata "proto_options" = [{
@@ -1318,3 +1320,36 @@ message MyString {
   string value = 1;
 }
 ```
+
+## formatter
+
+
+### CLI Usage
+
+The `smithytranslate` CLI will recursively go through all child directories of the
+input directory provided and convert any openapi files ending with an extension of `yaml`,
+`yml`, or `json`.
+
+```
+> smithytranslate openapi-to-smithy --help
+
+Usage: smithy-translate openapi-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
+
+Take Open API specs as input and produce Smithy files as output.
+
+Options and flags:
+    --help
+        Display this help text.
+    --input <path>, -i <path>
+        input source files
+    --verboseNames
+        If set, names of shapes not be simplified and will be as verbose as possible
+    --failOnValidationErrors
+        If set, abort the conversion if any specs contains a validation error
+    --useEnumTraitSyntax
+        output enum types with the smithy v1 enum trait (deprecated) syntax
+    --outputJson
+        changes output format to be json representations of the smithy models
+```
+
+Run `smithytranslate openapi-to-smithy --help` for more usage information.

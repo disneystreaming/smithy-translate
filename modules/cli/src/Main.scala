@@ -15,21 +15,23 @@
 
 package smithytranslate.cli
 
+import cats.data.Validated
 import com.monovore.decline.Opts
-import smithytranslate.cli.opts.{
-  FormatterOpts,
-  OpenAPIJsonSchemaOpts,
-  ProtoOpts,
-  SmithyTranslateCommand
-}
 import smithytranslate.cli.opts.FormatterOpts.FormatOpts
 import smithytranslate.cli.opts.SmithyTranslateCommand.{
   Format,
   OpenApiTranslate,
   ProtoTranslate
 }
-import smithytranslate.cli.runners.{OpenApi, Proto}
+import smithytranslate.cli.opts.{
+  FormatterOpts,
+  OpenAPIJsonSchemaOpts,
+  ProtoOpts,
+  SmithyTranslateCommand
+}
 import smithytranslate.cli.runners.formatter.Formatter.reformat
+import smithytranslate.cli.runners.formatter.FormatterError
+import smithytranslate.cli.runners.{OpenApi, Proto}
 
 object Main
     extends smithytranslate.cli.CommandApp(
@@ -47,9 +49,21 @@ object Main
             OpenApi.runOpenApi(opts)
           case OpenApiTranslate(opts) => OpenApi.runJsonSchema(opts)
           case ProtoTranslate(opts)   => Proto.runFromCli(opts)
-          case Format(FormatOpts(smithyFile, noClobber)) =>
-            smithyFile.foldLeft(()) { case (_, path) =>
-              reformat(path, noClobber)
+          case Format(FormatOpts(files, noClobber)) =>
+            files.toList.flatMap(file => reformat(file, noClobber)).foreach {
+              case Validated.Valid(smithyFile) =>
+                println(s"Reformatted $smithyFile")
+              case Validated.Invalid(formatterError) =>
+                formatterError match {
+                  case FormatterError.UnableToParse(message) =>
+                    println(
+                      s"unable to parse the Smithy file for the following reason: $message"
+                    )
+                  case FormatterError.InvalidModel(file) =>
+                    println(
+                      s"the Smithy file '$file' passed in did not pass the Aws Model Validation "
+                    )
+                }
             }
         }
       }
