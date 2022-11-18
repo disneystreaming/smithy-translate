@@ -25,6 +25,7 @@ import software.amazon.smithy.model.traits.EnumTrait
 import software.amazon.smithy.model.traits.RequiredTrait
 import software.amazon.smithy.model.traits.SparseTrait
 import software.amazon.smithy.model.traits.UnitTypeTrait
+import software.amazon.smithy.model.traits.TraitDefinition
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
@@ -57,8 +58,12 @@ class Compiler() {
       !passthroughShapeNames(shape.getId().getName())
     }
 
+    def traitShapes(s: Shape): Boolean = {
+      s.hasTrait(classOf[TraitDefinition])
+    }
+
     def exclude(s: Shape): Boolean =
-      excludeInternal(s) || Prelude.isPreludeShape(s)
+      excludeInternal(s) || Prelude.isPreludeShape(s) || traitShapes(s)
   }
 
   /** Unused union shape are not exported.

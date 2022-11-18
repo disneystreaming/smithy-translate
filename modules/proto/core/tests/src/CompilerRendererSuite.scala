@@ -689,6 +689,32 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("test/definitions.proto" -> expected))
   }
 
+  test("do not render shapes used in trait definition") {
+    val source = """|namespace test
+                    |
+                    |@trait()
+                    |structure compat {
+                    |  @required
+                    |  mode: String
+                    |}
+                    |
+                    |@compat(mode: "ignored")
+                    |structure Test {
+                    |  @required
+                    |  s: String
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message Test {
+                      |  string s = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("test/definitions.proto" -> expected))
+  }
+
   test("service with protoEnabled") {
     val source = """|namespace test
                   |
