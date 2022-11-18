@@ -330,7 +330,7 @@ object Deps {
     val parse = ivy"org.typelevel::cats-parse:0.3.8"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
-  val decline = ivy"com.monovore::decline:2.3.1"
+  val decline = ivy"com.monovore::decline:2.4.0"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.8.1"
   }
