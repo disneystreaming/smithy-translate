@@ -55,6 +55,8 @@ _Note: this library is published to work on Java 8 and above. However, you will 
     - [Example](#example)
 - [Formatter](#formatter)
   - [CLI Usage](#cli-usage-3)
+  - [Capabilities and Design](#capabilities-and-design)
+
 
 ## Alloy
 
@@ -1327,29 +1329,24 @@ message MyString {
 ### CLI Usage
 
 The `smithytranslate` CLI will recursively go through all child directories of the
-input directory provided and convert any openapi files ending with an extension of `yaml`,
-`yml`, or `json`.
+input directory provided and format any Smithy files it finds. The output 
 
 ```
-> smithytranslate openapi-to-smithy --help
+> smithytranslate format --help
 
-Usage: smithy-translate openapi-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
+Usage: smithy-translate format [--no-clobber] <path to Smithy file or directory containing Smithy files>...
 
-Take Open API specs as input and produce Smithy files as output.
+validates and formats smithy files
 
 Options and flags:
     --help
         Display this help text.
-    --input <path>, -i <path>
-        input source files
-    --verboseNames
-        If set, names of shapes not be simplified and will be as verbose as possible
-    --failOnValidationErrors
-        If set, abort the conversion if any specs contains a validation error
-    --useEnumTraitSyntax
-        output enum types with the smithy v1 enum trait (deprecated) syntax
-    --outputJson
-        changes output format to be json representations of the smithy models
+    --no-clobber
+        dont overwrite existing file instead create a new file with the word 'formatted' appended so test.smithy -> test_formatted.smithy
 ```
 
-Run `smithytranslate openapi-to-smithy --help` for more usage information.
+### Capabilities and Design
+ - The formatter is based off the ABNF defined at [Smithy-Idl-ABNF](https://smithy.io/2.0/spec/idl.html#smithy-idl-abnf) 
+ - The formatter assumes the file is a valid Smithy file and must be able to pass the Model Assembler validation , otherwise it will return an error
+ - use --no-clobber to create a new file to avoid overwriting the original file
+ - actual formatting rules are still WIP and will be updated as the formatter is developed
