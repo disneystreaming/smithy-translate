@@ -34,14 +34,20 @@ object Formatter {
 
   def reformat(
       smithyWorkspacePath: os.Path,
-      noClobber: Boolean
+      noClobber: Boolean,
+      validate: Boolean
   ): List[Validated[FormatterError, Path]] = {
 
     val filesAndContent: List[(Path, String)] = discoverFiles(
       smithyWorkspacePath
     )
+
     filesAndContent.map { case (basePath, contents) =>
-      if (validator.validate(contents)) {
+      if (validate && !validator.validate(contents)) {
+        Validated.Invalid(
+          InvalidModel(basePath.toNIO.getFileName.toString)
+        )
+      } else {
         SmithyParserLive
           .parse(contents)
           .fold(
@@ -60,10 +66,6 @@ object Formatter {
               Validated.Valid(newPath)
             }
           )
-      } else {
-        Validated.Invalid(
-          InvalidModel(basePath.toNIO.getFileName.toString)
-        )
       }
 
     }

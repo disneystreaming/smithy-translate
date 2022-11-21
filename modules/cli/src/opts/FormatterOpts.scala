@@ -15,13 +15,17 @@
 package smithytranslate.cli.opts
 
 import cats.data.NonEmptyList
-import cats.implicits.catsSyntaxTuple2Semigroupal
+import cats.implicits.catsSyntaxTuple3Semigroupal
 import com.monovore.decline.{Command, Opts}
 import smithytranslate.cli.opts.CommonOpts.osPathArg
 import smithytranslate.cli.opts.SmithyTranslateCommand.Format
 
 object FormatterOpts {
-  case class FormatOpts(smithyFile: NonEmptyList[os.Path], noClobber: Boolean)
+  case class FormatOpts(
+      smithyFile: NonEmptyList[os.Path],
+      noClobber: Boolean,
+      validateModel: Boolean
+  )
   val header = "validates and formats smithy files"
 
   val smithyFile: Opts[NonEmptyList[os.Path]] =
@@ -35,8 +39,15 @@ object FormatterOpts {
     )
     .orFalse
 
+  val validateModel: Opts[Boolean] = Opts
+    .flag(
+      "validate-model",
+      "validate the model before formatting"
+    )
+    .orFalse
+
   val formatOpts: Opts[FormatOpts] =
-    (smithyFile, noClobber).mapN(FormatOpts.apply)
+    (smithyFile, noClobber, validateModel).mapN(FormatOpts.apply)
 
   val formatCommand: Command[FormatOpts] =
     Command(name = "format", header = header)(formatOpts)
