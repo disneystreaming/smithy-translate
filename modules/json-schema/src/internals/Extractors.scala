@@ -183,6 +183,12 @@ object Extractors {
         val genericHints = getGenericHints(sch)
         Option(obj.getPatternProperties().asScala.head._2)
           .map(genericHints -> _)
+      case (obj: ObjectSchema)
+          if obj.getPropertySchemas().size() == 0 && obj
+            .getSchemaOfAdditionalProperties() != null =>
+        val genericHints = getGenericHints(sch)
+        Option(obj.getSchemaOfAdditionalProperties())
+          .map(genericHints -> _)
       case _ => None
     }
   }
