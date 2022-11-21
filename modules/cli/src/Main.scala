@@ -50,21 +50,24 @@ object Main
           case OpenApiTranslate(opts) => OpenApi.runJsonSchema(opts)
           case ProtoTranslate(opts)   => Proto.runFromCli(opts)
           case Format(FormatOpts(files, noClobber)) =>
-            files.toList.flatMap(file => reformat(file, noClobber)).foreach {
-              case Validated.Valid(smithyFile) =>
-                println(s"Reformatted $smithyFile")
-              case Validated.Invalid(formatterError) =>
-                formatterError match {
-                  case FormatterError.UnableToParse(message) =>
-                    println(
-                      s"unable to parse the Smithy file for the following reason: $message"
-                    )
-                  case FormatterError.InvalidModel(file) =>
-                    println(
-                      s"the Smithy file '$file' passed in did not pass the Aws Model Validation "
-                    )
-                }
-            }
+            files.toList.foreach(file =>
+              reformat(file, noClobber) match {
+                case Validated.Valid(smithyFile) =>
+                  println(s"Reformatted ${smithyFile.mkString("\n")}")
+                case Validated.Invalid(formatterError) =>
+                  formatterError.toList.foreach {
+                    case FormatterError.UnableToParse(message) =>
+                      println(
+                        s"unable to parse the Smithy file for the following reason: $message"
+                      )
+                    case FormatterError.InvalidModel(file) =>
+                      println(
+                        s"the Smithy file '$file' passed in did not pass the Aws Model Validation "
+                      )
+
+                  }
+              }
+            )
         }
       }
     )

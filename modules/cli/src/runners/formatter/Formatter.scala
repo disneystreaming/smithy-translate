@@ -17,9 +17,15 @@ package cli
 package runners
 package formatter
 
-import cats.data.Validated
+import cats.data.{Validated, ValidatedNel}
+import cats.implicits.toTraverseOps
+import cats.implicits.*
+import cats.syntax.all.*
 import os.Path
-import smithytranslate.cli.runners.formatter.FormatterError.{InvalidModel, UnableToParse}
+import smithytranslate.cli.runners.formatter.FormatterError.{
+  InvalidModel,
+  UnableToParse
+}
 import smithytranslate.formatter.parsers.SmithyParserLive
 import smithytranslate.formatter.writers.IdlWriter.idlWriter
 import smithytranslate.formatter.writers.Writer.WriterOps
@@ -30,36 +36,44 @@ import scala.util.Try
 object Formatter {
 
   def reformat(
-      smithyFilePath: os.Path,
+      smithyWorkspacePath: os.Path,
       noClobber: Boolean
-  ): List[Validated[FormatterError, Path]] = {
+  ): ValidatedNel[FormatterError, List[Path]] = {
 
-    val filesAndContent: List[(Path, String)] = discoverFiles(smithyFilePath)
+    val filesAndContent: List[(Path, String)] = discoverFiles(
+      smithyWorkspacePath
+    )
 
-    filesAndContent.map { case (basePath, contents) =>
-      if (validator.validate(contents))
-        SmithyParserLive
-          .parse(contents)
-          .fold(
-            message => Validated.Invalid(UnableToParse(message)),
-            idl => {
-              val newPath =
-                if (noClobber) {
-                  val newFile = basePath
-                    .getSegment(basePath.segmentCount - 1).split("\\.").mkString("_formatted.")
-                  os.Path(basePath.wrapped.getParent) / s"$newFile"
-                } else basePath
+    filesAndContent.foldLeft(
+      Validated
+        .valid(List.empty[Path]): ValidatedNel[FormatterError, List[Path]]
+    ) { case (acc, (basePath, contents)) =>
+      val ind: Validated[FormatterError, Path] =
+        if (validator.validate(contents)) {
+          SmithyParserLive
+            .parse(contents)
+            .fold(
+              message => Validated.Invalid(UnableToParse(message)),
+              idl => {
+                val newPath =
+                  if (noClobber) {
+                    val newFile = basePath
+                      .getSegment(basePath.segmentCount - 1)
+                      .split("\\.")
+                      .mkString("_formatted.")
+                    os.Path(basePath.wrapped.getParent) / s"$newFile"
+                  } else basePath
 
-              os.write.over(newPath, idl.write)
-              Validated.Valid(newPath)
-            }
+                os.write.over(newPath, idl.write)
+                Validated.Valid(newPath)
+              }
+            )
+        } else {
+          Validated.Invalid(
+            InvalidModel(basePath.toNIO.getFileName.toString)
           )
-      else {
-        Validated.Invalid(
-          InvalidModel(basePath.toNIO.getFileName.toString)
-        )
-      }
-
+        }
+      acc.combine(ind)
     }
   }
 
