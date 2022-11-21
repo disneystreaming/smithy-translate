@@ -61,7 +61,7 @@ object Main
                     )
                   case FormatterError.InvalidModel(message) =>
                     println(
-                      s"the smithy file passed in did not pass the Aws Model Validation $message"
+                      s"the Smithy file passed in did not pass the  Smithy model validation: $message $message"
                     )
                 }
             }
