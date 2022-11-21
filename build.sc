@@ -211,6 +211,14 @@ object formatter extends BaseModule { outer =>
   object jvm extends BaseScalaModule {
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
+
+    object tests extends this.Tests with TestModule.Munit {
+      def ivyDeps = Agg(
+        Deps.munit,
+        Deps.smithy.build,
+        Deps.lihaoyi.oslib
+      )
+    }
   }
 
   object js extends BaseScalaJSModule {
@@ -223,6 +231,7 @@ object formatter extends BaseModule { outer =>
       super.sources() ++ jsSources()
     }
   }
+
 }
 
 object traits extends BaseJavaModule {
