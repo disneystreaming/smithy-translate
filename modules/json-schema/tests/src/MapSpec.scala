@@ -41,4 +41,27 @@ final class MapSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
+
+  test("additionalProperties") {
+    val jsonSchString = """|{
+                           |  "$id": "test.json",
+                           |  "$schema": "http://json-schema.org/draft-07/schema#",
+                           |  "title": "TestMap",
+                           |  "type": "object",
+                           |  "additionalProperties": {
+                           |    "type": "string"
+                           |  }
+                           |}
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |map TestMap {
+                            | key: String,
+                            | value: String
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
 }
