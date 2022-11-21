@@ -16,35 +16,25 @@ package smithytranslate
 package formatter
 package parsers
 
+import cats.parse.Numbers.nonNegativeIntString
+import cats.parse.Parser
+import cats.parse.Rfc5234.{digit, dquote, hexdig}
 import smithytranslate.formatter.ast.EscapedChar.{CharCase, UnicodeEscape}
+import smithytranslate.formatter.ast.NodeValue.NodeStringValue.{
+  QuotedTextCase,
+  ShapeIdCase,
+  TextBlockCase
+}
+import smithytranslate.formatter.ast.NodeValue.Number.{Exp, Frac}
+import smithytranslate.formatter.ast.NodeValue._
 import smithytranslate.formatter.ast.QuotedChar.{
   EscapedCharCase,
   NewLineCase,
   PreservedDoubleCase,
   SimpleCharCase
 }
-import smithytranslate.formatter.ast.NodeValue.Number.{Exp, Frac}
-import smithytranslate.formatter.ast.NodeValue.{
-  NodeArray,
-  NodeKeyword,
-  NodeObject,
-  NodeObjectKey,
-  NodeObjectKeyValuePair,
-  NodeStringValue,
-  SmithyNumber
-}
-import smithytranslate.formatter.ast.NodeValue.NodeStringValue.{
-  QuotedTextCase,
-  ShapeIdCase,
-  TextBlockCase
-}
+import smithytranslate.formatter.parsers.WhitespaceParser.{NL, sp0, ws}
 import smithytranslate.formatter.ast.{
-  allQuotable,
-  escape,
-  escapeChars,
-  op,
-  openCurly,
-  openSquare,
   EscapedChar,
   NodeValue,
   PreservedDouble,
@@ -52,11 +42,7 @@ import smithytranslate.formatter.ast.{
   QuotedText,
   TextBlock
 }
-import smithytranslate.formatter.ast.whitespace_parser.{sp0, ws, NL}
-import cats.parse.Numbers.nonNegativeIntString
-import cats.parse.Parser
-import cats.parse.Rfc5234.{digit, dquote, hexdig}
-import parsers.ShapeIdParser.{identifier, shape_id}
+import smithytranslate.formatter.parsers.ShapeIdParser.{identifier, shape_id}
 
 object NodeParser {
 

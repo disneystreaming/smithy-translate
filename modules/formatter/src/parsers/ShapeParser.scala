@@ -16,14 +16,10 @@ package smithytranslate
 package formatter
 package parsers
 
-import smithytranslate.formatter.ast.node_parser.{node_value, nodeObject}
-import smithytranslate.formatter.parsers.ShapeIdParser.{
-  absolute_root_shape_id,
-  identifier,
-  namespace,
-  shape_id,
-  shape_id_member
-}
+import cats.parse.{Parser, Parser0}
+import smithytranslate.formatter.ast.{ShapeId, Whitespace, shapes}
+import smithytranslate.formatter.ast.shapes._
+import smithytranslate.formatter.ast.shapes.ShapeBody._
 import smithytranslate.formatter.ast.shapes.ShapeBody.ListStatement.{
   ElidedListMember,
   ExplicitListMember,
@@ -48,23 +44,13 @@ import smithytranslate.formatter.ast.shapes.ShapeBody.StructureMembers.Structure
   ElidedStructureMember,
   ExplicitStructureMember
 }
-import smithytranslate.formatter.ast.shapes.ShapeBody._
 import smithytranslate.formatter.ast.shapes.ShapeStatementsCase.{
   ApplyStatementCase,
   ShapeStatementCase
 }
-import smithytranslate.formatter.ast.shapes._
-import smithytranslate.formatter.ast.whitespace_parser.{br, sp, sp0, ws}
-import smithytranslate.formatter.ast.{
-  closeCurly,
-  closeSquare,
-  openCurly,
-  openSquare,
-  shapes,
-  ShapeId,
-  Whitespace
-}
-import cats.parse.{Parser, Parser0}
+import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws}
+import smithytranslate.formatter.parsers.NodeParser._
+import smithytranslate.formatter.parsers.ShapeIdParser._
 import smithytranslate.formatter.parsers.ShapeParser.list_parsers.list_statement
 import smithytranslate.formatter.parsers.ShapeParser.map_parsers.map_statement
 import smithytranslate.formatter.parsers.ShapeParser.operation_parsers.operation_statement

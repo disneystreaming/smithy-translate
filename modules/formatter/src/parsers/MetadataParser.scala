@@ -16,8 +16,11 @@ package smithytranslate
 package formatter
 package parsers
 
-import smithytranslate.formatter.ast.node_parser.{node_object_key, node_value}
-import smithytranslate.formatter.ast.whitespace_parser.{br, sp, sp0}
+import smithytranslate.formatter.parsers.NodeParser.{
+  node_object_key,
+  node_value
+}
+import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0}
 import cats.parse.{Parser, Parser0}
 import smithytranslate.formatter.ast.MetadataStatement
 import smithytranslate.formatter.ast.MetadataSection

@@ -17,9 +17,9 @@ package formatter
 package parsers
 
 import cats.parse.Parser0
-import smithytranslate.formatter.ast.whitespace_parser.ws
+import smithytranslate.formatter.parsers.WhitespaceParser.ws
 import smithytranslate.formatter.ast.Idl
-import smithytranslate.formatter.ast.control_parser.control_section
+import smithytranslate.formatter.parsers.ControlParser.control_section
 import MetadataParser.metadata_section
 import ShapeParser.shape_section
 

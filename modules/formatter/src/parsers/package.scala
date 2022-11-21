@@ -29,4 +29,12 @@ package object parsers {
   val quotable2: List[Char] = (0x5d.toChar to 0x10ffff.toChar).toList
   val allQuotable: List[Char] = quotable0 ++ quotable1 ++ quotable2
   val op: List[Char] = List('+', '-')
+  val escape: Parser[Unit] = Parser.char(0x5c)
+  val zero: Parser[Unit] = Parser.char('0')
+  val openParentheses: Parser[Unit] = Parser.char('(')
+  val closeParentheses: Parser[Unit] = Parser.char(')')
+  implicit class CharRange(val char: Char) extends AnyVal {
+    def inRange(from: Int, to: Int): Boolean =
+      char >= from && char <= to
+  }
 }

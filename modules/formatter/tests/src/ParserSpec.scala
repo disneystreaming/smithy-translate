@@ -1,4 +1,6 @@
-import smithytranslate.formatter.ast.control_parser.control_section
+package smithytranslate
+package formatter
+import parsers.ControlParser.control_section
 import smithytranslate.formatter.parsers.IdlParser
 import smithytranslate.formatter.parsers.MetadataParser.metadata_section
 
