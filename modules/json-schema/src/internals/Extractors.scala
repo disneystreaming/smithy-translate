@@ -187,8 +187,7 @@ object Extractors {
           if obj.getPropertySchemas().size() == 0 && obj
             .getSchemaOfAdditionalProperties() != null =>
         val genericHints = getGenericHints(sch)
-        Option(obj.getSchemaOfAdditionalProperties())
-          .map(genericHints -> _)
+        Some(genericHints -> obj.getSchemaOfAdditionalProperties())
       case _ => None
     }
   }
