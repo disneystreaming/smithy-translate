@@ -1,4 +1,6 @@
 {
   "imports": ["./modules/proto/examples/smithy"],
-  "mavenDependencies": ["com.disneystreaming.alloy:alloy-core:0.1.0"]
+  "maven": {
+    "dependencies": ["com.disneystreaming.alloy:alloy-core:0.1.2"]
+  }
 }

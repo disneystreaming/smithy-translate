@@ -21,17 +21,7 @@ import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
 
-  test("top level - union") {
-    val expected = """|syntax = "proto3";
-                      |
-                      |package com.example;
-                      |
-                      |message MyUnion {
-                      |  oneof MyUnionOneof {
-                      |    string name = 1;
-                      |    int32 id = 2;
-                      |  }
-                      |}""".stripMargin
+  test("top level - union (not used within a structure) are not exported") {
     val source = """|namespace com.example
                     |
                     |union MyUnion {
@@ -39,7 +29,64 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
+    convertCheck(source, Map.empty)
+  }
+
+  test("top level - union (used within only one data structure)") {
+    val source = """|namespace com.example
+                    |
+                    |structure WithUnion {
+                    |  @required
+                    |  age: Integer
+                    |  @required
+                    |  myUnion: MyUnion
+                    |  @required
+                    |  other: String
+                    |}
+                    |
+                    |union MyUnion {
+                    |  name: String,
+                    |  id: Integer
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message WithUnion {
+                      |  int32 age = 1;
+                      |  oneof myUnion {
+                      |    string name = 2;
+                      |    int32 id = 3;
+                      |  }
+                      |  string other = 4;
+                      |}
+                      |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
+  }
+
+  test("top level - union (used within multiple data structures)") {
+    val source = """|namespace com.example
+                    |
+                    |structure WithUnion {
+                    |  @required
+                    |  myUnion: MyUnion
+                    |}
+                    |
+                    |list OfUnion {
+                    |  member: MyUnion
+                    |}
+                    |
+                    |union MyUnion {
+                    |  name: String,
+                    |  id: Integer
+                    |}
+                    |""".stripMargin
+
+    intercept[RuntimeException](
+      convertCheck(source, Map.empty)
+    )
   }
 
   test("top level - document") {
@@ -571,6 +618,46 @@ class CompilerRendererSuite extends FunSuite {
                    |}
                    |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
+
+  }
+
+  test("inline list with a union") {
+    val source = """|namespace com.example
+                    |
+                    |union MyUnion {
+                    |  name: String,
+                    |  id: Integer
+                    |}
+                    |
+                    |structure UnionStruct {
+                    |  @required
+                    |  value: MyUnion
+                    |}
+                    |
+                    |list ListOfUnion {
+                    |  member: UnionStruct
+                    |}
+                    |
+                    |structure Unions {
+                    |  @required
+                    |  values: ListOfUnion
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message UnionStruct {
+                      |  oneof value {
+                      |    string name = 1;
+                      |    int32 id = 2;
+                      |  }
+                      |}
+                      |
+                      |message Unions {
+                      |  repeated com.example.UnionStruct values = 1;
+                      |}""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("transitive structure with protoEnabled") {
@@ -602,6 +689,34 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
     convertCheck(source, Map("test/definitions.proto" -> expected))
+
+  }
+
+  test("do not render shapes used in trait definition") {
+    val source = """|namespace test
+                    |
+                    |@trait()
+                    |structure compat {
+                    |  @required
+                    |  mode: String
+                    |}
+                    |
+                    |@compat(mode: "ignored")
+                    |structure Test {
+                    |  @required
+                    |  s: String
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message Test {
+                      |  string s = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("test/definitions.proto" -> expected))
+
   }
 
   test("service with protoEnabled") {

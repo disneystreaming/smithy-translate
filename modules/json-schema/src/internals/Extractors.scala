@@ -41,12 +41,33 @@ object Extractors {
   }
 
   object CaseEnum {
+
+    // returns the EnumSchema if the only two schemas in the vector are an
+    // enum and a string type. This indicates that it is an enum of type
+    // string.
+    private def onlyEnumAndStringType(v: Vector[Schema]): Option[EnumSchema] = {
+      v.toList match {
+        case (first: EnumSchema) :: (_: StringSchema) :: Nil  => Some(first)
+        case (_: StringSchema) :: (second: EnumSchema) :: Nil => Some(second)
+        case _                                                => None
+      }
+    }
+
+    private def getValues(e: EnumSchema): Vector[String] = {
+      e.getPossibleValues.asScala.collect { case s: String =>
+        s
+      }.toVector
+    }
+
     def unapply(sch: Schema): Option[(List[Hint], Vector[String])] = sch match {
       case e: EnumSchema =>
-        val enumValues = e.getPossibleValues.asScala.collect { case s: String =>
-          s
-        }.toVector
+        val enumValues = getValues(e)
         Some(getGenericHints(sch) -> enumValues)
+      case CaseAllOf(_, schemas) =>
+        onlyEnumAndStringType(schemas) match {
+          case None    => None
+          case Some(e) => Some(getGenericHints(sch) -> getValues(e))
+        }
       case _ => None
     }
   }

@@ -3,7 +3,7 @@
 ## cli
 
 ```
-mill proto.cli.run --namespaces demo -i modules/proto/examples/smithy/demo.smithy modules/proto/examples/protobuf/
+mill cli.run smithy-to-proto -i modules/proto/examples/smithy/demo.smithy modules/proto/examples/protobuf/
 ```
 
 ## shell

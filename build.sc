@@ -132,8 +132,8 @@ trait BaseJavaModule extends BaseJavaNoPublishModule with BasePublishModule
 trait BaseMunitTests extends TestModule.Munit {
   def ivyDeps =
     Agg(
-      ivy"org.scalameta::munit::1.0.0-M6",
-      ivy"org.scalameta::munit-scalacheck::1.0.0-M6"
+      ivy"org.scalameta::munit::1.0.0-M7",
+      ivy"org.scalameta::munit-scalacheck::1.0.0-M7"
     )
 }
 
@@ -334,7 +334,7 @@ object transitive extends BaseScalaModule {
 
 object Deps {
   object alloy {
-    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.0"
+    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.2"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.3"
@@ -343,10 +343,10 @@ object Deps {
     val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.1"
   }
   val slf4j =
-    ivy"org.slf4j:slf4j-nop:2.0.3" // needed since swagger-parser relies on slf4j-api
+    ivy"org.slf4j:slf4j-nop:2.0.4" // needed since swagger-parser relies on slf4j-api
   object swagger {
     val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.8",
+      ivy"io.swagger.parser.v3:swagger-parser:2.1.9",
       // included to override the version brought in by swagger-parser which has a vulnerability
       ivy"org.mozilla:rhino:1.7.14"
     )
@@ -362,7 +362,7 @@ object Deps {
     val parse = ivy"org.typelevel::cats-parse:0.3.8"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
-  val decline = ivy"com.monovore::decline:2.3.1"
+  val decline = ivy"com.monovore::decline:2.4.0"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.8.1"
   }

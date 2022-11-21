@@ -1127,6 +1127,11 @@ message Testing {
 
 Smithy:
 ```smithy
+structure Union {
+  @required
+  value: TestUnion
+}
+
 union TestUnion {
     num: Integer,
     txt: String
@@ -1135,8 +1140,8 @@ union TestUnion {
 
 Proto:
 ```proto
-message TestUnion {
-  oneof TestUnionOneof {
+message Union {
+  oneof value {
     int32 num = 1;
     string txt = 2;
   }
@@ -1291,7 +1296,7 @@ We used a `String` to represent the option such as `"true"` for a boolean and `"
 The following is an example:
 
 Smithy:
-```smithy
+```kotlin
 $version: "2"
 
 metadata "proto_options" = [{
