@@ -105,6 +105,30 @@ class ModelPrePocessorSpec extends FunSuite {
     }
   }
 
+  test("alloy#UUID is converted to smithytranslate#UUID") {
+    val smithy = s"""|namespace test
+                     |
+                     |use alloy#UUID
+                     |
+                     |structure Test {
+                     |  @required
+                     |  id: UUID
+                     |}
+                     |""".stripMargin
+    checkTransformer(
+      smithy,
+      ModelPreProcessor.transformers.CompactUUID
+    ) { case (original, transformed) =>
+      val removed = Set(
+        ShapeId.from("alloy#UUID")
+      )
+      removed.foreach { sId =>
+        assertEquals(original.getShape(sId).isPresent(), true)
+        assertEquals(transformed.getShape(sId).isPresent(), false)
+      }
+    }
+  }
+
   /** Here, only BigInteger is used. We expect smithytranslate#BigInteger to be
     * included, but not smithytranslate#BigDecimal or smithytranslate#Timestamp
     */

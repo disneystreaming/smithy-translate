@@ -15,7 +15,10 @@
 
 package smithyproto.proto3
 
+import java.util.stream.Collectors
+
 import smithytranslate.closure.TransitiveModel
+import smithytranslate.UUID
 import software.amazon.smithy.build.{ProjectionTransformer, TransformContext}
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.loader.Prelude
@@ -186,10 +189,112 @@ object ModelPreProcessor {
         }
       }
 
+    /** Transforms UUID into a structure that produces the following protobuf
+      * message:
+      * ```proto
+      * message UUID {
+      *   int64 upper_bits = 1;
+      *   int64 lower_bits = 2;
+      * }
+      * ```
+      */
+    val CompactUUID: ProjectionTransformer =
+      new ProjectionTransformer() {
+
+        def getName(): String = "compact-alloy-uuid"
+        def transform(x: TransformContext): Model = {
+          val uuidShapeId = ShapeId.fromParts("alloy", "UUID")
+          val newUUIDShapeId = ShapeId.fromParts("smithytranslate", "UUID")
+
+          /** Visitor to replace any reference to alloy#UUID in member shapes to
+            * a custom alloy#CompactUUID shape.
+            */
+          val updateMemberShapes = new ShapeVisitor.Default[Shape]() {
+            override protected def getDefault(shape: Shape): Shape =
+              shape
+
+            private def updateMember(shape: MemberShape): MemberShape = {
+              if (shape.getTarget() == uuidShapeId) {
+                shape.toBuilder().target(newUUIDShapeId).build()
+              } else {
+                shape
+              }
+            }
+
+            override def structureShape(shape: StructureShape): Shape = {
+              shape
+                .toBuilder()
+                .members(
+                  shape
+                    .getAllMembers()
+                    .values()
+                    .stream()
+                    .map(updateMember)
+                    .collect(Collectors.toList())
+                )
+                .build()
+
+            }
+            override def unionShape(shape: UnionShape): Shape = {
+              shape
+                .toBuilder()
+                .members(
+                  shape
+                    .getAllMembers()
+                    .values()
+                    .stream()
+                    .map(updateMember)
+                    .collect(Collectors.toList())
+                )
+                .build()
+            }
+            override def listShape(shape: ListShape): Shape = {
+              shape
+                .toBuilder()
+                .member(updateMember(shape.getMember()))
+                .build()
+            }
+            override def mapShape(shape: MapShape): Shape = {
+              shape
+                .toBuilder()
+                .key(updateMember(shape.getKey()))
+                .value(updateMember(shape.getValue()))
+                .build()
+            }
+          }
+          val uuidUsage = x
+            .getModel()
+            .getMemberShapes()
+            .stream()
+            .filter { _.getTarget() == uuidShapeId }
+            .count()
+          if (uuidUsage > 0) {
+            val updatedShapes = x
+              .getModel()
+              .toSet()
+              .stream()
+              // remove reference to alloy#UUID
+              .filter(_.getId() != uuidShapeId)
+              .map { _shape =>
+                _shape.accept(updateMemberShapes)
+              }
+              .collect(Collectors.toList())
+            Model
+              .builder()
+              .addShapes(updatedShapes)
+              .addShape(UUID.shape)
+              .build()
+          } else {
+            x.getModel()
+          }
+        }
+      }
+
     def all(allowedNamespace: Option[String]): List[ProjectionTransformer] =
       Transitive(allowedNamespace) ::
         PreludeReplacements ::
         PreventEnumConflicts ::
+        CompactUUID ::
         Nil
   }
 
@@ -197,7 +302,6 @@ object ModelPreProcessor {
       model: Model,
       transformers: List[ProjectionTransformer]
   ): Model = {
-
     transformers.foldLeft(model) { (acc, transformer) =>
       transformer.transform(TransformContext.builder().model(acc).build())
     }
