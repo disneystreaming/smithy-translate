@@ -1097,6 +1097,26 @@ There are more precises number scalar types in protobuf that don't exist in Smit
 
 _Note: we can see from the table that the `@protoNumType` has no effect on non-required integer/long (except `UNSIGNED`). This is because there are no FIXED, FIXED_SIGNED or SIGNED instances in the Google's protobuf wrappers_
 
+Smithy Translate has special support for `alloy#UUID`. A custom `message` is used in place of `alloy#UUID`. This message is defined as such and it is optmized for compactness:
+
+Smithy:
+```kotlin
+structure UUID {
+  @required
+  upper_bits: Long
+  @required
+  lower_bits: Long
+}
+```
+
+Proto:
+```proto
+message UUID {
+  int64 upper_bits = 1;
+  int64 lower_bits = 2;
+}
+```
+
 #### Aggregate Types
 
 ##### Structure
