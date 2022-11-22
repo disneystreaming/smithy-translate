@@ -163,7 +163,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
  @required
  myString: String
@@ -194,7 +194,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
  @jsonName("12_twelve")
  n12_twelve: String
@@ -236,7 +236,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use alloy#untagged
 
 structure Cat {
@@ -292,7 +292,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 structure Number {
     @required
     num: Integer,
@@ -353,7 +353,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use alloy#discriminated
 
 structure Cat {
@@ -389,7 +389,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 list StringArray {
     member: String
 }
@@ -414,7 +414,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 @uniqueItems
 list StringSet {
     member: String
@@ -439,7 +439,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 map StringStringMap {
     key: String,
     value: String
@@ -470,7 +470,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 enum Color {
   red
   green
@@ -480,7 +480,7 @@ enum Color {
 
 Or if using the `useEnumTraitSyntax` flag:
 
-```kotlin
+```smithy
 @enum([
  {value: "red"},
  {value: "green"},
@@ -506,7 +506,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 @pattern("^\\d{3}-\\d{2}-\\d{4}$")
 string MyString
 ```
@@ -562,7 +562,7 @@ to inform the naming of the operation and the various shapes it
 contains.
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -639,7 +639,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -719,7 +719,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentType
 
 service FooService {
@@ -803,7 +803,7 @@ paths:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#contentTypeDiscriminated
 use smithytranslate#contentType
 
@@ -881,7 +881,7 @@ components:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#openapiExtensions
 
 @openapiExtensions(
@@ -952,7 +952,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#defaultValue
 
 structure Person {
@@ -986,7 +986,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 use smithytranslate#nullable
 
 structure Foo {
@@ -1022,7 +1022,7 @@ JSON Schema:
 ```
 
 Smithy:
-```kotlin
+```smithy
 map TestMap {
  key: String,
  value: String
@@ -1100,7 +1100,7 @@ _Note: we can see from the table that the `@protoNumType` has no effect on non-r
 Smithy Translate has special support for `alloy#UUID`. A custom `message` is used in place of `alloy#UUID`. This message is defined as such and it is optmized for compactness:
 
 Smithy:
-```kotlin
+```smithy
 structure UUID {
   @required
   upper_bits: Long
@@ -1122,7 +1122,7 @@ message UUID {
 ##### Structure
 
 Smithy:
-```kotlin
+```smithy
 structure Testing {
   myString: String,
   myInt: Integer
@@ -1142,7 +1142,7 @@ message Testing {
 ##### Union
 
 Smithy:
-```kotlin
+```smithy
 structure Union {
   @required
   value: TestUnion
@@ -1167,7 +1167,7 @@ message Union {
 ##### List
 
 Smithy:
-```kotlin
+```smithy
 list StringArrayType {
     member: String
 }
@@ -1186,7 +1186,7 @@ message StringArray {
 ##### Map
 
 Smithy:
-```kotlin
+```smithy
 map StringStringMapType {
     key: String,
     value: String
@@ -1208,7 +1208,7 @@ message StringStringMap {
 ##### Enum
 
 Smithy:
-```kotlin
+```smithy
 enum Color {
     RED
     GREEN
@@ -1230,7 +1230,7 @@ enum Color {
 ##### Basic Service
 
 Smithy:
-```kotlin
+```smithy
 use alloy.proto#protoEnabled
 
 @protoEnabled
@@ -1312,7 +1312,7 @@ We used a `String` to represent the option such as `"true"` for a boolean and `"
 The following is an example:
 
 Smithy:
-```kotlin
+```smithy
 $version: "2"
 
 metadata "proto_options" = [{

@@ -63,7 +63,7 @@ object ReadmeParser {
 
   def parse(input: String): Either[ParserError, ParserResult] = {
     val openapiHeader = header("OpenAPI:", "yaml")
-    val smithyHeader = header("Smithy:", "kotlin")
+    val smithyHeader = header("Smithy:", "smithy")
     val protoHeader = header("Proto:", "proto")
     val jsonHeader = header("JSON Schema:", "json")
 
