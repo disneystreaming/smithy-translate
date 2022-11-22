@@ -33,7 +33,7 @@ import smithytranslate.formatter.ast.QuotedChar.{
   PreservedDoubleCase,
   SimpleCharCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{NL, sp0, ws}
+import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws}
 import smithytranslate.formatter.ast.{
   EscapedChar,
   NodeValue,
@@ -60,11 +60,11 @@ object NodeParser {
   val QuotedChar: Parser[QuotedChar] =
     qChar.backtrack.map(SimpleCharCase) | escaped_char.backtrack.map(
       EscapedCharCase
-    ) | preserved_double.map(PreservedDoubleCase) | NL.as(NewLineCase)
+    ) | preserved_double.map(PreservedDoubleCase) | nl.as(NewLineCase)
 
   val ThreeDquotes = dquote ~ dquote ~ dquote
   val text_block: Parser[TextBlock] =
-    ((ThreeDquotes ~ sp0 *> NL) *> QuotedChar.rep0 <* ThreeDquotes)
+    ((ThreeDquotes ~ sp0 *> nl) *> QuotedChar.rep0 <* ThreeDquotes)
       .map(TextBlock)
   val quoted_text: Parser[QuotedText] =
     (dquote *> QuotedChar.rep0 <* dquote).map(QuotedText)

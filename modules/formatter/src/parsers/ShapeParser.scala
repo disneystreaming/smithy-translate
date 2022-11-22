@@ -180,7 +180,7 @@ object ShapeParser {
         }
 
     val map_members =
-      (openCurly *> (ws ~ map_key ~ br ~ map_value ~ ws) <* closeCurly).map {
+      (openCurly *> (ws ~ map_key ~ ws ~ map_value ~ ws) <* closeCurly).map {
         case ((((ws0, key), br), value), ws2) =>
           MapMembers(ws0, key, br, value, ws2)
       }
@@ -250,11 +250,11 @@ object ShapeParser {
   object operation_parsers {
     val ir: Parser[(Whitespace, ShapeId)] = Parser.char(':') *> ws ~ shape_id
     val operation_input: Parser[OperationInput] =
-      (Parser.string("input") *> ws ~ ir.eitherOr(inline_structure) ~ ws).map {
+      (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(inline_structure) ~ ws).map {
         case ((ws0, either), ws1) => OperationInput(ws0, either, ws1)
       }
     val operation_output: Parser[OperationOutput] =
-      (Parser.string("output") *> ws ~ ir.eitherOr(inline_structure) ~ ws).map {
+      (Parser.string("output") *> ws ~ ir.backtrack.eitherOr(inline_structure) ~ ws).map {
         case ((ws0, either), ws1) => OperationOutput(ws0, either, ws1)
       }
     val operation_errors: Parser[OperationErrors] =
