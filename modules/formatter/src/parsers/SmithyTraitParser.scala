@@ -48,7 +48,7 @@ object SmithyTraitParser {
     )
   //  "(" ws trait_body_value ws ")"
   val strait_body: Parser0[TraitBody] =
-    ((openParentheses *> ws ~ strait_body_value ~ ws) <* closeParentheses)
+    ((openParentheses *> ws ~ strait_body_value.? ~ ws) <* closeParentheses)
       .map { case ((a, b), c) =>
         TraitBody(a, b, c)
       }

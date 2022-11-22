@@ -27,7 +27,7 @@ case class SmithyTrait(shapeId: ShapeId, traitBody: Option[TraitBody])
 
 case class TraitBody(
     ws0: Whitespace,
-    traitBodyValue: SmithyTraitBodyValue,
+    traitBodyValue: Option[SmithyTraitBodyValue],
     ws1: Whitespace
 )
 
