@@ -689,6 +689,32 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("test/definitions.proto" -> expected))
   }
 
+  test("uuid can be used") {
+    val source = """|namespace test
+                    |
+                    |use smithytranslate#UUID
+                    |
+                    |structure Test {
+                    |  @required
+                    |  id: UUID
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "smithytranslate/definitions.proto";
+                      |
+                      |message Test {
+                      |  smithytranslate.UUID id = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
   test("do not render shapes used in trait definition") {
     val source = """|namespace test
                     |
@@ -912,6 +938,11 @@ class CompilerRendererSuite extends FunSuite {
                           |message Timestamp {
                           |  int64 value = 1;
                           |}
+                          |
+                          |message UUID {
+                          |  int64 upper_bits = 1;
+                          |  int64 lower_bits = 2;
+                          |}
                           |""".stripMargin
     val newExpected = Map(
       "smithytranslate/definitions.proto" -> expectedApi
@@ -944,7 +975,8 @@ class CompilerRendererSuite extends FunSuite {
           .addShapes(
             smithytranslate.BigInteger.shape,
             smithytranslate.BigDecimal.shape,
-            smithytranslate.Timestamp.shape
+            smithytranslate.Timestamp.shape,
+            smithytranslate.UUID.shape
           )
         srcs.foreach { case (name, src) =>
           assembler.addUnparsedModel(name, src)

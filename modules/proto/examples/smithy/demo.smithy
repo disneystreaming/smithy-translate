@@ -6,6 +6,7 @@ use alloy.proto#protoIndex
 use alloy.proto#protoEnabled
 use alloy.proto#protoReservedFields
 use alloy.proto#protoNumType
+use alloy#UUID
 
 @protoEnabled
 service Hello {
@@ -45,6 +46,9 @@ structure HelloRequest {
 
     @protoIndex(5)
     int: Integer
+
+    @protoIndex(6)
+    id: UUID
 }
 
 structure HelloResponse {

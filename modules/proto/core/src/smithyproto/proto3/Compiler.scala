@@ -46,16 +46,17 @@ class Compiler() {
     */
   object ShapeFiltering {
 
-    private val passthroughShapeNames: Set[String] =
+    private val passthroughShapeIds: Set[ShapeId] =
       Set(
         "BigInteger",
         "BigDecimal",
-        "Timestamp"
-      )
+        "Timestamp",
+        "UUID"
+      ).map(name => ShapeId.fromParts("smithytranslate", name))
     private def excludeInternal(shape: Shape): Boolean = {
       val excludeNs = Set("alloy.proto", "alloy", "smithytranslate")
       excludeNs.contains(shape.getId().getNamespace()) &&
-      !passthroughShapeNames(shape.getId().getName())
+      !passthroughShapeIds(shape.getId())
     }
 
     def traitShapes(s: Shape): Boolean = {
