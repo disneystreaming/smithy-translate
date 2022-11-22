@@ -105,6 +105,29 @@ class ModelPrePocessorSpec extends FunSuite {
     }
   }
 
+  test("smithytranslate UUID is not included if alloy#UUID is not used") {
+    val smithy = s"""|namespace test
+                     |
+                     |structure Test {
+                     |  @required
+                     |  id: String
+                     |}
+                     |""".stripMargin
+    checkTransformer(
+      smithy,
+      ModelPreProcessor.transformers.CompactUUID
+    ) { case (original, transformed) =>
+      assertEquals(
+        original.getShape(ShapeId.from("alloy#UUID")).isPresent(),
+        true
+      )
+      assertEquals(
+        transformed.getShape(ShapeId.from("smithytranslate#UUID")).isPresent(),
+        false
+      )
+    }
+  }
+
   test("alloy#UUID is converted to smithytranslate#UUID") {
     val smithy = s"""|namespace test
                      |
@@ -126,6 +149,9 @@ class ModelPrePocessorSpec extends FunSuite {
         assertEquals(original.getShape(sId).isPresent(), true)
         assertEquals(transformed.getShape(sId).isPresent(), false)
       }
+      assert(
+        transformed.getShape(ShapeId.from("smithytranslate#UUID")).isPresent()
+      )
     }
   }
 
