@@ -15,7 +15,7 @@
 package smithytranslate.cli.opts
 
 import cats.data.NonEmptyList
-import cats.implicits.catsSyntaxTuple3Semigroupal
+import cats.implicits.catsSyntaxTuple4Semigroupal
 import com.monovore.decline.{Command, Opts}
 import smithytranslate.cli.opts.CommonOpts.osPathArg
 import smithytranslate.cli.opts.SmithyTranslateCommand.Format
@@ -24,7 +24,8 @@ object FormatterOpts {
   case class FormatOpts(
       smithyFile: NonEmptyList[os.Path],
       noClobber: Boolean,
-      validateModel: Boolean
+      validateModel: Boolean,
+      smithyBuildJson: Option[os.Path]
   )
   val header = "validates and formats smithy files"
 
@@ -46,8 +47,17 @@ object FormatterOpts {
     )
     .orFalse
 
+  val smithyBuildJson: Opts[Option[os.Path]] = Opts
+    .option[os.Path](
+      "smithy-build-json",
+      "path to smithy-build.json file"
+    )
+    .orNone
+
   val formatOpts: Opts[FormatOpts] =
-    (smithyFile, noClobber, validateModel).mapN(FormatOpts.apply)
+    (smithyFile, noClobber, validateModel, smithyBuildJson).mapN(
+      FormatOpts.apply
+    )
 
   val formatCommand: Command[FormatOpts] =
     Command(name = "format", header = header)(formatOpts)

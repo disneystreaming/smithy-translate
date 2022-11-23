@@ -250,12 +250,16 @@ object ShapeParser {
   object operation_parsers {
     val ir: Parser[(Whitespace, ShapeId)] = Parser.char(':') *> ws ~ shape_id
     val operation_input: Parser[OperationInput] =
-      (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(inline_structure) ~ ws).map {
-        case ((ws0, either), ws1) => OperationInput(ws0, either, ws1)
+      (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(
+        inline_structure
+      ) ~ ws).map { case ((ws0, either), ws1) =>
+        OperationInput(ws0, either, ws1)
       }
     val operation_output: Parser[OperationOutput] =
-      (Parser.string("output") *> ws ~ ir.backtrack.eitherOr(inline_structure) ~ ws).map {
-        case ((ws0, either), ws1) => OperationOutput(ws0, either, ws1)
+      (Parser.string("output") *> ws ~ ir.backtrack.eitherOr(
+        inline_structure
+      ) ~ ws).map { case ((ws0, either), ws1) =>
+        OperationOutput(ws0, either, ws1)
       }
     val operation_errors: Parser[OperationErrors] =
       (((Parser.string("errors") *> ws <* Parser.char(

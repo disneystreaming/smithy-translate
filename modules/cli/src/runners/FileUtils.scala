@@ -15,33 +15,36 @@
 package smithytranslate
 package cli
 package runners
+import cats.data
 import cats.data.NonEmptyList
 
 object FileUtils {
   def readAll(
       paths: NonEmptyList[os.Path],
       includedExtensions: List[String]
-  ): List[(NonEmptyList[String], String)] = {
+  ): List[(data.NonEmptyList[String], String)] = {
     paths.toList.flatMap { path =>
       if (os.isDir(path)) {
         val files = os
           .walk(path)
           .filter(p => includedExtensions.contains(p.ext))
         files.map { in =>
-          val subParts = in
-            .relativeTo(path)
-            .segments
-            .toList
-          val baseNs = path.segments.toList.lastOption.toList
-          val nsPath =
-            baseNs ++ subParts
-          NonEmptyList.fromListUnsafe(nsPath) -> os
+          pathToNel(in, path) -> os
             .read(in)
         }.toList
       } else {
         List((NonEmptyList.of(path.last), os.read(path)))
       }
     }
+  }
+
+  def pathToNel(in: os.Path, path: os.Path): NonEmptyList[String] = {
+    val subParts = in
+      .relativeTo(path)
+      .segments
+      .toList
+    val baseNs = path.segments.toList.lastOption.toList
+    NonEmptyList.fromListUnsafe(baseNs ++ subParts)
   }
 
 }

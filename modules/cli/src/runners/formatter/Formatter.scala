@@ -19,6 +19,7 @@ package formatter
 
 import cats.data.Validated
 import os.Path
+import smithytranslate.cli.opts.FormatterOpts.FormatOpts
 import smithytranslate.cli.runners.formatter.FormatterError.{
   InvalidModel,
   UnableToParse
@@ -32,17 +33,27 @@ import scala.util.Try
 
 object Formatter {
 
-  def reformat(
+  def run(formatOpts: FormatOpts): Unit = {
+    formatOpts match {
+      case FormatOpts(files, noClobber, validateModel, buildFile) =>
+        files.toList.foreach(
+          reformat(_, noClobber, validateModel, buildFile).report()
+        )
+
+    }
+  }
+  private def reformat(
       smithyWorkspacePath: os.Path,
       noClobber: Boolean,
-      validate: Boolean
-  ): List[Validated[FormatterError, Path]] = {
+      validate: Boolean,
+      buildFile: Option[os.Path]
+  ): Report = {
 
     val filesAndContent: List[(Path, String)] = discoverFiles(
       smithyWorkspacePath
     )
 
-    filesAndContent.map { case (basePath, contents) =>
+    val res = filesAndContent.map { case (basePath, contents) =>
       if (validate && !validator.validate(contents)) {
         Validated.Invalid(
           InvalidModel(basePath.toNIO.getFileName.toString)
@@ -69,6 +80,7 @@ object Formatter {
       }
 
     }
+    Report(res)
   }
 
   def discoverFiles(smithyFilePath: os.Path): List[(Path, String)] = {

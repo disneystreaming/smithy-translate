@@ -29,6 +29,6 @@ object SmithyParserLive extends SmithyParser {
     IdlParser.idlParser
       .parseAll(input)
       .leftMap(error =>
-        s"failed at offset ${error.failedAtOffset} with error: ${error.show} ${error._2.map(_.context.mkString("")).toList.mkString}"
+        s"failed at offset ${error.failedAtOffset} with error: ${error.show}  ${error._2.map(_.context.mkString("")).toList.mkString}"
       )
 }
