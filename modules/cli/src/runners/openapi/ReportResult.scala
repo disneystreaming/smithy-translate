@@ -75,7 +75,7 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
         path -> in._2
       }
 
-  def apply(result: OpenApiCompiler.Result[Model]): Unit = {
+  def apply(result: OpenApiCompiler.Result[Model], debug: Boolean): Unit = {
     result match {
       case OpenApiCompiler.Failure(error, modelErrors) =>
         val message = if (modelErrors.isEmpty) {
@@ -87,7 +87,11 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
               |$errorsSummary""".stripMargin
         }
         System.err.println(message)
-        error.printStackTrace(System.err)
+        if (debug) {
+          error.printStackTrace(System.err)
+        } else {
+          System.err.println(error.getMessage())
+        }
       case OpenApiCompiler.Success(modelErrors, model) =>
         modelErrors.foreach(e => System.err.println(e.getMessage()))
         val smithyFiles =
