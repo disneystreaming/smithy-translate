@@ -1,0 +1,102 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Testers Service v1",
+    "description": "",
+    "contact": {
+      "name": "",
+      "url": ""
+    },
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": ""
+    }
+  ],
+  "paths": {
+    "/Testers/{id}": {
+      "get": {
+        "tags": ["Testers"],
+        "summary": "Testers_GetTest",
+        "operationId": "Testers_GetTest",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Format - uuid.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Testers.DataContracts.Responses.Command.GetTestByIdCommandResponse"
+                },
+                "example": {
+                  "Test": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Testers/queries/unique-tags": {
+      "get": {
+        "tags": ["Testers"],
+        "summary": "Testers_GetTestTags",
+        "operationId": "Testers_GetTestTags",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Testers.DataContracts.Responses.Command.GetUniqueTestTagsCommandResponse"
+                },
+                "example": {
+                  "tags": ["string"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Testers.DataContracts.Responses.Command.GetUniqueTestTagsCommandResponse": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Testers.DataContracts.Responses.Command.GetTestByIdCommandResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
