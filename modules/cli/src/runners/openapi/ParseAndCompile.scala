@@ -27,7 +27,8 @@ object ParseAndCompile {
       useVerboseNames: Boolean,
       failOnValidationErrors: Boolean,
       transformers: List[TranslateTransformer],
-      useEnumTraitSyntax: Boolean
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
   ): OpenApiCompiler.Result[Model] = {
     val includedExtensions = List("yaml", "yml", "json")
     val inputs = getInputs(inputPaths, includedExtensions)
@@ -35,7 +36,8 @@ object ParseAndCompile {
       useVerboseNames,
       failOnValidationErrors,
       transformers,
-      useEnumTraitSyntax
+      useEnumTraitSyntax,
+      debug
     )
     OpenApiCompiler.parseAndCompile(opts, inputs: _*)
   }
@@ -45,7 +47,8 @@ object ParseAndCompile {
       useVerboseNames: Boolean,
       failOnValidationErrors: Boolean,
       transformers: List[TranslateTransformer],
-      useEnumTraitSyntax: Boolean
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
   ): OpenApiCompiler.Result[Model] = {
     val includedExtensions = List("json")
     val inputs = getInputs(inputPaths, includedExtensions)
@@ -53,7 +56,8 @@ object ParseAndCompile {
       useVerboseNames,
       failOnValidationErrors,
       transformers,
-      useEnumTraitSyntax
+      useEnumTraitSyntax,
+      debug
     )
     JsonSchemaCompiler.parseAndCompile(opts, inputs: _*)
   }

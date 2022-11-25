@@ -26,7 +26,8 @@ final case class OpenAPIJsonSchemaOpts(
     useVerboseNames: Boolean,
     failOnValidationErrors: Boolean,
     useEnumTraitSyntax: Boolean,
-    outputJson: Boolean
+    outputJson: Boolean,
+    debug: Boolean
 )
 
 object OpenAPIJsonSchemaOpts {
@@ -58,6 +59,13 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
+  private val debug = Opts
+    .flag(
+      "debug",
+      "print more information as when processing the inputes"
+    )
+    .orFalse
+
   private def getOpts(isOpenapi: Boolean) =
     (
       CommonOpts.sources,
@@ -65,9 +73,10 @@ object OpenAPIJsonSchemaOpts {
       verboseNames,
       failOnValidationErrors,
       useEnumTraitSyntax,
-      outputJson
+      outputJson,
+      debug
     ).mapN(
-      OpenAPIJsonSchemaOpts.apply(isOpenapi, _, _, _, _, _, _)
+      OpenAPIJsonSchemaOpts.apply(isOpenapi, _, _, _, _, _, _, _)
     )
 
   private val openApiToSmithyCmd = Command(

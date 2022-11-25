@@ -32,7 +32,8 @@ object OpenApi {
         useVerboseNames = opts.useVerboseNames,
         failOnValidationErrors = opts.failOnValidationErrors,
         transformers,
-        opts.useEnumTraitSyntax
+        opts.useEnumTraitSyntax,
+        opts.debug
       )
     )
   }
@@ -47,7 +48,8 @@ object OpenApi {
         useVerboseNames = opts.useVerboseNames,
         failOnValidationErrors = opts.failOnValidationErrors,
         transformers,
-        opts.useEnumTraitSyntax
+        opts.useEnumTraitSyntax,
+        opts.debug
       )
     )
   }
