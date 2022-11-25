@@ -30,6 +30,9 @@ import software.amazon.smithy.build.TransformContext
 import cats.Functor
 import smithytranslate.openapi.OpenApiCompiler.SmithyVersion.One
 import smithytranslate.openapi.OpenApiCompiler.SmithyVersion.Two
+import software.amazon.smithy.model.validation.ValidatedResultException
+import software.amazon.smithy.model.validation.Severity
+import java.util.stream.Collectors
 
 /** Converts openapi to a smithy model.
   */
@@ -80,8 +83,22 @@ object OpenApiCompiler {
       useVerboseNames: Boolean,
       failOnValidationErrors: Boolean,
       transformers: List[ProjectionTransformer],
-      useEnumTraitSyntax: Boolean
-  )
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
+  ) {
+    val debugModelValidationError: Throwable => Throwable = {
+      case ex: ValidatedResultException if !debug =>
+        new ValidatedResultException(
+          ex.getValidationEvents()
+            .stream()
+            .filter(err =>
+              err.getSeverity == Severity.ERROR || err.getSeverity == Severity.DANGER
+            )
+            .collect(Collectors.toList())
+        )
+      case ex: Throwable => ex
+    }
+  }
 
   type Input = (NonEmptyList[String], Either[List[String], OpenAPI])
 
@@ -139,6 +156,7 @@ object OpenApiCompiler {
     scala.util
       .Try(validate(smithy0))
       .toEither
+      .leftMap(opts.debugModelValidationError)
       .map(transform(opts))
       .fold(
         err => Failure(err, errors),
