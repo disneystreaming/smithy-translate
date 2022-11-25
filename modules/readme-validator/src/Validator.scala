@@ -91,7 +91,8 @@ object Validator {
         useVerboseNames = false,
         failOnValidationErrors = true,
         List.empty,
-        useEnumTraitSyntax = false
+        useEnumTraitSyntax = false,
+        debug = false
       )
     val result =
       OpenApiCompiler.parseAndCompile(
@@ -133,7 +134,8 @@ object Validator {
         useVerboseNames = false,
         failOnValidationErrors = true,
         List.empty,
-        useEnumTraitSyntax = false
+        useEnumTraitSyntax = false,
+        debug = false
       )
     val result =
       JsonSchemaCompiler.parseAndCompile(

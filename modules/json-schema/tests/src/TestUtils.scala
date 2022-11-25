@@ -54,7 +54,8 @@ object TestUtils {
           useVerboseNames = false,
           failOnValidationErrors = false,
           List.empty,
-          input0.smithyVersion == SmithyVersion.One
+          input0.smithyVersion == SmithyVersion.One,
+          debug = true
         ),
         inputs.map(i => i.filePath -> i.jsonSpec): _*
       )
