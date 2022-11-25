@@ -34,7 +34,8 @@ object OpenApi {
         transformers,
         opts.useEnumTraitSyntax,
         opts.debug
-      )
+      ),
+      opts.debug
     )
   }
 
@@ -50,7 +51,8 @@ object OpenApi {
         transformers,
         opts.useEnumTraitSyntax,
         opts.debug
-      )
+      ),
+      opts.debug
     )
   }
 }
