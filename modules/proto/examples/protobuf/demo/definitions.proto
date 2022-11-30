@@ -24,6 +24,7 @@ message HelloRequest {
   demo.Language lang = 2;
   int32 requiredInt = 4;
   google.protobuf.Int32Value int = 5;
+  smithytranslate.UUID id = 6;
 }
 
 message HelloResponse {
