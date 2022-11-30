@@ -35,9 +35,9 @@ object Formatter {
 
   def run(formatOpts: FormatOpts): Unit = {
     formatOpts match {
-      case FormatOpts(files, noClobber, validateModel, buildFile) =>
+      case FormatOpts(files, noClobber, validateModel, _) =>
         files.toList.foreach(
-          reformat(_, noClobber, validateModel, buildFile).report()
+          reformat(_, noClobber, validateModel).report()
         )
 
     }
@@ -45,9 +45,7 @@ object Formatter {
   private def reformat(
       smithyWorkspacePath: os.Path,
       noClobber: Boolean,
-      validate: Boolean,
-      buildFile: Option[os.Path]
-  ): Report = {
+      validate: Boolean): Report = {
 
     val filesAndContent: List[(Path, String)] = discoverFiles(
       smithyWorkspacePath
