@@ -1,4 +1,3 @@
-import $file.scalablytyped
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
