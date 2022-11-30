@@ -175,6 +175,9 @@ object Extractors {
   }
 
   object CaseMap {
+    @annotation.nowarn(
+      "msg=method getPatternProperties in class ObjectSchema is deprecated"
+    )
     def unapply(sch: Schema): Option[(List[Hint], Schema)] = sch match {
       // See http://json-schema.org/draft/2020-12/json-schema-core.html#name-patternproperties
       // This is really not easy to represent in a well-typed manner, so we're just accepting

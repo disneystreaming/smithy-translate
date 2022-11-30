@@ -1,8 +1,9 @@
-import $file.scalablytyped
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.1`
+
+import coursier.maven.MavenRepository
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
@@ -18,9 +19,7 @@ import mill.scalalib.publish._
 import mill.define.Sources
 import os._
 
-
 import scala.Ordering.Implicits._
-import coursier.maven.MavenRepository
 
 trait BaseModule extends Module with HeaderModule {
   def millSourcePath: Path = {
@@ -100,11 +99,8 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   }
 }
 
-trait ScalaVersionModule
-    extends mill.scalalib.bsp.ScalaMetalsSupport
-    with ScalafmtModule {
-  def scalaVersion = T.input("2.13.8")
-  def semanticDbVersion = T.input("4.4.34")
+trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
+  def scalaVersion = T.input("2.13.10")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
@@ -123,7 +119,6 @@ trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
   def scalaJSVersion = "1.11.0"
   def moduleKind = ModuleKind.CommonJSModule
 }
-
 
 trait BaseJavaNoPublishModule extends BaseModule with JavaModule {}
 
@@ -186,7 +181,7 @@ object cli extends BaseScalaModule {
     Deps.smithy.build
   )
 
-  def moduleDeps = Seq(openapi, proto.core, `json-schema`,formatter.jvm)
+  def moduleDeps = Seq(openapi, proto.core, `json-schema`, formatter.jvm)
 
   def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
     val inputArgs = inputs.flatMap { p =>
@@ -278,6 +273,7 @@ object `readme-validator` extends BaseScalaNoPublishModule {
     )
   }
 }
+
 object proto extends Module {
 
   object core extends BaseScalaModule {
@@ -332,6 +328,7 @@ object proto extends Module {
     )
   }
 }
+
 object transitive extends BaseScalaModule {
   def ivyDeps = Agg(
     Deps.smithy.model,

@@ -26,32 +26,32 @@ object string_ops {
       s.substring(0, index) + str + s.substring(index)
     }
     def insertAfter(char: Char, toInsert: String): String = {
-      val index = s.indexOf(char)
+      val index = s.indexOf(char.toInt)
       if (index < 0) s
       else insertAt(index, toInsert)
     }
 
     def insertBefore(char: Char, toInsert: String): String = {
-      val index = s.indexOf(char) - 1
+      val index = s.indexOf(char.toInt) - 1
       if (index < 0) s
       else insertAt(index, toInsert)
     }
 
     def insertAfterLast(char: Char, toInsert: String): String = {
-      val index = s.lastIndexOf(char)
+      val index = s.lastIndexOf(char.toInt)
       if (index < 0) s
       else insertAt(index + 1, toInsert)
     }
 
     def insertBeforeLast(char: Char, toInsert: String): String = {
-      val index = s.lastIndexOf(char)
+      val index = s.lastIndexOf(char.toInt)
       if (index < 0) s
       else insertAt(index, toInsert)
     }
 
-    def slice(string: String, open: Char, close: Char): String = {
-      val openIndex = s.indexOf(open)
-      val closeIndex = s.indexOf(close)
+    def slice(open: Char, close: Char): String = {
+      val openIndex = s.indexOf(open.toInt)
+      val closeIndex = s.indexOf(close.toInt)
       if (openIndex < 0 || closeIndex < 0) s
       else s.substring(openIndex + 1, closeIndex)
 
@@ -89,8 +89,7 @@ object string_ops {
   def indentList[A: Show](
       value: List[A],
       delimiter: String,
-      indentLevel: Int,
-      maxHorizontal: Int
+      indentLevel: Int
   ): String = {
     val indentation = " " * indentLevel
     val intermediate = value
