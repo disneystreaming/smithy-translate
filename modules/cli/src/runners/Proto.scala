@@ -107,7 +107,7 @@ private object Deps {
     val validDeps = DependencyParser
       .dependencies(
         dependencies,
-        defaultScalaVersion = "2.13.8"
+        defaultScalaVersion = "2.13.10"
       )
       .either
       .getOrElse(sys.error("Invalid dependency."))
