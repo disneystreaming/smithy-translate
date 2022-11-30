@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package smithytranslate
 package cli
 package runners
@@ -45,7 +46,8 @@ object Formatter {
   private def reformat(
       smithyWorkspacePath: os.Path,
       noClobber: Boolean,
-      validate: Boolean): Report = {
+      validate: Boolean
+  ): Report = {
 
     val filesAndContent: List[(Path, String)] = discoverFiles(
       smithyWorkspacePath
