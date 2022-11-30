@@ -144,6 +144,7 @@ class Compiler() {
   private def isProtoService(ss: ServiceShape): Boolean =
     ss.hasTrait(classOf[ProtoEnabledTrait])
 
+  @annotation.nowarn("msg=class EnumTrait in package traits is deprecated")
   private def getEnumTrait(s: Shape): Option[EnumTrait] =
     s.getTrait(classOf[EnumTrait]).toScala
 
@@ -588,6 +589,8 @@ class Compiler() {
       def operationShape(shape: OperationShape): Option[Type] = None
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
+
+      @annotation.nowarn("msg=class SetShape in package shapes is deprecated")
       override def setShape(shape: SetShape): Option[Type] = Some(
         Type.MessageType(
           Namespacing.shapeIdToFqn(shape.getId),

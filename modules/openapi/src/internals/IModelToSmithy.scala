@@ -170,7 +170,9 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
   private def buildEnum(e: Enumeration): Shape = {
     val Enumeration(id, values, hints) = e
     if (useEnumTraitSyntax) {
-      val enumTraitBuilder = EnumTrait.builder()
+      val enumTraitBuilder = EnumTrait.builder(): @annotation.nowarn(
+        "msg=class EnumTrait in package traits is deprecated"
+      )
       values.foreach(v =>
         enumTraitBuilder.addEnum(EnumDefinition.builder.value(v).build())
       )
