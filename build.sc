@@ -95,11 +95,8 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   }
 }
 
-trait ScalaVersionModule
-    extends mill.scalalib.bsp.ScalaMetalsSupport
-    with ScalafmtModule {
-  def scalaVersion = T.input("2.13.8")
-  def semanticDbVersion = T.input("4.4.34")
+trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
+  def scalaVersion = T.input("2.13.10")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
