@@ -7,16 +7,19 @@ import coursier.maven.MavenRepository
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
-import mill.contrib.scalapblib.ScalaPBModule
-import mill.scalalib.scalafmt.ScalafmtModule
 import mill._
+import mill.contrib.scalapblib.ScalaPBModule
+import mill.define.Sources
+import mill.define.Task
+import mill.modules.Assembly
 import mill.modules.Jvm
-import mill.scalalib._
 import mill.scalajslib.api.ModuleKind
 import mill.scalajslib.ScalaJSModule
+import mill.scalalib._
 import mill.scalalib.api.Util._
+import mill.scalalib.CrossVersion.Binary
 import mill.scalalib.publish._
-import mill.define.Sources
+import mill.scalalib.scalafmt.ScalafmtModule
 import os._
 
 import scala.Ordering.Implicits._
@@ -214,6 +217,26 @@ object formatter extends BaseModule { outer =>
         Deps.lihaoyi.oslib
       )
     }
+
+    object shaded extends BaseJavaModule {
+
+      override def localClasspath: T[Seq[PathRef]] =
+        formatter.jvm.localClasspath()
+
+      override def resolvedRunIvyDeps: T[Agg[PathRef]] =
+        formatter.jvm.resolvedRunIvyDeps()
+
+      override def publishXmlDeps = T.task { Agg.empty[Dependency] }
+
+      override def assemblyRules: Seq[Assembly.Rule] =
+        super.assemblyRules ++ Seq(
+          Assembly.Rule
+            .Relocate("smithytranslate.**", "smithyfmt.smithytranslate.@1"),
+          Assembly.Rule.Relocate("scala.**", "smithyfmt.scala.@1"),
+          Assembly.Rule.Relocate("cats.**", "smithyfmt.cats.@1")
+        )
+      override def jar: T[PathRef] = assembly
+    }
   }
 
   object js extends BaseScalaJSModule {
@@ -226,7 +249,6 @@ object formatter extends BaseModule { outer =>
       super.sources() ++ jsSources()
     }
   }
-
 }
 
 object traits extends BaseJavaModule {
