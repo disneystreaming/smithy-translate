@@ -237,6 +237,21 @@ object formatter extends BaseModule { outer =>
         )
       override def jar: T[PathRef] = assembly
     }
+
+    object `java-api` extends BaseJavaModule {
+      override def unmanagedClasspath = T {
+        super.unmanagedClasspath() ++ Agg(formatter.jvm.shaded.jar())
+      }
+      override def publishXmlDeps = T.task {
+        Agg(
+          mill.scalalib.publish.Dependency(
+            formatter.jvm.shaded.publishSelfDependency(),
+            Scope.Compile
+          )
+        )
+      }
+      override def millSourcePath = outer.millSourcePath / "java-api"
+    }
   }
 
   object js extends BaseScalaJSModule {
