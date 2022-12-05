@@ -20,7 +20,7 @@ import ast.{ControlSection, ControlStatement}
 import util.string_ops.{doubleSpace, purgeIfNonText}
 import NodeWriter.{nodeObjectKeyWriter, nodeValueWriter}
 import WhiteSpaceWriter.breakWriter
-import Writer.WriterOps
+import Writer.{WriterOps, WriterOpsIterable}
 
 object ControlWriter {
 
@@ -31,7 +31,7 @@ object ControlWriter {
 
   implicit val controlSectionWriter: Writer[ControlSection] = Writer.write {
     case ControlSection(list) =>
-      purgeIfNonText(doubleSpace(list.map(_.write).mkString))
+      purgeIfNonText(doubleSpace(list.writeN("", "", "\n")))
   }
 
   /*
