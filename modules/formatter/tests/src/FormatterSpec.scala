@@ -91,4 +91,32 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - newlines between each shape") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |use dslib#uuidFormat
+                 |
+                 |long TargetingRuleId
+                 |
+                 |string PartnerName
+                 |
+                 |integer FeatureVersion
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |use dslib#uuidFormat
+                      |
+                      |long TargetingRuleId
+                      |
+                      |string PartnerName
+                      |
+                      |integer FeatureVersion
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

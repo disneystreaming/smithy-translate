@@ -77,7 +77,7 @@ object ShapeWriter {
     }
   implicit val shapeStatementsWriter: Writer[ShapeStatements] = Writer.write {
     case ShapeStatements(shape_statements) =>
-      shape_statements.writeN
+      shape_statements.writeN("\n")
   }
   implicit val simpleTypeNameWriter: Writer[SimpleTypeName] = Writer.write {
     case SimpleTypeName(name) => name.write
