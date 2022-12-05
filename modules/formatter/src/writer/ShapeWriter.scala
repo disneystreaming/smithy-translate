@@ -115,12 +115,12 @@ object ShapeWriter {
 
   implicit val enumShapeMembersWriter: Writer[EnumShapeMembers] = Writer.write {
     case EnumShapeMembers(whitespace, members) =>
-      s"{${whitespace.write}${members
+      s"${whitespace.write}${members
           .map { case (ts, identifiers, maybeValue, ws) =>
             s"${ts.write}${identifiers.write}${maybeValue.write}${ws.write}"
           }
           .toList
-          .mkString_("", ",\n", ",")}}"
+          .mkString_("", ",\n", ",")}"
   }
   implicit val structureMemberTypeWriter: Writer[StructureMemberType] =
     Writer.write {
