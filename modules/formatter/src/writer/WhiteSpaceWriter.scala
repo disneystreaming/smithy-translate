@@ -28,7 +28,7 @@ object WhiteSpaceWriter {
   implicit val breakWriter: Writer[Break] = Writer.write {
     case Break(comments) =>
       if (comments.isEmpty) "\n"
-      else s"${comments.writeN("\n", "\n", "")}"
+      else s"${comments.writeN("\n", "\n", "\n")}"
   }
   implicit val commentWriter: Writer[Comment] = Writer.write {
     case Comment(commentType, text) =>
