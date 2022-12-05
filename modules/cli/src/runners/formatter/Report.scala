@@ -18,34 +18,53 @@ package cli
 package runners
 package formatter
 
-import cats.data.Validated
 import os.Path
+import smithytranslate.cli.runners.formatter.FormatterError.{
+  InvalidModel,
+  UnableToParse,
+  UnableToReadFile
+}
+import smithytranslate.cli.runners.formatter.Report.logError
 
-case class Report(results: List[Validated[FormatterError, Path]]) {
-  def report(): Unit = {
-    val (invalidResults, validResults) = results.partitionMap { _.toEither }
-    if (validResults.nonEmpty) {
-      println("Successfully formatted the following files:")
-      validResults.foreach { path =>
-        println(s"\t${path.toNIO.getFileName.toString}")
-      }
+case class Report(success: List[Path], errors: List[FormatterError]) {
+  override def toString: String = {
+    val formatReport = if (success.nonEmpty) {
+      "Successfully formatted the following files:\n" +
+        success
+          .map { path => s"\t${path.toNIO.getFileName.toString}" }
+          .mkString("\n")
+    } else {
+      "No files were formatted"
     }
 
-    if (invalidResults.nonEmpty) {
-      println("The following files were not formatted:\n")
-      invalidResults.foreach(error => logError(error))
-    }
+    val errorReport = if (errors.nonEmpty) {
+      "\nThe following files were not formatted:\n\n" + errors
+        .map(_.fileName)
+        .mkString("\n") + "\nfor the following reasons\n" + errors
+        .map(error => logError(error))
+        .mkString("\n")
+    } else ""
 
-    def logError(formatterError: FormatterError): Unit = formatterError match {
-      case FormatterError.UnableToParse(message) =>
-        println(
-          s"unable to parse the Smithy file for the following reason: $message"
-        )
-      case FormatterError.InvalidModel(message) =>
-        println(
-          s"the Smithy file passed in did not pass the  Smithy model validation: $message"
-        )
-    }
+    formatReport + "\n" + errorReport
   }
 
+  def report(): Unit = {
+    println(toString())
+  }
+
+}
+object Report {
+  def success(success: List[Path]): Report = new Report(success, List.empty)
+  def error(error: FormatterError): Report = new Report(List.empty, List(error))
+
+  def logError(formatterError: FormatterError): String = formatterError match {
+    case FormatterError(fileName, UnableToParse(message)) =>
+      s"unable to parse the Smithy file: $fileName for the following reason: $message"
+
+    case FormatterError(fileName, UnableToReadFile(cause)) =>
+      s"unable to read the Smithy file $fileName for the following reason: $cause"
+
+    case FormatterError(fileName, InvalidModel) =>
+      s"unable to validate the Smithy model  in the file $fileName"
+  }
 }

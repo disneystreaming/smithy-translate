@@ -18,12 +18,13 @@ package cli
 package runners
 package formatter
 
-import cats.data.Validated
+import cats.implicits.toBifunctorOps
 import os.Path
 import smithytranslate.cli.opts.FormatterOpts.FormatOpts
 import smithytranslate.cli.runners.formatter.FormatterError.{
   InvalidModel,
-  UnableToParse
+  UnableToParse,
+  UnableToReadFile
 }
 import smithytranslate.formatter.parsers.SmithyParserLive
 import smithytranslate.formatter.writers.IdlWriter.idlWriter
@@ -49,20 +50,18 @@ object Formatter {
       validate: Boolean
   ): Report = {
 
-    val filesAndContent: List[(Path, String)] = discoverFiles(
+    val res: List[Either[FormatterError, Path]] = discoverFiles(
       smithyWorkspacePath
-    )
-
-    val res = filesAndContent.map { case (basePath, contents) =>
+    ).map(_.flatMap { case (basePath, contents) =>
       if (validate && !validator.validate(contents)) {
-        Validated.Invalid(
-          InvalidModel(basePath.toNIO.getFileName.toString)
+        Left(
+          InvalidModel(basePath)
         )
       } else {
         SmithyParserLive
           .parse(contents)
           .fold(
-            message => Validated.Invalid(UnableToParse(message)),
+            message => Left(UnableToParse(basePath, message)),
             idl => {
               val newPath =
                 if (noClobber) {
@@ -74,31 +73,66 @@ object Formatter {
                 } else basePath
 
               os.write.over(newPath, idl.write)
-              Validated.Valid(newPath)
+              Right(newPath)
             }
           )
       }
 
+    })
+    res.partitionMap(identity) match {
+      case (errors, formatted) => Report(formatted, errors)
     }
-    Report(res)
   }
 
-  def discoverFiles(smithyFilePath: os.Path): List[(Path, String)] = {
+  private def discoverFiles(
+      smithyFilePath: os.Path
+  ): List[Either[FormatterError, (Path, String)]] = {
+    def readFile(path: os.Path): Either[FormatterError, (os.Path, String)] = {
+      Try((path, os.read(path))).toEither.leftMap(t =>
+        UnableToReadFile.apply(path, t.getMessage)
+      )
+    }
+
     if (os.isDir(smithyFilePath)) {
       val smithyFiles = os.walk(smithyFilePath).filter(p => p.ext == "smithy")
       smithyFiles.map { discoveredPath =>
-        discoveredPath -> os.read(discoveredPath)
+        readFile(discoveredPath)
       }.toList
     } else {
-      List(smithyFilePath -> os.read(smithyFilePath))
+      List(readFile(smithyFilePath))
     }
+
   }
 }
 
-sealed trait FormatterError extends Throwable
+case class FormatterError(fileName: String, errorType: FormatterErrorType)
+    extends Throwable
+sealed trait FormatterErrorType
 object FormatterError {
-  case class UnableToParse(cause: String) extends FormatterError
-  case class InvalidModel(fileName: String) extends FormatterError
+  case class UnableToParse(message: String) extends FormatterErrorType
+  object UnableToParse {
+    def apply(fileName: os.Path, message: String): FormatterError =
+      FormatterError(
+        fileName.toNIO.getFileName.toString,
+        UnableToParse(message)
+      )
+  }
+  case object InvalidModel extends FormatterErrorType {
+    def apply(fileName: os.Path): FormatterError =
+      FormatterError(fileName.toNIO.getFileName.toString, InvalidModel)
+  }
+
+  case class UnableToReadFile(cause: String) extends FormatterErrorType
+  object UnableToReadFile {
+    def apply(fileName: os.Path, cause: String): FormatterError =
+      FormatterError(
+        fileName.toNIO.getFileName.toString,
+        UnableToReadFile(cause)
+      )
+  }
+
+  def invalidModel(fileName: String): FormatterError =
+    FormatterError(fileName, InvalidModel)
 }
 object validator {
   def validate(smithy: String): Boolean = {
