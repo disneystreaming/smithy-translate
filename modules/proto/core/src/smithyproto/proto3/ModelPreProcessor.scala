@@ -206,9 +206,9 @@ object ModelPreProcessor {
           val uuidShapeId = ShapeId.fromParts("alloy", "UUID")
           val newUUIDShapeId = ShapeId.fromParts("smithytranslate", "UUID")
 
-          /** Visitor to replace any reference to alloy#UUID in member shapes to
-            * a custom alloy#CompactUUID shape.
-            */
+          /* Visitor to replace any reference to alloy#UUID in member shapes to
+           * a custom alloy#CompactUUID shape.
+           */
           val updateMemberShapes = new ShapeVisitor.Default[Shape]() {
             override protected def getDefault(shape: Shape): Shape =
               shape
