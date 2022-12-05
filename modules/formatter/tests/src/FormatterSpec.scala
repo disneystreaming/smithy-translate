@@ -53,7 +53,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |use alloy#uuidFormat
                       |
                       |long TargetingRuleId
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
