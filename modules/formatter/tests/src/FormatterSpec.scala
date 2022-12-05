@@ -57,4 +57,38 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
+  test("format test - handles triple comments") {
+    // this test is intended to catch instances where
+    // the line after a triple comment is moved onto the comment
+    // line. this example produces the following:
+    //  `/// Used to identify the disney platformstring PartnerName`
+    // this only happes if `long TargetingRuleId` is there
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |use dslib#uuidFormat
+                 |
+                 |long TargetingRuleId
+                 |
+                 |/// Used to identify the disney platform
+                 |string PartnerName
+                 |
+                 |integer FeatureVersion
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |use dslib#uuidFormat
+                      |
+                      |long TargetingRuleId
+                      |
+                      |/// Used to identify the disney platform
+                      |string PartnerName
+                      |
+                      |integer FeatureVersion
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
