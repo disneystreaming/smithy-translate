@@ -411,7 +411,7 @@ MapStatement =
     %s"map" SP Identifier [Mixins] *WS MapMembers
 
 MapMembers =
-    "{" *WS MapKey BR MapValue *WS "}"
+    "{" *WS MapKey WS MapValue *WS "}"
 
 MapKey =
     [TraitStatements] (ElidedMapKey / ExplicitMapKey)
