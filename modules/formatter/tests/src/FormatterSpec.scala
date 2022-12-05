@@ -199,4 +199,60 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - enum") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |enum MyEnum {
+                 |  VALUE1,
+                 |    VALUE2
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |enum MyEnum {
+                      |    VALUE1,
+                      |    VALUE2,
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("format test - identation on shape with body") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |structure MyStruct {
+                 |this: String,
+                 |  that: Integer
+                 |}
+                 |
+                 |union MyUnion {
+                 | this: String,
+                 |orThat: Integer
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |structure MyStruct {
+                      |    this: String,
+                      |    that: Integer
+                      |}
+                      |
+                      |union MyUnion {
+                      |    this: String,
+                      |    orThat: Integer,
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
