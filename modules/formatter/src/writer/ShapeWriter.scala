@@ -115,12 +115,13 @@ object ShapeWriter {
 
   implicit val enumShapeMembersWriter: Writer[EnumShapeMembers] = Writer.write {
     case EnumShapeMembers(whitespace, members) =>
-      s"${whitespace.write}${members
-          .map { case (ts, identifiers, maybeValue, ws) =>
-            s"${ts.write}${identifiers.write}${maybeValue.write}${ws.write}"
-          }
-          .toList
-          .mkString_("", ",\n", ",")}"
+      val memberLines = members
+        .map { case (ts, identifiers, maybeValue, ws) =>
+          s"${ts.write}${identifiers.write}${maybeValue.write}${ws.write}"
+        }
+        .toList
+        .mkString_("", ",\n", ",")
+      s"${whitespace.write}${memberLines}"
   }
   implicit val structureMemberTypeWriter: Writer[StructureMemberType] =
     Writer.write {
@@ -135,11 +136,12 @@ object ShapeWriter {
 
   implicit val unionMembersWriter: Writer[UnionMembers] = Writer.write {
     case UnionMembers(whitespace, members) =>
-      s"${whitespace.write}${members
-          .map { case (traitStatements, structureMember, ws) =>
-            s"${traitStatements.write}${structureMember.write}${ws.write}"
-          }
-          .mkString_("", ",\n", ",")}"
+      val memberLines = members
+        .map { case (traitStatements, structureMember, ws) =>
+          s"${traitStatements.write}${structureMember.write}${ws.write}"
+        }
+        .mkString_("", ",\n", ",")
+      s"${whitespace.write}${memberLines}"
   }
   implicit val structureMemberWriter: Writer[StructureMember] = Writer.write {
     case StructureMember(whitespace, maybeAssignment) =>
@@ -147,11 +149,12 @@ object ShapeWriter {
   }
   implicit val structureMembersWriter: Writer[StructureMembers] = Writer.write {
     case StructureMembers(whitespace, members) =>
-      s"${whitespace.write}${members
-          .map { case (traitStatements, structureMember, ws) =>
-            s"${traitStatements.write}${structureMember.write}${ws.write}"
-          }
-          .mkString_("", ",\n", "")}"
+      val memberLines = members
+        .map { case (traitStatements, structureMember, ws) =>
+          s"${traitStatements.write}${structureMember.write}${ws.write}"
+        }
+        .mkString_("", ",\n", "")
+      s"${whitespace.write}${memberLines}"
   }
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
     case InlineStructure(whitespace, traitStatements, mixin, ws1, members) =>
@@ -168,17 +171,19 @@ object ShapeWriter {
   }
   implicit val operationErrorsWriter: Writer[OperationErrors] = Writer.write {
     case OperationErrors(ws0, ws1, list, ws3) =>
-      s"errors: ${ws0.write}${ws1.write}${list
-          .map { case (ws, shapeId) =>
-            s"${ws.write}${shapeId.write}"
-          }
-          .mkString_("[", ", ", ",]")}${ws3.write}"
+      val listLine = list
+        .map { case (ws, shapeId) =>
+          s"${ws.write}${shapeId.write}"
+        }
+        .mkString_("[", ", ", ",]")
+      s"errors: ${ws0.write}${ws1.write}${listLine}${ws3.write}"
   }
   implicit val operationBodyWriter: Writer[OperationBody] = Writer.write {
     case OperationBody(whitespace, input, output, errors, ws1) =>
-      s"${whitespace.write}${List(input.write, output.write, errors.write)
-          .filter(_.nonEmpty)
-          .mkString_("", "\n", "")}${ws1.write}"
+      val lines = List(input.write, output.write, errors.write)
+        .filter(_.nonEmpty)
+        .mkString_("", "\n", "")
+      s"${whitespace.write}${lines}${ws1.write}"
   }
   implicit val listMemberTypeWriter: Writer[ListMemberType] = Writer.write {
     case ElidedListMember(shapeIdMember) => s"$$${shapeIdMember.write}"
