@@ -199,7 +199,7 @@ object ShapeWriter {
 
   implicit val shapeBodyWriter: Writer[ShapeBody] = Writer.write {
     case SimpleShapeStatement(simpleTypeName, ws0, mixin) =>
-      s"${simpleTypeName.write} ${ws0.write}${mixin.write}\n"
+      s"${simpleTypeName.write} ${ws0.write}${mixin.write}"
     case EnumShapeStatement(
           typeName,
           id,
@@ -207,20 +207,20 @@ object ShapeWriter {
           whitespace,
           enumShapeMembers
         ) =>
-      s"$typeName ${id.write}${mixin.write}${whitespace.write} {\n${indent(enumShapeMembers.write, "\n", 4)}\n}\n"
+      s"$typeName ${id.write}${mixin.write}${whitespace.write} {\n${indent(enumShapeMembers.write, "\n", 4)}\n}"
 
     case MapStatement(identifier, mixin, whitespace, members) =>
-      s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}\n"
+      s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
     case UnionStatement(identifier, mixin, whitespace, members) =>
-      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}\n"
+      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case ServiceStatement(identifier, mixin, whitespace1, nodeObject) =>
-      s"service ${identifier.write} ${mixin.write}${whitespace1.write} {\n${nodeObject.write}\n}\n"
+      s"service ${identifier.write} ${mixin.write}${whitespace1.write} {\n${nodeObject.write}\n}"
     case ResourceStatement(identifier, mixin, whitespace, nodeObject) =>
-      s"resource ${identifier.write} ${mixin.write}${whitespace.write} {\n${nodeObject.write}\n}\n"
+      s"resource ${identifier.write} ${mixin.write}${whitespace.write} {\n${nodeObject.write}\n}"
     case OperationStatement(identifier, mixin, whitespace, operationBody) =>
-      s"operation ${identifier.write} ${mixin.write}${whitespace.write} {\n${indent(operationBody.write, "\n", 4)}\n}\n"
+      s"operation ${identifier.write} ${mixin.write}${whitespace.write} {\n${indent(operationBody.write, "\n", 4)}\n}"
     case ListStatement(identifier, mixin, whitespace, members) =>
-      s"list ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}\n"
+      s"list ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
     case StructureStatement(
           identifier,
           resource,
@@ -228,7 +228,7 @@ object ShapeWriter {
           whitespace,
           members
         ) =>
-      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(suffix(members.write, "\n"), "\n", 4)}\n}\n"
+      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(suffix(members.write, "\n"), "\n", 4)}\n}"
 
   }
 
