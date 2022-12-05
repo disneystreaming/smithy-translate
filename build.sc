@@ -219,6 +219,7 @@ object formatter extends BaseModule { outer =>
     }
 
     object shaded extends BaseJavaModule {
+      override def millSourcePath = outer.millSourcePath / "shaded"
 
       override def localClasspath: T[Seq[PathRef]] =
         formatter.jvm.localClasspath()
