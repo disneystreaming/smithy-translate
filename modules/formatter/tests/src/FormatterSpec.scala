@@ -53,6 +53,7 @@ final class FormatterSpec extends munit.FunSuite {
                       |use alloy#uuidFormat
                       |
                       |long TargetingRuleId
+                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -88,6 +89,7 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
+                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -116,6 +118,84 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("format test - comment on traits") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |/// comment between trait and shape
+                 |@documentation("this is a test")
+                 |string PartnerName
+                 |
+                 |integer FeatureVersion
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |/// comment between trait and shape
+                      |@documentation("this is a test")
+                      |string PartnerName
+                      |
+                      |integer FeatureVersion
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("format test - comment beteen trait and shape") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |@documentation("this is a test")
+                 |/// comment between trait and shape
+                 |string PartnerName
+                 |
+                 |integer FeatureVersion
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |@documentation("this is a test")
+                      |/// comment between trait and shape
+                      |string PartnerName
+                      |
+                      |integer FeatureVersion
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("format test - comments beteen trait and shape") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |@documentation("this is a test")
+                 |/// comment between trait and shape
+                 |///two comments?
+                 |string PartnerName
+                 |
+                 |integer FeatureVersion
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |@documentation("this is a test")
+                      |/// comment between trait and shape
+                      |/// two comments?
+                      |string PartnerName
+                      |
+                      |integer FeatureVersion
+                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
