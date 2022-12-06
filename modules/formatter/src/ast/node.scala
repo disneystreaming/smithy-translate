@@ -30,7 +30,7 @@ object NodeValue {
   // The grammar says: "{" *WS [NodeObjectKvp *(WS NodeObjectKvp)] *WS "}"
   // If we follow this, then `{ name: "examples.hello", entryPoints: true }` is invalid
   // where as `{ name: "examples.hello" entryPoints: true }` is valid, which does not make
-  // sense
+  // sense.
   case class NodeObject(
       whitespace: Whitespaces,
       values: Option[

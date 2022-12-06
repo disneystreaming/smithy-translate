@@ -250,24 +250,33 @@ object shapes {
         ws1: Whitespaces
     )
 
+    // Diverging from the grammar:
+    // `%s"input" *WS (InlineStructure / (":" *WS ShapeId)) WS` vs
+    // `%s"input" *WS (InlineStructure / (":" *WS ShapeId)) *WS`
     case class OperationInput(
         whitespace: Whitespaces,
         either: Either[InlineStructure, (Whitespaces, ShapeId)],
-        whitespace1: Whitespace
+        whitespace1: Whitespaces
     )
 
+    // Diverging from the grammar:
+    // `%s"output" *WS (InlineStructure / (":" *WS ShapeId)) WS` vs
+    // `%s"output" *WS (InlineStructure / (":" *WS ShapeId)) *WS`
     case class OperationOutput(
         whitespace: Whitespaces,
         either: Either[InlineStructure, (Whitespaces, ShapeId)],
-        whitespace1: Whitespace
+        whitespace1: Whitespaces
     )
 
+    // Diverging from the grammar:
+    // `%s"errors" *WS ":" *WS "[" *(*WS Identifier) *WS "]" WS` vs
+    // `%s"errors" *WS ":" *WS "[" *(*WS Identifier) *WS "]" *WS`
     case class OperationErrors(
         ws0: Whitespaces,
         ws1: Whitespaces,
         list: List[(Whitespaces, Identifier)],
         ws2: Whitespaces,
-        ws3: Whitespace
+        ws3: Whitespaces
     )
 
     case class OperationStatement(

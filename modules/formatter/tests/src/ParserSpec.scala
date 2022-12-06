@@ -76,6 +76,32 @@ final class ParserSpec extends munit.FunSuite {
     assertEitherIsRight(result)
   }
 
+  /*
+@readonly
+@http(method: "GET", uri: "/filmography/{actorId}")
+///Get the [Filmography] for the specified actor
+operation GetFilmography {
+  input: ActorInput,
+  output: Filmography
+}
+   */
+
+  test("operation") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |operation GetFilmography {
+           |  input: ActorInput
+           |  output: Filmography
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
+
   test("enum with commas") {
     val result =
       IdlParser.idlParser.parseAll(

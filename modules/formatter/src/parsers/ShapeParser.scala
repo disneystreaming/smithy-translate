@@ -255,19 +255,19 @@ object ShapeParser {
     val operation_input: Parser[OperationInput] =
       (Parser.string("input") *> ws0 ~ ir.backtrack.eitherOr(
         inline_structure
-      ) ~ ws).map { case ((ws0, either), ws1) =>
+      ) ~ ws0).map { case ((ws0, either), ws1) =>
         OperationInput(ws0, either, ws1)
       }
     val operation_output: Parser[OperationOutput] =
       (Parser.string("output") *> ws0 ~ ir.backtrack.eitherOr(
         inline_structure
-      ) ~ ws).map { case ((ws0, either), ws1) =>
+      ) ~ ws0).map { case ((ws0, either), ws1) =>
         OperationOutput(ws0, either, ws1)
       }
     val operation_errors: Parser[OperationErrors] =
       ((((Parser.string("errors") *> ws0 <* Parser.char(
         ':'
-      )) ~ ws0 <* openSquare) ~ (ws0.with1 ~ identifier).backtrack.rep0 ~ ws0 <* closeSquare) ~ ws)
+      )) ~ ws0 <* openSquare) ~ (ws0.with1 ~ identifier).backtrack.rep0 ~ ws0 <* closeSquare) ~ ws0)
         .map { case ((((ws0, ws1), indentifiers), ws2), ws3) =>
           OperationErrors(ws0, ws1, indentifiers, ws2, ws3)
         }
