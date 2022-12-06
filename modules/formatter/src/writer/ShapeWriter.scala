@@ -110,7 +110,8 @@ object ShapeWriter {
   }
 
   implicit val valueAssignmentWriter: Writer[ValueAssignment] = Writer.write {
-    case ValueAssignment(value, break) => s"${value.write}${break.write}"
+    case ValueAssignment(value, whitespace) =>
+      s" = ${value.write}${whitespace.write}"
   }
 
   implicit val enumShapeMembersWriter: Writer[EnumShapeMembers] = Writer.write {
@@ -120,7 +121,7 @@ object ShapeWriter {
           s"${ts.write}${identifiers.write}${maybeValue.write}${ws.write}"
         }
         .toList
-        .mkString_("", ",\n", ",")
+        .mkString_("", "\n", "")
       s"${whitespace.write}${memberLines}"
   }
   implicit val structureMemberTypeWriter: Writer[StructureMemberType] =

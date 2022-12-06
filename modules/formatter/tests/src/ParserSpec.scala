@@ -36,7 +36,8 @@ final class ParserSpec extends munit.FunSuite {
     assert(result.isRight && result.exists(_.list.size == 1))
   }
   test("both") {
-    val result = IdlParser.idlParser.parseAll(controlStatement + metadataStatement)
+    val result =
+      IdlParser.idlParser.parseAll(controlStatement + metadataStatement)
     assert(
       result.isRight && result.exists(res =>
         res.metadata.metadata.size == 2 && res.control.list.size == 1
@@ -44,4 +45,19 @@ final class ParserSpec extends munit.FunSuite {
     )
   }
 
+  test("enum with commas") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |enum OtherEnum {
+           |    V1 = "v1",
+           |    V2 = "v2"
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
 }

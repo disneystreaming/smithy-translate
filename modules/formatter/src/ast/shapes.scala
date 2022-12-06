@@ -290,6 +290,9 @@ object shapes {
         ]
     )
 
-    case class ValueAssignment(value: NodeValue, break: Break)
+    // The spec adds a BR after the NodeValue
+    // *SP "=" *SP NodeValue BR but it does not make sense
+    // Instead we'll use `*SP "=" *SP NodeValue *WS`
+    case class ValueAssignment(value: NodeValue, whitespace: Whitespaces)
   }
 }
