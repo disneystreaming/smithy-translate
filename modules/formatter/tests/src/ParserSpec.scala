@@ -17,8 +17,18 @@ package formatter
 import parsers.ControlParser.control_section
 import smithytranslate.formatter.parsers.IdlParser
 import smithytranslate.formatter.parsers.MetadataParser.metadata_section
+import munit.Location
 
 final class ParserSpec extends munit.FunSuite {
+  private def assertEitherIsRight[T, R](result: Either[T, R])(implicit
+      loc: Location
+  ) = {
+    assert(
+      result.isRight,
+      s"Failed with ${result.swap.getOrElse(fail("Unable to extract error from either"))}"
+    )
+  }
+
   val metadataStatement: String =
     """metadata greeting = "hello"
     metadata "stringList" = ["a", "b", "c"]
@@ -28,20 +38,112 @@ final class ParserSpec extends munit.FunSuite {
 
   test("Parse a metadata statement") {
     val result = metadata_section.parseAll(metadataStatement)
-    assert(result.isRight && result.exists(_.metadata.size == 2))
+    assertEitherIsRight(result)
+    assert(result.exists(_.metadata.size == 2))
   }
 
   test("Parse a control statement") {
     val result = control_section.parseAll(controlStatement)
-    assert(result.isRight && result.exists(_.list.size == 1))
+    assertEitherIsRight(result)
+    assert(result.exists(_.list.size == 1))
   }
+
   test("both") {
-    val result = IdlParser.idlParser.parseAll(controlStatement + metadataStatement)
+    val result =
+      IdlParser.idlParser.parseAll(controlStatement + metadataStatement)
+    assertEitherIsRight(result)
     assert(
-      result.isRight && result.exists(res =>
+      result.exists(res =>
         res.metadata.metadata.size == 2 && res.control.list.size == 1
       )
     )
   }
 
+  test("complex metadata") {
+    val result =
+      IdlParser.idlParser.parseAll("""|$version: "2.0"
+                                      |
+                                      |metadata somePieceOfData = { name: "examples.hello", entryPoints: true }
+                                      |metadata other = { name: "examples.hello" }
+                                      |metadata noComma = { name: "examples.hello" entryPoints: true }
+                                      |metadata noComma = {
+                                      |name: "examples.hello"
+                                      |entryPoints: true
+                                      |}
+                                      |
+                                      |namespace examples.hello
+                                      |""".stripMargin)
+    assertEitherIsRight(result)
+  }
+
+  /*
+@readonly
+@http(method: "GET", uri: "/filmography/{actorId}")
+///Get the [Filmography] for the specified actor
+operation GetFilmography {
+  input: ActorInput,
+  output: Filmography
+}
+   */
+
+  test("operation") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |operation GetFilmography {
+           |  input: ActorInput
+           |  output: Filmography
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
+
+  test("map") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |map Test {key: String value: String}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
+
+  test("trait") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |@http(method: "GET", uri: "/filmography/{actorId}")
+           |structure GetFilmography {
+           |  input: String,
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
+
+  test("enum with commas") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |enum OtherEnum {
+           |    V1 = "v1",
+           |    V2 = "v2"
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
 }

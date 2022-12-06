@@ -85,8 +85,9 @@ object ShapeParser {
     Parser.stringIn(simpleNames).map(SimpleTypeName)
   val enum_type_name: Parser[String] = Parser.stringIn(enumTypeNames)
 
+  // see comments on ValueAssignment
   val value_assigments: Parser[ValueAssignment] =
-    (sp *> Parser.char('=') *> sp *> node_value ~ br).map { case (l, r) =>
+    (sp *> Parser.char('=') *> sp *> node_value ~ ws).map { case (l, r) =>
       ValueAssignment(l, r)
     }
 
