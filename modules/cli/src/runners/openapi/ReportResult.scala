@@ -75,16 +75,23 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
         path -> in._2
       }
 
-  def apply(result: OpenApiCompiler.Result[Model]): Unit = {
+  def apply(result: OpenApiCompiler.Result[Model], debug: Boolean): Unit = {
     result match {
       case OpenApiCompiler.Failure(error, modelErrors) =>
-        val errorsSummary = modelErrors.map(_.getMessage).mkString("\n")
-        val message =
+        val message = if (modelErrors.isEmpty) {
+          "An error occurred while importing your Open API resources."
+        } else {
+          val errorsSummary = modelErrors.map(_.getMessage).mkString("\n")
           s"""|Failed to validate the produced Smithy model. The following is a list of
-                          |error messages followed by the validation exception from Smithy:
-                          |$errorsSummary""".stripMargin
+              |error messages followed by the validation exception from Smithy:
+              |$errorsSummary""".stripMargin
+        }
         System.err.println(message)
-        error.printStackTrace(System.err)
+        if (debug) {
+          error.printStackTrace(System.err)
+        } else {
+          System.err.println(error.getMessage())
+        }
       case OpenApiCompiler.Success(modelErrors, model) =>
         modelErrors.foreach(e => System.err.println(e.getMessage()))
         val smithyFiles =
