@@ -33,7 +33,7 @@ import smithytranslate.formatter.ast.QuotedChar.{
   PreservedDoubleCase,
   SimpleCharCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws, ws0}
+import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws0}
 import smithytranslate.formatter.ast.{
   EscapedChar,
   NodeValue,
@@ -102,7 +102,7 @@ object NodeParser {
     }
 
   val nodeObject: Parser[NodeObject] =
-    (openCurly *> ws0 ~ (node_object_kvp ~ (ws.with1 ~ node_object_kvp).backtrack.rep0).?.backtrack <* (ws0 ~ closeCurly))
+    (openCurly *> ws0 ~ (node_object_kvp ~ (ws0.with1 ~ node_object_kvp).backtrack.rep0).?.backtrack <* (ws0 ~ closeCurly))
       .map { case (whitespace, maybeTuple) =>
         NodeObject(whitespace, maybeTuple)
       }

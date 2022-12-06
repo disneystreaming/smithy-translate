@@ -25,10 +25,16 @@ object NodeValue {
       whitespace: Whitespaces,
       values: List[(NodeValue, Whitespaces)]
   ) extends NodeValue
+
+  // NodeObject is another place where we diverge from the grammar
+  // The grammar says: "{" *WS [NodeObjectKvp *(WS NodeObjectKvp)] *WS "}"
+  // If we follow this, then `{ name: "examples.hello", entryPoints: true }` is invalid
+  // where as `{ name: "examples.hello" entryPoints: true }` is valid, which does not make
+  // sense
   case class NodeObject(
       whitespace: Whitespaces,
       values: Option[
-        (NodeObjectKeyValuePair, List[(Whitespace, NodeObjectKeyValuePair)])
+        (NodeObjectKeyValuePair, List[(Whitespaces, NodeObjectKeyValuePair)])
       ]
   ) extends NodeValue
 

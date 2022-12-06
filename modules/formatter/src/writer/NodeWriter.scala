@@ -48,7 +48,7 @@ import ast.QuotedChar.{
 }
 import util.string_ops.{addBrackets, indent}
 import ShapeIdWriter.{identifierWriter, shapeIdWriter}
-import WhiteSpaceWriter.{wsWriter, wssWriter}
+import WhiteSpaceWriter.wssWriter
 import Writer.{WriterOps, WriterOpsIterable}
 
 object NodeWriter {
