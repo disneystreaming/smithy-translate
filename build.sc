@@ -48,6 +48,7 @@ trait BaseModule extends Module with HeaderModule {
 }
 
 trait BasePublishModule extends BaseModule with CiReleaseModule {
+  override def publishVersion = "dev-SNAPSHOT"
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
@@ -214,6 +215,16 @@ object formatter extends BaseModule { outer =>
       def ivyDeps = Agg(
         Deps.munit,
         Deps.smithy.build,
+        Deps.lihaoyi.oslib
+      )
+    }
+
+    object `parser-test` extends BaseScalaNoPublishModule {
+      def moduleDeps = Seq(formatter.jvm)
+      override def millSourcePath = outer.millSourcePath / "parser-test"
+
+      def ivyDeps = Agg(
+        Deps.decline,
         Deps.lihaoyi.oslib
       )
     }
