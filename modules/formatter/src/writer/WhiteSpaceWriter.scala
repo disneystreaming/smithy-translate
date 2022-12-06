@@ -16,7 +16,7 @@ package smithytranslate
 package formatter
 package writers
 
-import smithytranslate.formatter.ast.{Break, Comment, Whitespace}
+import smithytranslate.formatter.ast.{Break, Comment, Whitespace, Whitespaces}
 import smithytranslate.formatter.writers.Writer.WriterOpsIterable
 
 object WhiteSpaceWriter {
@@ -35,8 +35,10 @@ object WhiteSpaceWriter {
       s"${commentType.write}${prefixWithWhiteSpace(text)}\n"
   }
   implicit val wsWriter: Writer[Whitespace] =
+    Writer.write(w => wssWriter.write(w.toWhitespaces))
+  implicit val wssWriter: Writer[Whitespaces] =
     Writer.write(
-      _.whitespace.writeN
+      _.comments.writeN
     )
 
   /*

@@ -42,7 +42,7 @@ import ShapeIdWriter.{
   shapeIdWriter
 }
 import SmithyTraitWriter.{applyStatementWriter, traitStatementsWriter}
-import WhiteSpaceWriter.{breakWriter, wsWriter}
+import WhiteSpaceWriter.{breakWriter, wsWriter, wssWriter}
 import Writer.{WriterOps, WriterOpsIterable}
 
 object ShapeWriter {
@@ -170,13 +170,13 @@ object ShapeWriter {
       s"output: ${ws0.write}${members.write}${ws1.write}"
   }
   implicit val operationErrorsWriter: Writer[OperationErrors] = Writer.write {
-    case OperationErrors(ws0, ws1, list, ws3) =>
+    case OperationErrors(ws0, ws1, list, ws2, ws3) =>
       val listLine = list
         .map { case (ws, shapeId) =>
           s"${ws.write}${shapeId.write}"
         }
         .mkString_("[", ", ", ",]")
-      s"errors: ${ws0.write}${ws1.write}${listLine}${ws3.write}"
+      s"errors: ${ws0.write}${ws1.write}${listLine}${ws2.write}${ws3.write}"
   }
   implicit val operationBodyWriter: Writer[OperationBody] = Writer.write {
     case OperationBody(whitespace, input, output, errors, ws1) =>

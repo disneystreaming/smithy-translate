@@ -99,14 +99,14 @@ object shapes {
         typeName: String,
         id: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         enumShapeMembers: EnumShapeMembers
     ) extends ShapeBody
 
     case class ListStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         members: ListMembers
     ) extends ShapeBody
 
@@ -118,9 +118,9 @@ object shapes {
       case class ExplicitListMember(shapeId: ShapeId) extends ListMemberType
 
       case class ListMembers(
-          ws0: Whitespace,
+          ws0: Whitespaces,
           members: ListMember,
-          ws1: Whitespace
+          ws1: Whitespaces
       )
 
       case class ListMember(
@@ -132,7 +132,7 @@ object shapes {
     case class MapStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         members: MapMembers
     ) extends ShapeBody
 
@@ -164,11 +164,11 @@ object shapes {
       }
 
       case class MapMembers(
-          ws0: Whitespace,
+          ws0: Whitespaces,
           mapKey: MapKey,
-          break: Whitespace,
+          whitespace: Whitespace,
           mapValue: MapValue,
-          ws1: Whitespace
+          ws1: Whitespaces
       )
     }
 
@@ -176,15 +176,15 @@ object shapes {
         identifier: Identifier,
         resource: Option[StructureResource],
         mixins: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         members: StructureMembers
     ) extends ShapeBody
 
     case class StructureResource(shapeId: ShapeId)
 
     case class StructureMembers(
-        ws0: Whitespace,
-        members: List[(TraitStatements, StructureMember, Whitespace)]
+        ws0: Whitespaces,
+        members: List[(TraitStatements, StructureMember, Whitespaces)]
     )
 
     object StructureMembers {
@@ -209,13 +209,13 @@ object shapes {
     case class UnionStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         members: UnionMembers
     ) extends ShapeBody
 
     case class UnionMembers(
-        whitespace: Whitespace,
-        members: List[(TraitStatements, UnionMember, Whitespace)]
+        whitespace: Whitespaces,
+        members: List[(TraitStatements, UnionMember, Whitespaces)]
     )
 
     case class UnionMember(structureMemberType: StructureMemberType)
@@ -223,69 +223,70 @@ object shapes {
     case class ServiceStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace1: Whitespace,
+        whitespace1: Whitespaces,
         nodeObject: NodeObject
     ) extends ShapeBody
 
     case class ResourceStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         nodeObject: NodeObject
     ) extends ShapeBody
 
     case class InlineStructure(
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         traitStatements: TraitStatements,
         mixin: Option[Mixin],
-        ws1: Whitespace,
+        ws1: Whitespaces,
         members: StructureMembers
     )
 
     case class OperationBody(
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         input: Option[OperationInput],
         output: Option[OperationOutput],
         errors: Option[OperationErrors],
-        ws1: Whitespace
+        ws1: Whitespaces
     )
 
     case class OperationInput(
-        whitespace: Whitespace,
-        either: Either[InlineStructure, (Whitespace, ShapeId)],
+        whitespace: Whitespaces,
+        either: Either[InlineStructure, (Whitespaces, ShapeId)],
         whitespace1: Whitespace
     )
 
     case class OperationOutput(
-        whitespace: Whitespace,
-        either: Either[InlineStructure, (Whitespace, ShapeId)],
+        whitespace: Whitespaces,
+        either: Either[InlineStructure, (Whitespaces, ShapeId)],
         whitespace1: Whitespace
     )
 
     case class OperationErrors(
-        ws0: Whitespace,
-        ws1: Whitespace,
-        list: List[(Whitespace, Identifier)],
-        ws2: Whitespace
+        ws0: Whitespaces,
+        ws1: Whitespaces,
+        list: List[(Whitespaces, Identifier)],
+        ws2: Whitespaces,
+        ws3: Whitespace
     )
 
     case class OperationStatement(
         identifier: Identifier,
         mixin: Option[Mixin],
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         operationBody: OperationBody
     ) extends ShapeBody
 
     case class Mixin(
-        whitespace: Whitespace,
-        shapeIds: NonEmptyList[(Whitespace, ShapeId)],
-        whitespace1: Whitespace
+        whitespace: Whitespaces,
+        shapeIds: NonEmptyList[(Whitespaces, ShapeId)],
+        whitespace1: Whitespaces
     )
 
     case class EnumShapeMembers(
-        whitespace: Whitespace,
+        whitespace: Whitespaces,
         members: NonEmptyList[
-          (TraitStatements, Identifier, Option[ValueAssignment], Whitespace)
+          (TraitStatements, Identifier, Option[ValueAssignment], Whitespaces)
         ]
     )
 

@@ -17,7 +17,7 @@ package formatter
 package parsers
 
 import cats.parse.{Parser, Parser0}
-import smithytranslate.formatter.ast.{ShapeId, Whitespace, shapes}
+import smithytranslate.formatter.ast.{ShapeId, Whitespaces, shapes}
 import smithytranslate.formatter.ast.shapes._
 import smithytranslate.formatter.ast.shapes.ShapeBody._
 import smithytranslate.formatter.ast.shapes.ShapeBody.ListStatement.{
@@ -48,7 +48,7 @@ import smithytranslate.formatter.ast.shapes.ShapeStatementsCase.{
   ApplyStatementCase,
   ShapeStatementCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws}
+import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws, ws0}
 import smithytranslate.formatter.parsers.NodeParser._
 import smithytranslate.formatter.parsers.ShapeIdParser._
 import smithytranslate.formatter.parsers.ShapeParser.list_parsers.list_statement
@@ -87,13 +87,15 @@ object ShapeParser {
 
   val value_assigments: Parser[ValueAssignment] =
     (sp *> Parser.char('=') *> sp *> node_value ~ br).map { case (l, r) =>
+      println(l)
+      println(r)
       ValueAssignment(l, r)
     }
 
   val mixins: Parser[Mixin] =
     ((sp.with1 *> Parser.string(
       "with"
-    ) *> ws <* openSquare) ~ (ws.with1 ~ shape_id).rep ~ ws <* closeSquare)
+    ) *> ws0 <* openSquare) ~ (ws0.with1 ~ shape_id).rep ~ ws0 <* closeSquare)
       .map { case ((ws0, values), ws1) =>
         Mixin(ws0, values, ws1)
       }
@@ -107,7 +109,7 @@ object ShapeParser {
     }
 
   val enum_shape_members: Parser[EnumShapeMembers] =
-    (openCurly *> ws.with1 ~ (trait_statements.with1 ~ identifier ~ value_assigments.? ~ ws).rep <* closeCurly)
+    (openCurly *> ws0.with1 ~ (trait_statements.with1 ~ identifier ~ value_assigments.? ~ ws0).rep <* closeCurly)
       .map { case (ws, members) =>
         EnumShapeMembers(
           ws,
@@ -119,7 +121,7 @@ object ShapeParser {
 
   // EnumTypeName SP Identifier [Mixins] *WS EnumShapeMembers
   val enum_shape_statement: Parser[EnumShapeStatement] =
-    ((enum_type_name <* sp) ~ identifier ~ mixinBT.? ~ ws ~ enum_shape_members)
+    ((enum_type_name <* sp) ~ identifier ~ mixinBT.? ~ ws0 ~ enum_shape_members)
       .map { case ((((enumTypeName, id), mixin), ws), members) =>
         EnumShapeStatement(enumTypeName, id, mixin, ws, members)
       }
@@ -142,14 +144,14 @@ object ShapeParser {
         }
 
     val list_members: Parser[ListMembers] =
-      (openCurly *> ws ~ list_member ~ ws <* closeCurly).map {
+      (openCurly *> ws0 ~ list_member ~ ws0 <* closeCurly).map {
         case ((ws0, members), ws1) => ListMembers(ws0, members, ws1)
       }
 
     val list_statement: Parser[ListStatement] =
       ((Parser.string(
         "list"
-      ) <* sp0) *> identifier ~ mixinBT.? ~ ws ~ list_members).map {
+      ) <* sp0) *> identifier ~ mixinBT.? ~ ws0 ~ list_members).map {
         case (((id, mixin), ws), members) =>
           ListStatement(id, mixin, ws, members)
       }
@@ -180,12 +182,14 @@ object ShapeParser {
         }
 
     val map_members =
-      (openCurly *> (ws ~ map_key ~ ws ~ map_value ~ ws) <* closeCurly).map {
+      (openCurly *> (ws0 ~ map_key ~ ws ~ map_value ~ ws0) <* closeCurly).map {
         case ((((ws0, key), br), value), ws2) =>
           MapMembers(ws0, key, br, value, ws2)
       }
     val map_statement: Parser[MapStatement] =
-      (Parser.string("map") *> sp0 *> identifier ~ mixinBT.? ~ ws ~ map_members)
+      (Parser.string(
+        "map"
+      ) *> sp0 *> identifier ~ mixinBT.? ~ ws0 ~ map_members)
         .map { case (((id, mixins), ws), members) =>
           MapStatement(id, mixins, ws, members)
         }
@@ -204,7 +208,7 @@ object ShapeParser {
         }
     }
     val structure_members: Parser[StructureMembers] =
-      (openCurly *> ws ~ (trait_statements.with1 ~ structure_member ~ ws).rep0 <* closeCurly)
+      (openCurly *> ws0 ~ (trait_statements.with1 ~ structure_member ~ ws0).rep0 <* closeCurly)
         .map { case (ws0, members) =>
           StructureMembers(
             ws0,
@@ -218,7 +222,7 @@ object ShapeParser {
         .map(StructureResource)
     val structure_statement: Parser[StructureStatement] = (Parser.string(
       "structure"
-    ) *> sp0 *> identifier ~ structure_resource.backtrack.? ~ mixinBT.? ~ ws ~ structure_members)
+    ) *> sp0 *> identifier ~ structure_resource.backtrack.? ~ mixinBT.? ~ ws0 ~ structure_members)
       .map { case ((((id, resource), mixins), ws), members) =>
         StructureStatement(id, resource, mixins, ws, members)
       }
@@ -229,7 +233,7 @@ object ShapeParser {
       (structure_parsers.explicit_structure_member | structure_parsers.elided_structure_member)
         .map(UnionMember)
     val union_members: Parser[UnionMembers] =
-      (openCurly *> ws ~ (trait_statements.with1 ~ union_member ~ ws).rep0 <* closeCurly)
+      (openCurly *> ws0 ~ (trait_statements.with1 ~ union_member ~ ws0).rep0 <* closeCurly)
         .map { case (ws0, members) =>
           UnionMembers(
             ws0,
@@ -241,36 +245,36 @@ object ShapeParser {
     val union_statement: Parser[UnionStatement] =
       (Parser.string(
         "union"
-      ) *> sp *> identifier ~ mixinBT.? ~ ws ~ union_members).map {
+      ) *> sp *> identifier ~ mixinBT.? ~ ws0 ~ union_members).map {
         case (((id, mixins), ws), members) =>
           UnionStatement(id, mixins, ws, members)
       }
   }
 
   object operation_parsers {
-    val ir: Parser[(Whitespace, ShapeId)] = Parser.char(':') *> ws ~ shape_id
+    val ir: Parser[(Whitespaces, ShapeId)] = Parser.char(':') *> ws0 ~ shape_id
     val operation_input: Parser[OperationInput] =
-      (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(
+      (Parser.string("input") *> ws0 ~ ir.backtrack.eitherOr(
         inline_structure
       ) ~ ws).map { case ((ws0, either), ws1) =>
         OperationInput(ws0, either, ws1)
       }
     val operation_output: Parser[OperationOutput] =
-      (Parser.string("output") *> ws ~ ir.backtrack.eitherOr(
+      (Parser.string("output") *> ws0 ~ ir.backtrack.eitherOr(
         inline_structure
       ) ~ ws).map { case ((ws0, either), ws1) =>
         OperationOutput(ws0, either, ws1)
       }
     val operation_errors: Parser[OperationErrors] =
-      (((Parser.string("errors") *> ws <* Parser.char(
+      ((((Parser.string("errors") *> ws0 <* Parser.char(
         ':'
-      )) ~ ws <* openSquare) ~ (ws.with1 ~ identifier).backtrack.rep0 ~ ws <* closeSquare)
-        .map { case (((ws0, ws1), indentifiers), ws2) =>
-          OperationErrors(ws0, ws1, indentifiers, ws2)
+      )) ~ ws0 <* openSquare) ~ (ws0.with1 ~ identifier).backtrack.rep0 ~ ws0 <* closeSquare) ~ ws)
+        .map { case ((((ws0, ws1), indentifiers), ws2), ws3) =>
+          OperationErrors(ws0, ws1, indentifiers, ws2, ws3)
         }
 
     val operation_body: Parser[OperationBody] =
-      (openCurly *> ws ~ operation_input.? ~ operation_output.? ~ operation_errors.? ~ ws <* closeCurly)
+      (openCurly *> ws0 ~ operation_input.? ~ operation_output.? ~ operation_errors.? ~ ws0 <* closeCurly)
         .map { case ((((ws0, input), output), errors), ws1) =>
           OperationBody(ws0, input, output, errors, ws1)
         }
@@ -278,7 +282,7 @@ object ShapeParser {
     val operation_statement: Parser[OperationStatement] =
       (Parser.string(
         "operation"
-      ) *> sp *> identifier ~ mixinBT.? ~ ws ~ operation_body).map {
+      ) *> sp *> identifier ~ mixinBT.? ~ ws0 ~ operation_body).map {
         case (((id, mixins), ws), body) =>
           OperationStatement(id, mixins, ws, body)
       }
@@ -287,21 +291,23 @@ object ShapeParser {
   val resource_statement: Parser[ResourceStatement] =
     (Parser.string(
       "resource"
-    ) *> sp *> identifier ~ mixinBT.? ~ ws ~ nodeObject)
+    ) *> sp *> identifier ~ mixinBT.? ~ ws0 ~ nodeObject)
       .map { case (((id, mixins), ws), nodeObject) =>
         ResourceStatement(id, mixins, ws, nodeObject)
       }
 
   val inline_structure: Parser[InlineStructure] = (Parser.string(
     ":="
-  ) *> ws ~ trait_statements ~ mixinBT.? ~ ws ~ structure_parsers.structure_members)
+  ) *> ws0 ~ trait_statements ~ mixinBT.? ~ ws0 ~ structure_parsers.structure_members)
     .map { case ((((ws0, traits), mixins), ws1), members) =>
       InlineStructure(ws0, traits, mixins, ws1, members)
     }
 
   // %s"service" SP Identifier [Mixins] *WS NodeObject
   val service_statement: Parser[ServiceStatement] =
-    (Parser.string("service") *> sp *> identifier ~ mixinBT.? ~ ws ~ nodeObject)
+    (Parser.string(
+      "service"
+    ) *> sp *> identifier ~ mixinBT.? ~ ws0 ~ nodeObject)
       .map { case (((id, mixins), ws), node_object) =>
         ServiceStatement(id, mixins, ws, node_object)
       }

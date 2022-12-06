@@ -21,7 +21,7 @@ import smithytranslate.formatter.ast.SmithyTraitBodyValue.{
   NodeValueCase,
   SmithyTraitStructureCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, ws}
+import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, ws, ws0}
 import smithytranslate.formatter.ast.*
 import smithytranslate.formatter.parsers.NodeParser.{
   node_object_key,
@@ -33,7 +33,7 @@ object SmithyTraitParser {
 
   //    node_object_key ws ":" ws node_value
   val trait_structure_kvp: Parser[TraitStructureKeyValuePair] =
-    ((node_object_key ~ ws <* Parser.char(':')) ~ ws ~ node_value).map {
+    ((node_object_key ~ ws0 <* Parser.char(':')) ~ ws0 ~ node_value).map {
       case (((a, b), c), d) => TraitStructureKeyValuePair(a, b, c, d)
     }
   //       TraitStructureKvp *(*WS TraitStructureKvp)
@@ -48,7 +48,7 @@ object SmithyTraitParser {
     )
   //  "(" ws trait_body_value ws ")"
   val strait_body: Parser0[TraitBody] =
-    ((openParentheses *> ws ~ strait_body_value.? ~ ws) <* closeParentheses)
+    ((openParentheses *> ws0 ~ strait_body_value.? ~ ws0) <* closeParentheses)
       .map { case ((a, b), c) =>
         TraitBody(a, b, c)
       }
@@ -57,7 +57,7 @@ object SmithyTraitParser {
     Parser.char('@') *> (shape_id ~ strait_body.?).map { SmithyTrait.tupled }
   // *(ws trait) ws
   val trait_statements: Parser0[TraitStatements] =
-    ((ws.with1 ~ strait).backtrack.rep0 ~ ws).map { case (traits, ws) =>
+    ((ws0.with1 ~ strait).backtrack.rep0 ~ ws0).map { case (traits, ws) =>
       TraitStatements(traits, ws)
     }
   val apply_singular: Parser[ApplyStatementSingular] =

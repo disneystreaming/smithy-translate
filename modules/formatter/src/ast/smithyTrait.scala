@@ -19,16 +19,16 @@ package ast
 import NodeValue.NodeObjectKey
 
 case class TraitStatements(
-    list: List[(Whitespace, SmithyTrait)],
-    after: Whitespace
+    list: List[(Whitespaces, SmithyTrait)],
+    after: Whitespaces
 )
 
 case class SmithyTrait(shapeId: ShapeId, traitBody: Option[TraitBody])
 
 case class TraitBody(
-    ws0: Whitespace,
+    ws0: Whitespaces,
     traitBodyValue: Option[SmithyTraitBodyValue],
-    ws1: Whitespace
+    ws1: Whitespaces
 )
 
 sealed trait SmithyTraitBodyValue
@@ -47,8 +47,8 @@ case class TraitStructure(
 
 case class TraitStructureKeyValuePair(
     nodeObjectKey: NodeObjectKey,
-    ws0: Whitespace,
-    ws1: Whitespace,
+    ws0: Whitespaces,
+    ws1: Whitespaces,
     nodeValue: NodeValue
 )
 //ApplyStatement =

@@ -15,19 +15,19 @@
 package smithytranslate
 package formatter
 
-import ast.{NodeValue, Whitespace}
+import ast.{NodeValue, Whitespaces}
 import smithytranslate.formatter.writers.NodeWriter.{
   nodeObjectKeyWriter,
   nodeValueWriter
 }
-import smithytranslate.formatter.writers.WhiteSpaceWriter.wsWriter
+import smithytranslate.formatter.writers.WhiteSpaceWriter.wssWriter
 import smithytranslate.formatter.writers.Writer.WriterOps
 
 package object writers {
   def showKeyValue(
       nodeObjectKey: NodeValue.NodeObjectKey,
-      ws0: Whitespace,
-      ws1: Whitespace,
+      ws0: Whitespaces,
+      ws1: Whitespaces,
       nodeValue: NodeValue
   ) = {
     s"${nodeObjectKey.write}${ws0.write}: ${ws1.write}${nodeValue.write}"

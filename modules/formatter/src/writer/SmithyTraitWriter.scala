@@ -31,7 +31,7 @@ import ast.SmithyTraitBodyValue.{NodeValueCase, SmithyTraitStructureCase}
 import util.string_ops.formatEnum
 import NodeWriter.nodeValueWriter
 import ShapeIdWriter.shapeIdWriter
-import WhiteSpaceWriter.{breakWriter, wsWriter}
+import WhiteSpaceWriter.{breakWriter, wsWriter, wssWriter}
 import Writer.{WriterOps, WriterOpsIterable}
 
 object SmithyTraitWriter {

@@ -19,7 +19,13 @@ package parsers
 import cats.parse.Rfc5234.{crlf, lf, wsp}
 import cats.parse.{Parser, Parser0}
 import smithytranslate.formatter.ast.CommentType.{Documentation, Line}
-import smithytranslate.formatter.ast.{Break, Comment, CommentType, Whitespace}
+import smithytranslate.formatter.ast.{
+  Break,
+  Comment,
+  CommentType,
+  Whitespace,
+  Whitespaces
+}
 
 object WhitespaceParser {
   val nl: Parser[Unit] = lf | crlf
@@ -30,7 +36,7 @@ object WhitespaceParser {
   // deviates from ABNF due to the fact that in examples provided there can be multiple new lines in a row between shapes
   lazy val br: Parser[Break] =
     Parser
-      .defer(sp.rep0.with1 *> commentOrNewline.rep <* ws)
+      .defer(sp0.with1 *> commentOrNewline.rep <* ws0)
       .map(list => Break(list.toList.flatten))
   private val not_newline: Parser0[String] = Parser.until(nl)
   val line_comment: Parser[Line] = Parser.string("//").as(Line)
@@ -43,11 +49,14 @@ object WhitespaceParser {
   private val commentOrNewline: Parser[Option[Comment]] =
     comment.eitherOr(nl).map(_.toOption)
 
-  val ws: Parser0[Whitespace] = sp
+  val ws: Parser[Whitespace] = sp
     .eitherOr(nl.eitherOr(comment.eitherOr(comma)))
-    .rep0
-    .map(_.flatMap(_.swap.toOption.flatMap(_.swap.toOption)))
-    .map(_.flatMap(_.toOption))
-    .map(Whitespace)
+    .map { e =>
+      val comment: Option[Comment] = e.swap.toOption
+        .flatMap(_.swap.toOption.flatMap(_.toOption))
+      Whitespace(comment)
+    }
+  val ws0: Parser0[Whitespaces] =
+    ws.rep0.map(wss => Whitespaces(wss.flatMap(_.comment.toList)))
 
 }

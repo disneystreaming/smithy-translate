@@ -19,7 +19,10 @@ package ast
 import smithytranslate.formatter.ast.CommentType.{Documentation, Line}
 
 case object Comma {}
-case class Whitespace(whitespace: List[Comment])
+case class Whitespace(comment: Option[Comment]) {
+  def toWhitespaces: Whitespaces = Whitespaces(comment.toList)
+}
+case class Whitespaces(comments: List[Comment])
 
 case class Break(newLineOrComment: List[Comment])
 sealed trait CommentType { self =>

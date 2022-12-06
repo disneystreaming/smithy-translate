@@ -33,7 +33,7 @@ import smithytranslate.formatter.ast.QuotedChar.{
   PreservedDoubleCase,
   SimpleCharCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws}
+import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws, ws0}
 import smithytranslate.formatter.ast.{
   EscapedChar,
   NodeValue,
@@ -97,18 +97,18 @@ object NodeParser {
     ) | identifier.map(NodeObjectKey.IdentifierNok)
 
   lazy val node_object_kvp: Parser[NodeObjectKeyValuePair] =
-    ((node_object_key ~ ws <* Parser.char(':')) ~ ws ~ node_value).map {
+    ((node_object_key ~ ws0 <* Parser.char(':')) ~ ws0 ~ node_value).map {
       case (((a, b), c), d) => NodeObjectKeyValuePair(a, b, c, d)
     }
 
   val nodeObject: Parser[NodeObject] =
-    (openCurly *> ws ~ (node_object_kvp ~ (ws.with1 ~ node_object_kvp).backtrack.rep0).?.backtrack <* (ws ~ closeCurly))
+    (openCurly *> ws0 ~ (node_object_kvp ~ (ws.with1 ~ node_object_kvp).backtrack.rep0).?.backtrack <* (ws0 ~ closeCurly))
       .map { case (whitespace, maybeTuple) =>
         NodeObject(whitespace, maybeTuple)
       }
 
   val nodeArray: Parser[NodeArray] =
-    ((openSquare *> ws ~ (node_value ~ ws).backtrack.rep0) <* (ws ~ closeSquare))
+    ((openSquare *> ws0 ~ (node_value ~ ws0).backtrack.rep0) <* (ws0 ~ closeSquare))
       .map { case (whitespace, maybeTuple) =>
         NodeArray(whitespace, maybeTuple)
       }

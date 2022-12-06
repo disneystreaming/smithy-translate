@@ -22,11 +22,11 @@ sealed trait NodeValue
 
 object NodeValue {
   case class NodeArray(
-      whitespace: Whitespace,
-      values: List[(NodeValue, Whitespace)]
+      whitespace: Whitespaces,
+      values: List[(NodeValue, Whitespaces)]
   ) extends NodeValue
   case class NodeObject(
-      whitespace: Whitespace,
+      whitespace: Whitespaces,
       values: Option[
         (NodeObjectKeyValuePair, List[(Whitespace, NodeObjectKeyValuePair)])
       ]
@@ -34,8 +34,8 @@ object NodeValue {
 
   case class NodeObjectKeyValuePair(
       nodeObjectKey: NodeObjectKey,
-      ws0: Whitespace,
-      ws1: Whitespace,
+      ws0: Whitespaces,
+      ws1: Whitespaces,
       nodeValue: NodeValue
   )
 

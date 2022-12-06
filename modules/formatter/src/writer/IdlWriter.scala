@@ -20,7 +20,7 @@ import ast.Idl
 import ControlWriter.controlSectionWriter
 import MetadataWriter.metadataSectionWriter
 import ShapeWriter.shapeSectionWriter
-import WhiteSpaceWriter.wsWriter
+import WhiteSpaceWriter.wssWriter
 import Writer.WriterOps
 
 object IdlWriter {

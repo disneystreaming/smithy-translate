@@ -19,7 +19,7 @@ package ast
 import smithytranslate.formatter.ast.shapes.ShapeSection
 
 case class Idl(
-    ws: Whitespace,
+    ws: Whitespaces,
     control: ControlSection,
     metadata: MetadataSection,
     shape: ShapeSection
