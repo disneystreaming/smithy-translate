@@ -38,7 +38,7 @@ object SmithyTraitParser {
     }
   //       TraitStructureKvp *(*WS TraitStructureKvp)
   val trait_structure: Parser[TraitStructure] =
-    (trait_structure_kvp ~ (ws.with1 ~ trait_structure_kvp).backtrack.rep0)
+    (trait_structure_kvp ~ (ws0.with1 ~ trait_structure_kvp).backtrack.rep0)
       .map(TraitStructure.tupled)
 
   //    trait_structure / node_value

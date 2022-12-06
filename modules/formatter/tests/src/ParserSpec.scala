@@ -102,6 +102,22 @@ operation GetFilmography {
     assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
   }
 
+  test("trait") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |@http(method: "GET", uri: "/filmography/{actorId}")
+           |structure GetFilmography {
+           |  input: String,
+           |}
+           |""".stripMargin
+      )
+    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+  }
+
   test("enum with commas") {
     val result =
       IdlParser.idlParser.parseAll(

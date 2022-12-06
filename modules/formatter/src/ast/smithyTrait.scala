@@ -42,7 +42,7 @@ object SmithyTraitBodyValue {
 
 case class TraitStructure(
     traitStructureKVP: TraitStructureKeyValuePair,
-    additionalTraits: List[(Whitespace, TraitStructureKeyValuePair)]
+    additionalTraits: List[(Whitespaces, TraitStructureKeyValuePair)]
 )
 
 case class TraitStructureKeyValuePair(
