@@ -209,14 +209,23 @@ final class FormatterSpec extends munit.FunSuite {
                  |  VALUE1,
                  |    VALUE2
                  |}
+                 |enum OtherEnum {
+                 |  V1 = "v1"
+                 |V2 = "v2"
+                 |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
                       |
                       |namespace test
                       |
                       |enum MyEnum {
-                      |    VALUE1,
-                      |    VALUE2,
+                      |    VALUE1
+                      |    VALUE2
+                      |}
+                      |
+                      |enum OtherEnum {
+                      |    V1 = "v1"
+                      |    V2 = "v2"
                       |}
                       |
                       |""".stripMargin
@@ -233,6 +242,10 @@ final class FormatterSpec extends munit.FunSuite {
                  |  that: Integer
                  |}
                  |
+                 |structure MyStructDefault {
+                 |  other: Integer = 1
+                 |}
+                 |
                  |union MyUnion {
                  | this: String,
                  |orThat: Integer
@@ -245,6 +258,10 @@ final class FormatterSpec extends munit.FunSuite {
                       |structure MyStruct {
                       |    this: String,
                       |    that: Integer
+                      |}
+                      |
+                      |structure MyStructDefault {
+                      |    other: Integer = 1
                       |}
                       |
                       |union MyUnion {
