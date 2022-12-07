@@ -1,7 +1,7 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.4`
-import $ivy.`com.lewisjkl::header-mill-plugin::0.0.1`
+import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
