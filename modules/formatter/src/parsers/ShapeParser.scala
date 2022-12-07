@@ -199,7 +199,7 @@ object ShapeParser {
     val elided_structure_member: Parser[ElidedStructureMember] =
       (Parser.string("$") *> identifier).map(ElidedStructureMember)
     val structure_member: Parser[StructureMember] = {
-      ((explicit_structure_member.backtrack | elided_structure_member) ~ value_assigments.?)
+      ((explicit_structure_member.backtrack | elided_structure_member) ~ value_assigments.backtrack.?)
         .map { case (member, va) =>
           StructureMember(member, va)
         }

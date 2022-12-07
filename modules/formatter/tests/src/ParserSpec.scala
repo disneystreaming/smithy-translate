@@ -160,4 +160,20 @@ operation GetFilmography {
       )
     assertEitherIsRight(result)
   }
+
+  test("parse structure body with trailing space") {
+    // trailing white space on `value: String` is important
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |structure GetSetInput {
+           |    value: String 
+           |}
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
 }
