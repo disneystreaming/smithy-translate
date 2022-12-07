@@ -94,7 +94,7 @@ object ShapeParser {
   val mixins: Parser[Mixin] =
     ((sp.with1 *> Parser.string(
       "with"
-    ) *> ws <* openSquare) ~ (ws.with1 ~ shape_id).rep ~ ws <* closeSquare)
+    ) *> ws <* openSquare) ~ (ws.with1 ~ shape_id).backtrack.rep ~ ws <* closeSquare)
       .map { case ((ws0, values), ws1) =>
         Mixin(ws0, values, ws1)
       }

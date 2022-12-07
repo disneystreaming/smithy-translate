@@ -192,4 +192,19 @@ operation GetFilmography {
       )
     assertEitherIsRight(result)
   }
+
+  test("structure with multiple mixins") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |structure LiveAndUnratedContentUpdated with [
+           |    LiveAndUnratedContent
+           |] {}
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
 }
