@@ -28,7 +28,6 @@ import org.json.JSONObject
 import smithytranslate.openapi.OpenApiCompiler._
 import io.circe.Json
 import smithytranslate.json_schema.internals.LoadSchema
-import software.amazon.smithy.model.validation.ValidatedResultException
 
 /** Converts json schema to a smithy model.
   */
