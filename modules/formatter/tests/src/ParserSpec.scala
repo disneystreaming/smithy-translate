@@ -99,7 +99,7 @@ operation GetFilmography {
            |}
            |""".stripMargin
       )
-    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+    assertEitherIsRight(result)
   }
 
   test("map") {
@@ -112,7 +112,7 @@ operation GetFilmography {
            |map Test {key: String value: String}
            |""".stripMargin
       )
-    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+    assertEitherIsRight(result)
   }
 
   test("trait") {
@@ -128,7 +128,7 @@ operation GetFilmography {
            |}
            |""".stripMargin
       )
-    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+    assertEitherIsRight(result)
   }
 
   test("enum with commas") {
