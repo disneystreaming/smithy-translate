@@ -144,6 +144,20 @@ operation GetFilmography {
            |}
            |""".stripMargin
       )
-    assert(result.isRight, s"Failed with ${result.swap.getOrElse(fail("err"))}")
+    assertEitherIsRight(result)
+  }
+
+  test("parse without trailing") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |structure Personalization {
+           |  name: String
+           |}""".stripMargin
+      )
+    assertEitherIsRight(result)
   }
 }
