@@ -17,7 +17,7 @@ package formatter
 package parsers
 
 import cats.parse.{Parser, Parser0}
-import smithytranslate.formatter.ast.{ShapeId, Whitespace, shapes}
+import smithytranslate.formatter.ast.{ShapeId, Break, Whitespace, shapes}
 import smithytranslate.formatter.ast.shapes._
 import smithytranslate.formatter.ast.shapes.ShapeBody._
 import smithytranslate.formatter.ast.shapes.ShapeBody.ListStatement.{
@@ -309,10 +309,14 @@ object ShapeParser {
 
   val shape_body: Parser[shapes.ShapeBody] =
     simple_shape_statement | enum_shape_statement | list_statement | map_statement | structure_statement | union_statement | service_statement | operation_statement | resource_statement
-  val shape_statement: Parser[ShapeStatement] =
-    (trait_statements.with1 ~ shape_body ~ br).map { case ((a, b), c) =>
+  val shape_statement: Parser[ShapeStatement] = {
+    val traitAndBody = trait_statements.with1 ~ shape_body
+    val interspersedBr =
+      (traitAndBody.soft ~ br) | traitAndBody.map(_ -> Break(Nil))
+    interspersedBr.map { case ((a, b), c) =>
       ShapeStatement(a, b, c)
     }
+  }
   val shape_statements: Parser0[ShapeStatements] = (shape_statement
     .map(
       ShapeStatementCase
