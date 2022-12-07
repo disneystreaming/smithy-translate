@@ -32,7 +32,8 @@ object WhitespaceParser {
     Parser
       .defer(sp.rep0.with1 *> commentOrNewline.rep <* ws)
       .map(list => Break(list.toList.flatten))
-  private val not_newline: Parser0[String] = Parser.until(nl)
+  private val not_newline: Parser0[String] =
+    Parser.until(nl).?.map(_.getOrElse(""))
   val line_comment: Parser[Line] = Parser.string("//").as(Line)
   val documentation_comment: Parser[CommentType.Documentation] =
     Parser.string("///").as(Documentation)

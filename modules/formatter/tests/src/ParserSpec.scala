@@ -176,4 +176,20 @@ operation GetFilmography {
       )
     assertEitherIsRight(result)
   }
+
+  test("empty triple doc break") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |///
+           |structure GetSetInput {
+           |    value: String
+           |}
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
 }
