@@ -251,6 +251,17 @@ object proto extends Module {
       )
       def scalaPBVersion = Deps.scalapb.version
 
+      // There are no sources to generate in this module.
+      // We use scalaPB to unpack some files.
+      // Changes in the 0.10.10 version mill removed a check
+      // that ensures the directory existed before running the
+      // compiler and that breaks this build.
+      // See: https://github.com/com-lihaoyi/mill/pull/2126/files
+      def compileScalaPB = T {
+        val out = T.dest
+        PathRef(out)
+      }
+
       def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
 
       def resources = T.sources {
