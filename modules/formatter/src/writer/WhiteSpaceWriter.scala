@@ -36,7 +36,7 @@ object WhiteSpaceWriter {
   }
   implicit val wsWriter: Writer[Whitespace] =
     Writer.write(
-      _.whitespace.writeN
+      _.comments.writeN
     )
 
   /*

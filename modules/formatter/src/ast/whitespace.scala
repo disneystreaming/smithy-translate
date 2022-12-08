@@ -19,9 +19,9 @@ package ast
 import smithytranslate.formatter.ast.CommentType.{Documentation, Line}
 
 case object Comma {}
-case class Whitespace(whitespace: List[Comment])
+case class Whitespace(comments: List[Comment])
 
-case class Break(newLineOrComment: List[Comment])
+case class Break(comments: List[Comment])
 sealed trait CommentType { self =>
   def write: String = self match {
     case Line          => "//"
