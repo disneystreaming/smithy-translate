@@ -207,4 +207,75 @@ operation GetFilmography {
       )
     assertEitherIsRight(result)
   }
+
+  // format: off
+  val parsables = Seq(
+    "just output" ->               """|operation OpName {
+                                      |  output: ShapeId
+                                      |}""".stripMargin,
+    "just input" ->                """|operation OpName {
+                                      |  input: ShapeId
+                                      |}""".stripMargin,
+    "just errors" ->               """|operation OpName {
+                                      |  errors: [ShapeId]
+                                      |}""".stripMargin,
+    "input/errors" ->              """|operation OpName {
+                                      |  input: ShapeId
+                                      |  errors: [ShapeId]
+                                      |}""".stripMargin,
+    "errors/input" ->              """|operation OpName {
+                                      |  errors: [ShapeId]
+                                      |  input: ShapeId
+                                      |}""".stripMargin,
+    "output/errors" ->             """|operation OpName {
+                                      |  output: ShapeId
+                                      |  errors: [ShapeId]
+                                      |}""".stripMargin,
+    "errors/output" ->             """|operation OpName {
+                                      |  errors: [ShapeId]
+                                      |  output: ShapeId
+                                      |}""".stripMargin,
+    "input/output" ->              """|operation OpName {
+                                      |  input: ShapeId
+                                      |  output: ShapeId
+                                      |}""".stripMargin,
+    "output/input" ->              """|operation OpName {
+                                      |  output: ShapeId
+                                      |  input: ShapeId
+                                      |}""".stripMargin,
+    "input/output/errors" ->       """|operation OpName {
+                                      |  input: ShapeId
+                                      |  output: ShapeId
+                                      |  errors: [ShapeId]
+                                      |}""".stripMargin,
+    "output/input/errors" ->       """|operation OpName {
+                                      |  output: ShapeId
+                                      |  input: ShapeId
+                                      |  errors: [ShapeId]
+                                      |}""".stripMargin,
+    "errors/input/output" ->       """|operation OpName {
+                                      |  errors: [ShapeId]
+                                      |  input: ShapeId
+                                      |  output: ShapeId
+                                      |}""".stripMargin,
+    "errors/output/input" ->       """|operation OpName {
+                                      |  errors: [ShapeId]
+                                      |  output: ShapeId
+                                      |  input: ShapeId
+                                      |}""".stripMargin
+  )
+  // format: on
+  parsables.map { case (name, op) =>
+    test(s"operation with $name can be parsed") {
+      val result = IdlParser.idlParser.parseAll(
+        s"""|$$version: "2.0"
+           |
+           |namespace test
+           |
+           |$op
+           |""".stripMargin
+      )
+      assertEitherIsRight(result)
+    }
+  }
 }

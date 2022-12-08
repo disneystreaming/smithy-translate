@@ -263,17 +263,30 @@ object ShapeParser {
         OperationOutput(ws0, either, ws1)
       }
     val operation_errors: Parser[OperationErrors] =
-      (((Parser.string("errors") *> ws <* Parser.char(
+      ((((Parser.string("errors") *> ws <* Parser.char(
         ':'
-      )) ~ ws <* openSquare) ~ (ws.with1 ~ identifier).backtrack.rep0 ~ ws <* closeSquare)
-        .map { case (((ws0, ws1), indentifiers), ws2) =>
-          OperationErrors(ws0, ws1, indentifiers, ws2)
+      )) ~ ws <* openSquare) ~ (ws.with1 ~ identifier).backtrack.rep0 ~ ws <* closeSquare) ~ ws)
+        .map { case ((((ws0, ws1), indentifiers), ws2), ws3) =>
+          OperationErrors(ws0, ws1, indentifiers, ws2, ws3)
+        }
+
+    val opBodyParts: Parser0[List[OperationBodyPart]] =
+      operation_input
+        .eitherOr(operation_output)
+        .eitherOr(operation_errors)
+        .rep0(0, 3)
+        .map {
+          _.map {
+            case Left(err)           => err
+            case Right(Left(output)) => output
+            case Right(Right(input)) => input
+          }
         }
 
     val operation_body: Parser[OperationBody] =
-      (openCurly *> ws ~ operation_input.? ~ operation_output.? ~ operation_errors.? ~ ws <* closeCurly)
-        .map { case ((((ws0, input), output), errors), ws1) =>
-          OperationBody(ws0, input, output, errors, ws1)
+      (openCurly *> ws ~ opBodyParts ~ ws <* closeCurly)
+        .map { case ((ws0, bodyParts), ws1) =>
+          OperationBody(ws0, bodyParts, ws1)
         }
 
     val operation_statement: Parser[OperationStatement] =

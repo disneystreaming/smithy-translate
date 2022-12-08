@@ -171,7 +171,7 @@ object ShapeWriter {
       s"output: ${ws0.write}${members.write}${ws1.write}"
   }
   implicit val operationErrorsWriter: Writer[OperationErrors] = Writer.write {
-    case OperationErrors(ws0, ws1, list, ws3) =>
+    case OperationErrors(ws0, ws1, list, _, ws3) =>
       val listLine = list
         .map { case (ws, shapeId) =>
           s"${ws.write}${shapeId.write}"
@@ -179,9 +179,15 @@ object ShapeWriter {
         .mkString_("[", ", ", ",]")
       s"errors: ${ws0.write}${ws1.write}${listLine}${ws3.write}"
   }
+  implicit val operationBodyPart: Writer[OperationBodyPart] = Writer.write {
+    case i: OperationInput  => i.write
+    case o: OperationOutput => o.write
+    case e: OperationErrors => e.write
+  }
   implicit val operationBodyWriter: Writer[OperationBody] = Writer.write {
-    case OperationBody(whitespace, input, output, errors, ws1) =>
-      val lines = List(input.write, output.write, errors.write)
+    case OperationBody(whitespace, bodyParts, ws1) =>
+      val lines = bodyParts
+        .map(_.write)
         .filter(_.nonEmpty)
         .mkString_("", "\n", "")
       s"${whitespace.write}${lines}${ws1.write}"
