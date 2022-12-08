@@ -183,8 +183,8 @@ object ShapeParser {
 
     val map_members =
       (openCurly *> (ws ~ map_key ~ ws ~ map_value ~ ws) <* closeCurly).map {
-        case ((((ws0, key), br), value), ws2) =>
-          MapMembers(ws0, key, br, value, ws2)
+        case ((((ws0, key), ws1), value), ws2) =>
+          MapMembers(ws0, key, ws1, value, ws2)
       }
     val map_statement: Parser[MapStatement] =
       (Parser.string("map") *> sp0 *> identifier ~ mixinBT.? ~ ws ~ map_members)

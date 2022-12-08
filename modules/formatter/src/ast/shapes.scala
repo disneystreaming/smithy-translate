@@ -166,9 +166,9 @@ object shapes {
       case class MapMembers(
           ws0: Whitespace,
           mapKey: MapKey,
-          break: Whitespace,
+          ws1: Whitespace,
           mapValue: MapValue,
-          ws1: Whitespace
+          ws2: Whitespace
       )
     }
 
