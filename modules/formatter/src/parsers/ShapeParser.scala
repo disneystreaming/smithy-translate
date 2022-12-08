@@ -87,8 +87,9 @@ object ShapeParser {
 
   // see comments on ValueAssignment
   val value_assigments: Parser[ValueAssignment] =
-    (sp *> Parser.char('=') *> sp *> node_value ~ ws).map { case (l, r) =>
-      ValueAssignment(l, r)
+    (sp0.with1 *> Parser.char('=') *> sp0 *> node_value ~ ws).map {
+      case (l, r) =>
+        ValueAssignment(l, r)
     }
 
   val mixins: Parser[Mixin] =
