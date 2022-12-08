@@ -244,30 +244,31 @@ object shapes {
 
     case class OperationBody(
         whitespace: Whitespace,
-        input: Option[OperationInput],
-        output: Option[OperationOutput],
-        errors: Option[OperationErrors],
+        bodyParts: List[OperationBodyPart],
         ws1: Whitespace
     )
+
+    sealed trait OperationBodyPart
 
     case class OperationInput(
         whitespace: Whitespace,
         either: Either[InlineStructure, (Whitespace, ShapeId)],
         whitespace1: Whitespace
-    )
+    ) extends OperationBodyPart
 
     case class OperationOutput(
         whitespace: Whitespace,
         either: Either[InlineStructure, (Whitespace, ShapeId)],
         whitespace1: Whitespace
-    )
+    ) extends OperationBodyPart
 
     case class OperationErrors(
         ws0: Whitespace,
         ws1: Whitespace,
         list: List[(Whitespace, Identifier)],
-        ws2: Whitespace
-    )
+        ws2: Whitespace,
+        ws3: Whitespace
+    ) extends OperationBodyPart
 
     case class OperationStatement(
         identifier: Identifier,
