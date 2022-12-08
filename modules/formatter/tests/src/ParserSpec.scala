@@ -216,8 +216,9 @@ operation GetFilmography {
            |
            |namespace test
            |
-           |structure LiveAndUnratedContentUpdated with [
-           |    LiveAndUnratedContent
+           |structure MyStruct with [
+           |    Mixin1
+           |    Mixin2
            |] {}
            |""".stripMargin
       )
