@@ -160,13 +160,13 @@ object ShapeParser {
     val elided_map_key: Parser[ElidedMapKey] =
       shape_id_member.map(ElidedMapKey)
     val explicit_map_key: Parser[ExplicitMapKey] =
-      Parser.string("key") *> sp0 *> Parser.char(':') *> sp0 *> shape_id.map(
+      Parser.string("key") *> sp0 *> colon *> sp0 *> shape_id.map(
         ExplicitMapKey
       )
     val elided_map_value: Parser[ElidedMapValue] =
       shape_id_member.map(ElidedMapValue)
     val explicit_map_value: Parser[ExplicitMapValue] =
-      Parser.string("value") *> sp0 *> Parser.char(':') *> sp0 *> shape_id.map(
+      Parser.string("value") *> sp0 *> colon *> sp0 *> shape_id.map(
         ExplicitMapValue
       )
     val map_value: Parser[MapValue] =
@@ -249,7 +249,7 @@ object ShapeParser {
   }
 
   object operation_parsers {
-    val ir: Parser[(Whitespace, ShapeId)] = Parser.char(':') *> ws ~ shape_id
+    val ir: Parser[(Whitespace, ShapeId)] = colon *> ws ~ shape_id
     val operation_input: Parser[OperationInput] =
       (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(
         inline_structure

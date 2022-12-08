@@ -33,7 +33,7 @@ object SmithyTraitParser {
 
   //    node_object_key ws ":" ws node_value
   val trait_structure_kvp: Parser[TraitStructureKeyValuePair] =
-    ((node_object_key ~ ws <* Parser.char(':')) ~ ws ~ node_value).map {
+    ((node_object_key ~ ws <* colon) ~ ws ~ node_value).map {
       case (((a, b), c), d) => TraitStructureKeyValuePair(a, b, c, d)
     }
   //       TraitStructureKvp *(*WS TraitStructureKvp)
