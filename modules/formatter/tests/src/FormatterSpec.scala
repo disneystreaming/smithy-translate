@@ -272,4 +272,32 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - map key/value") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |map Milestone {
+                 |    // some doc
+                 |    // other doc
+                 |    key: String,
+                 |
+                 |    value: Milestone
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |map Milestone {
+                      |    // some doc
+                      |    // other doc
+                      |    key: String
+                      |    value: Milestone
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

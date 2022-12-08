@@ -105,8 +105,8 @@ object ShapeWriter {
   }
 
   implicit val mapMembersWriter: Writer[MapMembers] = Writer.write {
-    case MapMembers(ws0, mapKey, break, mapValue, ws1) =>
-      s"${ws0.write}${mapKey.write}${break.write}${mapValue.write}${ws1.write}"
+    case MapMembers(ws0, mapKey, ws1, mapValue, ws2) =>
+      s"${ws0.write}${mapKey.write}\n${ws1.write}${mapValue.write}${ws2.write}"
   }
 
   implicit val valueAssignmentWriter: Writer[ValueAssignment] = Writer.write {
@@ -222,7 +222,7 @@ object ShapeWriter {
       s"$typeName ${id.write}${mixin.write}${whitespace.write} {\n${indent(enumShapeMembers.write, "\n", 4)}\n}"
 
     case MapStatement(identifier, mixin, whitespace, members) =>
-      s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
+      s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case UnionStatement(identifier, mixin, whitespace, members) =>
       s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case ServiceStatement(identifier, mixin, whitespace1, nodeObject) =>
