@@ -97,7 +97,7 @@ object NodeParser {
     ) | identifier.map(NodeObjectKey.IdentifierNok)
 
   lazy val node_object_kvp: Parser[NodeObjectKeyValuePair] =
-    ((node_object_key ~ ws <* Parser.char(':')) ~ ws ~ node_value).map {
+    ((node_object_key ~ ws <* colon) ~ ws ~ node_value).map {
       case (((a, b), c), d) => NodeObjectKeyValuePair(a, b, c, d)
     }
 
