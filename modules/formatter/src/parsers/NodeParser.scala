@@ -83,7 +83,7 @@ object NodeParser {
       }
 
   val number: Parser[SmithyNumber] =
-    (Parser.charWhere(_ == '-').?.with1 ~ nonNegativeIntString ~ frac.? ~ exp.?)
+    (Parser.charIn('-').?.with1 ~ nonNegativeIntString ~ frac.? ~ exp.?)
       .map { case (((a, b), c), d) =>
         SmithyNumber(a, b, c, d)
       }
