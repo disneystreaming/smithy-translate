@@ -168,18 +168,29 @@ object ShapeWriter {
         .mkString_("", ",\n", "")
       s"${whitespace.write}${memberLines}"
   }
+
+  implicit val inputShapeIdWriter: Writer[InputShapeId] = Writer.write {
+    case InputShapeId(ws0, shapeId) =>
+      s": ${ws0.write}${shapeId.write}"
+  }
+
+  implicit val outputShapeIdWriter: Writer[OutputShapeId] = Writer.write { os =>
+    inputShapeIdWriter.write(InputShapeId(os.ws0, os.shapeId))
+  }
+
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
     case InlineStructure(whitespace, traitStatements, mixin, ws1, members) =>
-      s"${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${members.write}"
+      val indented = indent(members.write, "\n", 4)
+      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${indented}\n}"
   }
   implicit val operationInputWriter: Writer[OperationInput] = Writer.write {
     case OperationInput(ws0, members, ws1) =>
-      s"input: ${ws0.write}${members.write}${ws1.write}"
+      s"input${ws0.write}${members.write}${ws1.write}"
   }
 
   implicit val operationOutputWriter: Writer[OperationOutput] = Writer.write {
     case OperationOutput(ws0, members, ws1) =>
-      s"output: ${ws0.write}${members.write}${ws1.write}"
+      s"output${ws0.write}${members.write}${ws1.write}"
   }
   implicit val operationErrorsWriter: Writer[OperationErrors] = Writer.write {
     case OperationErrors(ws0, ws1, list, _, ws3) =>
@@ -241,7 +252,7 @@ object ShapeWriter {
     case ResourceStatement(identifier, mixin, whitespace, nodeObject) =>
       s"resource ${identifier.write} ${mixin.write}${whitespace.write} {\n${nodeObject.write}\n}"
     case OperationStatement(identifier, mixin, whitespace, operationBody) =>
-      s"operation ${identifier.write} ${mixin.write}${whitespace.write} {\n${indent(operationBody.write, "\n", 4)}\n}"
+      s"operation ${identifier.write} ${mixin.write}${whitespace.write}{\n${indent(operationBody.write, "\n", 4)}\n}"
     case ListStatement(identifier, mixin, whitespace, members) =>
       s"list ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
     case StructureStatement(

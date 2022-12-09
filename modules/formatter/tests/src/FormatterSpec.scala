@@ -392,4 +392,45 @@ final class FormatterSpec extends munit.FunSuite {
                        |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - support inline structure") {
+    val src = s"""|$$version: "2.0"
+                  |
+                  |namespace test
+                  |
+                  |operation Op {
+                  |  input: ShapeId
+                  |  output: ShapeId
+                  |}
+                  |
+                  |operation Op {
+                  |  input := {
+                  |    value: String
+                  |  }
+                  |  output := {
+                  |    value: String
+                  |  }
+                  |}
+                  |""".stripMargin
+    val expected = s"""|$$version: "2.0"
+                       |
+                       |namespace test
+                       |
+                       |operation Op {
+                       |    input: ShapeId
+                       |    output: ShapeId
+                       |}
+                       |
+                       |operation Op {
+                       |    input := {
+                       |        value: String
+                       |    }
+                       |    output := {
+                       |        value: String
+                       |    }
+                       |}
+                       |
+                       |""".stripMargin
+    formatTest(src, expected)
+  }
 }

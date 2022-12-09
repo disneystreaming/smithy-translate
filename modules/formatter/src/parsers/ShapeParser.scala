@@ -251,18 +251,22 @@ object ShapeParser {
 
   object operation_parsers {
     val ir: Parser[(Whitespace, ShapeId)] = colon *> ws ~ shape_id
-    val operation_input: Parser[OperationInput] =
-      (Parser.string("input") *> ws ~ ir.backtrack.eitherOr(
+    val operation_input: Parser[OperationInput] = {
+      val isid = ir.map { case (ws, id) => InputShapeId(ws, id) }
+      (Parser.string("input") *> ws ~ isid.backtrack.eitherOr(
         inline_structure
       ) ~ ws).map { case ((ws0, either), ws1) =>
         OperationInput(ws0, either, ws1)
       }
-    val operation_output: Parser[OperationOutput] =
-      (Parser.string("output") *> ws ~ ir.backtrack.eitherOr(
+    }
+    val operation_output: Parser[OperationOutput] = {
+      val osid = ir.map { case (ws, id) => OutputShapeId(ws, id) }
+      (Parser.string("output") *> ws ~ osid.backtrack.eitherOr(
         inline_structure
       ) ~ ws).map { case ((ws0, either), ws1) =>
         OperationOutput(ws0, either, ws1)
       }
+    }
     val operation_errors: Parser[OperationErrors] =
       ((((Parser.string("errors") *> ws <* Parser.char(
         ':'
