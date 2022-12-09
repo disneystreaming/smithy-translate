@@ -122,17 +122,20 @@ object ShapeWriter {
 
   implicit val valueAssignmentWriter: Writer[ValueAssignment] = Writer.write {
     case ValueAssignment(value, whitespace) =>
-      s" = ${value.write}${whitespace.write}"
+      s" = ${value.write}\n${whitespace.write}"
   }
 
   implicit val enumShapeMembersWriter: Writer[EnumShapeMembers] = Writer.write {
     case EnumShapeMembers(whitespace, members) =>
       val memberLines = members
         .map { case (ts, identifiers, maybeValue, ws) =>
-          s"${ts.write}${identifiers.write}${maybeValue.write}${ws.write}"
+          val endLine = maybeValue
+            .map(v => s"${v.write}${ws.write}")
+            .getOrElse(s"\n${ws.write}")
+          s"${ts.write}${identifiers.write}${endLine}"
         }
         .toList
-        .mkString_("", "\n", "")
+        .mkString
       s"${whitespace.write}${memberLines}"
   }
   implicit val structureMemberTypeWriter: Writer[StructureMemberType] =
@@ -152,7 +155,7 @@ object ShapeWriter {
         case (traitStatements, structureMember, ws) =>
           s"${traitStatements.write}${structureMember.write}\n${ws.write}"
       }.mkString
-      indent(s"${whitespace.write}${memberLines}", "\n", 4)
+      s"${whitespace.write}${memberLines}"
   }
   implicit val structureMemberWriter: Writer[StructureMember] = Writer.write {
     case StructureMember(whitespace, maybeAssignment) =>
@@ -164,7 +167,7 @@ object ShapeWriter {
         case (traitStatements, structureMember, ws) =>
           s"${traitStatements.write}${structureMember.write}\n${ws.write}"
       }.mkString
-      indent(s"${whitespace.write}${memberLines}", "\n", 4)
+      s"${whitespace.write}${memberLines}"
   }
 
   implicit val inputShapeIdWriter: Writer[InputShapeId] = Writer.write {
@@ -178,7 +181,8 @@ object ShapeWriter {
 
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
     case InlineStructure(whitespace, traitStatements, mixin, ws1, members) =>
-      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${members.write}\n}"
+      val indented = indent(members.write, "\n", 4)
+      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${indented}\n}"
   }
   implicit val operationInputWriter: Writer[OperationInput] = Writer.write {
     case OperationInput(ws0, members, ws1) =>
@@ -243,7 +247,7 @@ object ShapeWriter {
     case MapStatement(identifier, mixin, whitespace, members) =>
       s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case UnionStatement(identifier, mixin, whitespace, members) =>
-      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
+      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case ServiceStatement(identifier, mixin, whitespace1, nodeObject) =>
       s"service ${identifier.write} ${mixin.write}${whitespace1.write}${nodeObject.write}"
     case ResourceStatement(identifier, mixin, whitespace, nodeObject) =>
@@ -259,7 +263,7 @@ object ShapeWriter {
           whitespace,
           members
         ) =>
-      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${members.write}\n}"
+      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
 
   }
 

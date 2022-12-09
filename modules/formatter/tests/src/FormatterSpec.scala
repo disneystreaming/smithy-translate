@@ -206,11 +206,15 @@ final class FormatterSpec extends munit.FunSuite {
                  |namespace test
                  |
                  |enum MyEnum {
+                 |  // comment 1
                  |  VALUE1,
+                 |  /// comment 2
                  |    VALUE2
                  |}
                  |enum OtherEnum {
+                 |  /// comment 1
                  |  V1 = "v1"
+                 |//comment 2
                  |V2 = "v2"
                  |}
                  |""".stripMargin
@@ -219,12 +223,16 @@ final class FormatterSpec extends munit.FunSuite {
                       |namespace test
                       |
                       |enum MyEnum {
+                      |    // comment 1
                       |    VALUE1
+                      |    /// comment 2
                       |    VALUE2
                       |}
                       |
                       |enum OtherEnum {
+                      |    /// comment 1
                       |    V1 = "v1"
+                      |    // comment 2
                       |    V2 = "v2"
                       |}
                       |
