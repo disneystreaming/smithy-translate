@@ -21,9 +21,13 @@ import smithytranslate.formatter.ast.NodeValue.Number.{Exp, Frac}
 sealed trait NodeValue
 
 object NodeValue {
+  case class NodeArrayValue(
+      value: NodeValue,
+      ws0: Whitespace
+  )
   case class NodeArray(
       whitespace: Whitespace,
-      values: List[(NodeValue, Whitespace)]
+      values: List[NodeArrayValue]
   ) extends NodeValue
   case class NodeObject(
       whitespace: Whitespace,

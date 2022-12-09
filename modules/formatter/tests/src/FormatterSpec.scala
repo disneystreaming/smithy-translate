@@ -549,4 +549,43 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - node value formatting") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |service MyService {
+                 |  operations: [A, B, C]
+                 |  operations: [
+                 |    // comment 1
+                 |    A
+                 |    /// comment 2
+                 |    B
+                 |  ]
+                 |  errors: [E1, E2]
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |service MyService {
+                      |    operations: [
+                      |        A
+                      |        B
+                      |        C
+                      |    ]
+                      |    operations: [
+                      |        // comment 1
+                      |        A
+                      |        /// comment 2
+                      |        B
+                      |    ]
+                      |    errors: [E1, E2]
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

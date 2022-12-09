@@ -18,6 +18,7 @@ package writers
 
 import ast.NodeValue.{
   NodeArray,
+  NodeArrayValue,
   NodeKeyword,
   NodeObject,
   NodeObjectKey,
@@ -26,6 +27,7 @@ import ast.NodeValue.{
   SmithyNumber
 }
 import ast.{
+  Comment,
   EscapedChar,
   NodeValue,
   PreservedDouble,
@@ -46,24 +48,37 @@ import ast.QuotedChar.{
   PreservedDoubleCase,
   SimpleCharCase
 }
-import util.string_ops.{addBrackets, indent}
+import util.string_ops.{addBrackets, indent, isTooWide}
 import ShapeIdWriter.{identifierWriter, shapeIdWriter}
 import WhiteSpaceWriter.wsWriter
 import Writer.{WriterOps, WriterOpsIterable}
 
 object NodeWriter {
+  implicit val nodeArrayValueWriter: Writer[NodeArrayValue] =
+    Writer.write { case NodeArrayValue(value, ws0) =>
+      s"${value.write}\n${ws0.write}"
+    }
+
   implicit val nodeArrayWriter: Writer[NodeArray] = Writer.write {
     case NodeArray(ws, Nil) => s"[${ws.write}]"
     case NodeArray(ws, elems) =>
-      "[\n" +
-        indent(
-          s"${ws.write}${elems.map { case (value, ws) =>
-              s"${value.write}${ws.write},\n"
-            }.mkString}\n]",
-          "\n",
-          4
-        )
+      val comments = ws +: elems.map(_.ws0)
+      val useNewLine =
+        Comment.whitespacesHaveComments(comments) || isTooWide(elems)
+      if (useNewLine) {
+        val indentedComment =
+          if (Comment.hasComment(ws)) indent(ws.write, "\n", 4)
+          else ""
+        elems
+          .map(_.write)
+          .map(indent(_, "\n", 4))
+          .mkString_(s"[\n$indentedComment\n", "\n", "\n]")
+      } else {
+        // no comment, just print the value
+        elems.map(_.value.write).mkString_(s"[${ws.write}", ", ", "]")
+      }
   }
+
   implicit val nodeObjectKvpWriter: Writer[NodeObjectKeyValuePair] =
     Writer.write { case NodeObjectKeyValuePair(key, ws0, ws1, value) =>
       showKeyValue(key, ws0, ws1, value)
@@ -77,7 +92,7 @@ object NodeWriter {
       addBrackets(
         ws.write + indent(
           s"${ws.write}${nokvp.write}${rest.map { case (ws, kvp) =>
-              s",\n${ws.write}${kvp.write}"
+              s"\n${ws.write}${kvp.write}"
             }.mkString}",
           "\n",
           4

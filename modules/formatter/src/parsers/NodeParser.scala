@@ -108,11 +108,13 @@ object NodeParser {
         NodeObject(whitespace, maybeTuple)
       }
 
-  val nodeArray: Parser[NodeArray] =
-    ((openSquare *> ws ~ (node_value ~ ws).backtrack.rep0) <* (ws ~ closeSquare))
+  val nodeArray: Parser[NodeArray] = {
+    val valueP = (node_value ~ ws).map(NodeArrayValue.tupled)
+    ((openSquare *> ws ~ valueP.backtrack.rep0) <* (ws ~ closeSquare))
       .map { case (whitespace, maybeTuple) =>
         NodeArray(whitespace, maybeTuple)
       }
+  }
 }
 
 /*
