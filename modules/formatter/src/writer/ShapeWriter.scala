@@ -195,12 +195,19 @@ object ShapeWriter {
   }
   implicit val operationErrorsWriter: Writer[OperationErrors] = Writer.write {
     case OperationErrors(ws0, ws1, list, _, ws3) =>
-      val listLine = list
-        .map { case (ws, shapeId) =>
-          s"${ws.write}${shapeId.write}"
-        }
-        .mkString_("[", ", ", ",]")
-      s"errors: ${ws0.write}${ws1.write}${listLine}${ws3.write}"
+      val comments = list.map(_._1)
+      val useNewLine =
+        Comment.whitespacesHaveComments(comments) || isTooWide(list)
+      val values = if (useNewLine) {
+        list
+          .map(_.write)
+          .map(indent(_, "\n", 4))
+          .mkString_(s"[\n", "\n", "\n]")
+      } else {
+        // no comment, just print the value
+        list.map(_._2.write).mkString_(s"[", ", ", "]")
+      }
+      s"errors${ws0.write}: ${ws1.write}${values}${ws3.write}"
   }
   implicit val operationBodyPart: Writer[OperationBodyPart] = Writer.write {
     case i: OperationInput  => i.write
