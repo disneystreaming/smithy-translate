@@ -154,12 +154,9 @@ object string_ops {
       newLineAfterOpen: Boolean = true,
       newLineBeforeClose: Boolean = true
   ): String = {
-    if (s.startsWith("{")) s
-    else {
-      val open = if (newLineAfterOpen) "\n{" else "{"
-      val close = if (newLineBeforeClose) "\n}" else "}"
-      open + s + close
-    }
+    val open = if (newLineAfterOpen) "{\n" else "{"
+    val close = if (newLineBeforeClose) "\n}" else "}"
+    open + s + close
   }
 
   def indentIfNotEmpty(value: String): String = {
