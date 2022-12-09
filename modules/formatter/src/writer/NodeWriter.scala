@@ -70,7 +70,7 @@ object NodeWriter {
     }
 
   implicit val nodeObjectWriter: Writer[NodeObject] = Writer.write {
-    case NodeObject(ws, None) => addBrackets(s"${ws.write}")
+    case NodeObject(ws, None) => addBrackets(ws.write)
     case NodeObject(ws, Some((nokvp, Nil))) =>
       addBrackets(indent(s"${ws.write}${nokvp.write}", "\n", 4))
     case NodeObject(ws, Some((nokvp, rest))) =>

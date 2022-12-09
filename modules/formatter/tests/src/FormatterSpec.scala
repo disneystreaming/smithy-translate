@@ -505,6 +505,7 @@ final class FormatterSpec extends munit.FunSuite {
                 |service Service {
                 |  version: "2"
                 |}
+                |service Service { }
                 |""".stripMargin
     val expected = """|$version: "2.0"
                       |
@@ -516,6 +517,10 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |service Service {
                       |    version: "2"
+                      |}
+                      |
+                      |service Service {
+                      |
                       |}
                       |
                       |""".stripMargin
