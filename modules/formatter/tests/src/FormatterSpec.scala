@@ -500,4 +500,27 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - number") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |structure Value {
+                 |  @range(a: -1.0, b: 2, c: 1E10, d: -1.12E-10)
+                 |  a: Int
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |structure Value {
+                      |    @range(a: -1.0, b: 2, c: 1E10, d: -1.12E-10)
+                      |    a: Int,
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
