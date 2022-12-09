@@ -58,9 +58,10 @@ object NodeParser {
   val escaped_char: Parser[EscapedChar] =
     escape *> (Parser.charIn(escapeChars).map(CharCase) | unicode_escape)
   val QuotedChar: Parser[QuotedChar] =
-    qChar.backtrack.map(SimpleCharCase) | escaped_char.backtrack.map(
-      EscapedCharCase
-    ) | preserved_double.map(PreservedDoubleCase) | nl.as(NewLineCase)
+    qChar.backtrack.map(SimpleCharCase) |
+      escaped_char.backtrack.map(EscapedCharCase) |
+      preserved_double.map(PreservedDoubleCase) |
+      nl.as(NewLineCase)
 
   val ThreeDquotes = dquote ~ dquote ~ dquote
   val text_block: Parser[TextBlock] =
