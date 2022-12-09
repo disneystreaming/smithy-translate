@@ -33,7 +33,7 @@ import ast.shapes.ShapeBody.StructureMembers.{
   StructureMember,
   StructureMemberType
 }
-import util.string_ops.{indent, suffix, isTooWide}
+import util.string_ops.{indent, isTooWide}
 import NodeWriter.{nodeObjectWriter, nodeValueWriter}
 import ShapeIdWriter.{
   absoluteRootShapeIdWriter,
@@ -161,12 +161,11 @@ object ShapeWriter {
   }
   implicit val structureMembersWriter: Writer[StructureMembers] = Writer.write {
     case StructureMembers(whitespace, members) =>
-      val memberLines = members
-        .map { case (traitStatements, structureMember, ws) =>
-          s"${traitStatements.write}${structureMember.write}${ws.write}"
-        }
-        .mkString_("", ",\n", "")
-      s"${whitespace.write}${memberLines}"
+      val memberLines = members.map {
+        case (traitStatements, structureMember, ws) =>
+          s"${traitStatements.write}${structureMember.write},\n${ws.write}"
+      }.mkString
+      indent(s"${whitespace.write}${memberLines}", "\n", 4)
   }
 
   implicit val inputShapeIdWriter: Writer[InputShapeId] = Writer.write {
@@ -180,8 +179,7 @@ object ShapeWriter {
 
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
     case InlineStructure(whitespace, traitStatements, mixin, ws1, members) =>
-      val indented = indent(members.write, "\n", 4)
-      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${indented}\n}"
+      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${members.write}\n}"
   }
   implicit val operationInputWriter: Writer[OperationInput] = Writer.write {
     case OperationInput(ws0, members, ws1) =>
@@ -262,7 +260,7 @@ object ShapeWriter {
           whitespace,
           members
         ) =>
-      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(suffix(members.write, "\n"), "\n", 4)}\n}"
+      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${members.write}\n}"
 
   }
 
