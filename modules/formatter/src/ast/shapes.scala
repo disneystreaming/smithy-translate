@@ -234,6 +234,9 @@ object shapes {
         nodeObject: NodeObject
     ) extends ShapeBody
 
+    case class InputShapeId(ws0: Whitespace, shapeId: ShapeId)
+    case class OutputShapeId(ws0: Whitespace, shapeId: ShapeId)
+
     case class InlineStructure(
         whitespace: Whitespace,
         traitStatements: TraitStatements,
@@ -252,13 +255,13 @@ object shapes {
 
     case class OperationInput(
         whitespace: Whitespace,
-        either: Either[InlineStructure, (Whitespace, ShapeId)],
+        either: Either[InlineStructure, InputShapeId],
         whitespace1: Whitespace
     ) extends OperationBodyPart
 
     case class OperationOutput(
         whitespace: Whitespace,
-        either: Either[InlineStructure, (Whitespace, ShapeId)],
+        either: Either[InlineStructure, OutputShapeId],
         whitespace1: Whitespace
     ) extends OperationBodyPart
 
