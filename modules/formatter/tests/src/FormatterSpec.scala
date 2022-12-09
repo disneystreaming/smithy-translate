@@ -356,4 +356,40 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - large documentation trait") {
+    val tq = "\"\"\""
+    val src = s"""|$$version: "2.0"
+                  |
+                  |namespace test
+                  |
+                  |@documentation(${tq}
+                  |  value
+                  |${tq})
+                  |string Value
+                  |
+                  |@other(${tq}
+                  |  value
+                  |  is
+                  |  multiline${tq})
+                  |string Value
+                  |""".stripMargin
+    val expected = s"""|$$version: "2.0"
+                       |
+                       |namespace test
+                       |
+                       |@documentation(${tq}
+                       |  value
+                       |${tq})
+                       |string Value
+                       |
+                       |@other(${tq}
+                       |  value
+                       |  is
+                       |  multiline${tq})
+                       |string Value
+                       |
+                       |""".stripMargin
+    formatTest(src, expected)
+  }
 }

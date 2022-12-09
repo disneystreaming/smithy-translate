@@ -120,7 +120,7 @@ object NodeWriter {
     case SimpleCharCase(char)                 => s"${char.write}"
     case EscapedCharCase(escapedChar)         => escapedChar.write
     case PreservedDoubleCase(preservedDouble) => preservedDouble.write
-    case NewLineCase                          => "\\n"
+    case NewLineCase                          => "\n"
   }
   implicit val quotedTextWriter: Writer[QuotedText] = Writer.write {
     case QuotedText(text) =>
@@ -128,7 +128,7 @@ object NodeWriter {
   }
   implicit val textBlockWriter: Writer[TextBlock] = Writer.write {
     case TextBlock(text) =>
-      s"\"\"\"${text.writeN}\"\"\""
+      s"\"\"\"\n${text.writeN}\"\"\""
   }
   implicit val fracWriter: Writer[Frac] = Writer.write { case Frac(frac) =>
     s".${frac.write}"
