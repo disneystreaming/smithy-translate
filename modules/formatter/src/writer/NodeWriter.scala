@@ -70,21 +70,24 @@ object NodeWriter {
     }
 
   implicit val nodeObjectWriter: Writer[NodeObject] = Writer.write {
-    case NodeObject(ws, None)               => s"{${ws.write}}"
-    case NodeObject(ws, Some((nokvp, Nil))) => s"{${ws.write}${nokvp.write}}"
+    case NodeObject(ws, None) => addBrackets(s"${ws.write}")
+    case NodeObject(ws, Some((nokvp, Nil))) =>
+      addBrackets(indent(s"${ws.write}${nokvp.write}", "\n", 4))
     case NodeObject(ws, Some((nokvp, rest))) =>
-      ws.write + indent(
-        s"${ws.write}${nokvp.write}${rest.map { case (ws, kvp) =>
-            s",\n${ws.write}${kvp.write}"
-          }.mkString}",
-        "\n",
-        4
+      addBrackets(
+        ws.write + indent(
+          s"${ws.write}${nokvp.write}${rest.map { case (ws, kvp) =>
+              s",\n${ws.write}${kvp.write}"
+            }.mkString}",
+          "\n",
+          4
+        )
       )
   }
 
   implicit val nodeValueWriter: Writer[NodeValue] = Writer.write {
     case array: NodeArray       => array.write
-    case nodeObject: NodeObject => addBrackets(nodeObject.write)
+    case nodeObject: NodeObject => nodeObject.write
     case number: SmithyNumber   => smithyNumberWriter(number)
     case NodeKeyword(value)     => value
     case value: NodeStringValue =>

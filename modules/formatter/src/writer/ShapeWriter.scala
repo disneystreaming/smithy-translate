@@ -248,9 +248,9 @@ object ShapeWriter {
     case UnionStatement(identifier, mixin, whitespace, members) =>
       s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case ServiceStatement(identifier, mixin, whitespace1, nodeObject) =>
-      s"service ${identifier.write} ${mixin.write}${whitespace1.write} {\n${nodeObject.write}\n}"
+      s"service ${identifier.write} ${mixin.write}${whitespace1.write}${nodeObject.write}"
     case ResourceStatement(identifier, mixin, whitespace, nodeObject) =>
-      s"resource ${identifier.write} ${mixin.write}${whitespace.write} {\n${nodeObject.write}\n}"
+      s"resource ${identifier.write} ${mixin.write}${whitespace.write}${nodeObject.write}"
     case OperationStatement(identifier, mixin, whitespace, operationBody) =>
       s"operation ${identifier.write} ${mixin.write}${whitespace.write}{\n${indent(operationBody.write, "\n", 4)}\n}"
     case ListStatement(identifier, mixin, whitespace, members) =>
