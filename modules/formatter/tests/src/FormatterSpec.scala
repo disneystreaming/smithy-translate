@@ -433,4 +433,32 @@ final class FormatterSpec extends munit.FunSuite {
                        |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - support node object in service/resource") {
+    val src = """|$version: "2.0"
+                |
+                |namespace test
+                |
+                |resource SubscriberResource {
+                |    read: GetSubscriber
+                |}
+                |service Service {
+                |  version: "2"
+                |}
+                |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |resource SubscriberResource {
+                      |    read: GetSubscriber
+                      |}
+                      |
+                      |service Service {
+                      |    version: "2"
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
