@@ -76,9 +76,9 @@ object NodeParser {
   val node_keywords: Parser[NodeKeyword] =
     Parser.stringIn(Set("true", "false", "null")).map(NodeKeyword)
 
-  val frac: Parser[Frac] = Parser.char('.') *> digit.string.map(Frac)
+  val frac: Parser[Frac] = Parser.char('.') *> digit.rep.string.map(Frac)
   val exp: Parser[Exp] =
-    (Parser.charWhere(c => c == 'e' || c == 'E') ~ opParser.? ~ digit.string)
+    (Parser.charIn('e', 'E') ~ opParser.? ~ digit.rep.string)
       .map { case ((a, b), c) =>
         Exp(a, b, c)
       }

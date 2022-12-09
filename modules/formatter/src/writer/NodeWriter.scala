@@ -103,8 +103,11 @@ object NodeWriter {
   }
 
   def smithyNumberWriter(number: SmithyNumber): String = {
-    s"${number.minus.getOrElse("")}${number.smithyInt.write}${number.frac
-        .getOrElse("")}${number.exp.getOrElse("")}"
+    val sign = number.minus.map(_.toString).getOrElse("")
+    val int = number.smithyInt.write
+    val frac = number.frac.map(_.write).getOrElse("")
+    val exp = number.exp.map(_.write).getOrElse("")
+    s"$sign$int${frac}${exp}"
   }
 
   implicit val nodeObjectKeyWriter: Writer[NodeObjectKey] = Writer.write {
