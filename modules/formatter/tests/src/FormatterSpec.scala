@@ -564,6 +564,22 @@ final class FormatterSpec extends munit.FunSuite {
                  |    B
                  |  ]
                  |  errors: [E1, E2]
+                 |    errors: [E3]
+                 |}
+                 |
+                 |operation SomeOp {
+                 |    errors: [E1, E2, E3]
+                 |}
+                 |
+                 |operation SomeOp {
+                 |    errors: [
+                 |      // one comment
+                 |      E1,
+                 |      E2
+                 |    ]
+                 |}
+                 |operation SomeOp {
+                 |    errors: [E1, E2]
                  |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
@@ -582,6 +598,27 @@ final class FormatterSpec extends munit.FunSuite {
                       |        /// comment 2
                       |        B
                       |    ]
+                      |    errors: [E1, E2]
+                      |    errors: [E3]
+                      |}
+                      |
+                      |operation SomeOp {
+                      |    errors: [
+                      |        E1
+                      |        E2
+                      |        E3
+                      |    ]
+                      |}
+                      |
+                      |operation SomeOp {
+                      |    errors: [
+                      |        // one comment
+                      |        E1
+                      |        E2
+                      |    ]
+                      |}
+                      |
+                      |operation SomeOp {
                       |    errors: [E1, E2]
                       |}
                       |
