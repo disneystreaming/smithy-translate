@@ -148,12 +148,11 @@ object ShapeWriter {
 
   implicit val unionMembersWriter: Writer[UnionMembers] = Writer.write {
     case UnionMembers(whitespace, members) =>
-      val memberLines = members
-        .map { case (traitStatements, structureMember, ws) =>
-          s"${traitStatements.write}${structureMember.write}${ws.write}"
-        }
-        .mkString_("", ",\n", ",")
-      s"${whitespace.write}${memberLines}"
+      val memberLines = members.map {
+        case (traitStatements, structureMember, ws) =>
+          s"${traitStatements.write}${structureMember.write}\n${ws.write}"
+      }.mkString
+      indent(s"${whitespace.write}${memberLines}", "\n", 4)
   }
   implicit val structureMemberWriter: Writer[StructureMember] = Writer.write {
     case StructureMember(whitespace, maybeAssignment) =>
@@ -163,7 +162,7 @@ object ShapeWriter {
     case StructureMembers(whitespace, members) =>
       val memberLines = members.map {
         case (traitStatements, structureMember, ws) =>
-          s"${traitStatements.write}${structureMember.write},\n${ws.write}"
+          s"${traitStatements.write}${structureMember.write}\n${ws.write}"
       }.mkString
       indent(s"${whitespace.write}${memberLines}", "\n", 4)
   }
@@ -244,7 +243,7 @@ object ShapeWriter {
     case MapStatement(identifier, mixin, whitespace, members) =>
       s"map ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case UnionStatement(identifier, mixin, whitespace, members) =>
-      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
+      s"union ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
     case ServiceStatement(identifier, mixin, whitespace1, nodeObject) =>
       s"service ${identifier.write} ${mixin.write}${whitespace1.write}${nodeObject.write}"
     case ResourceStatement(identifier, mixin, whitespace, nodeObject) =>

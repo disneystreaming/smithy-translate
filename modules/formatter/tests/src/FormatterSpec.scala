@@ -249,6 +249,13 @@ final class FormatterSpec extends munit.FunSuite {
                  |  // some comment
                  |  other: Integer = 1
                  |}
+                 |
+                 |union MyUnion {
+                 |    // some comment
+                 | this: String,
+                 |    /// some comment
+                 |orThat: Integer
+                 |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
                       |
@@ -257,14 +264,21 @@ final class FormatterSpec extends munit.FunSuite {
                       |structure MyStruct {
                       |    @doc("data")
                       |    /// comment 1
-                      |    this: String,
+                      |    this: String
                       |    /// comment 2
-                      |    that: Integer,
+                      |    that: Integer
                       |}
                       |
                       |structure MyStructDefault {
                       |    // some comment
-                      |    other: Integer = 1,
+                      |    other: Integer = 1
+                      |}
+                      |
+                      |union MyUnion {
+                      |    // some comment
+                      |    this: String
+                      |    /// some comment
+                      |    orThat: Integer
                       |}
                       |
                       |""".stripMargin
@@ -295,17 +309,17 @@ final class FormatterSpec extends munit.FunSuite {
                       |namespace test
                       |
                       |structure MyStruct {
-                      |    this: String,
-                      |    that: Integer,
+                      |    this: String
+                      |    that: Integer
                       |}
                       |
                       |structure MyStructDefault {
-                      |    other: Integer = 1,
+                      |    other: Integer = 1
                       |}
                       |
                       |union MyUnion {
-                      |    this: String,
-                      |    orThat: Integer,
+                      |    this: String
+                      |    orThat: Integer
                       |}
                       |
                       |""".stripMargin
@@ -318,11 +332,10 @@ final class FormatterSpec extends munit.FunSuite {
                  |namespace test
                  |
                  |map Milestone {
-                 |    // some doc
-                 |    // other doc
-                 |    key: String,
-                 |
-                 |    value: Milestone
+                 |  // some doc
+                 |  key: String,
+                 |  // other doc
+                 |  value: Milestone
                  |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
@@ -331,8 +344,8 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |map Milestone {
                       |    // some doc
-                      |    // other doc
                       |    key: String
+                      |    // other doc
                       |    value: Milestone
                       |}
                       |
@@ -462,10 +475,10 @@ final class FormatterSpec extends munit.FunSuite {
                        |
                        |operation Op {
                        |    input := {
-                       |        value: String,
+                       |        value: String
                        |    }
                        |    output := {
-                       |        value: String,
+                       |        value: String
                        |    }
                        |}
                        |
@@ -517,7 +530,7 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |structure Value {
                       |    @range(a: -1.0, b: 2, c: 1E10, d: -1.12E-10)
-                      |    a: Int,
+                      |    a: Int
                       |}
                       |
                       |""".stripMargin
