@@ -148,7 +148,7 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
-  test("format test - comment beteen trait and shape") {
+  test("format test - comment between trait and shape") {
     val src = """|$version: "2.0"
                  |
                  |namespace test
@@ -173,7 +173,7 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
-  test("format test - comments beteen trait and shape") {
+  test("format test - comments between trait and shape") {
     val src = """|$version: "2.0"
                  |
                  |namespace test
