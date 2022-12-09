@@ -225,6 +225,22 @@ operation GetFilmography {
     assertEitherIsRight(result)
   }
 
+  test("format test - large documentation trait") {
+    val tq = "\"\"\""
+    val src = s"""|$$version: "2.0"
+                  |
+                  |namespace test
+                  |
+                  |@documentation(${tq}
+                  |  value
+                  |${tq})
+                  |string Value
+                  |
+                  |""".stripMargin
+    val result = IdlParser.idlParser.parseAll(src)
+    assertEitherIsRight(result)
+  }
+
   // format: off
   val parsables = Seq(
     "just output" ->               """|operation OpName {
