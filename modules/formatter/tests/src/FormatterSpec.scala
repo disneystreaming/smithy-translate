@@ -232,6 +232,45 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
+  test("format test - structure with commented members") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |structure MyStruct {
+                 |  @doc("data")
+                 |  /// comment 1
+                 |  this: String,
+                 |  /// comment 2
+                 |  that: Integer
+                 |}
+                 |
+                 |structure MyStructDefault {
+                 |  // some comment
+                 |  other: Integer = 1
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |structure MyStruct {
+                      |    @doc("data")
+                      |    /// comment 1
+                      |    this: String,
+                      |    /// comment 2
+                      |    that: Integer,
+                      |}
+                      |
+                      |structure MyStructDefault {
+                      |    // some comment
+                      |    other: Integer = 1,
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("format test - identation on shape with body") {
     val src = """|$version: "2.0"
                  |
@@ -257,11 +296,11 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |structure MyStruct {
                       |    this: String,
-                      |    that: Integer
+                      |    that: Integer,
                       |}
                       |
                       |structure MyStructDefault {
-                      |    other: Integer = 1
+                      |    other: Integer = 1,
                       |}
                       |
                       |union MyUnion {
@@ -423,10 +462,10 @@ final class FormatterSpec extends munit.FunSuite {
                        |
                        |operation Op {
                        |    input := {
-                       |        value: String
+                       |        value: String,
                        |    }
                        |    output := {
-                       |        value: String
+                       |        value: String,
                        |    }
                        |}
                        |
