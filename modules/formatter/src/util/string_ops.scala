@@ -86,6 +86,9 @@ object string_ops {
       string
   }
 
+  def isTooWide[A](values: List[A], limit: Integer = 3): Boolean =
+    values.size >= limit
+
   def indentList[A: Show](
       value: List[A],
       delimiter: String,

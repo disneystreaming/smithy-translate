@@ -36,3 +36,15 @@ object CommentType {
   type Line = Line.type
 }
 case class Comment(commentType: CommentType, text: String)
+
+object Comment {
+  def hasComment(br: Break): Boolean = br.comments.nonEmpty
+  def hasComment(whitespace: Whitespace): Boolean =
+    whitespace.comments.nonEmpty
+
+  def whitespacesHaveComments(whitespace: Seq[Whitespace]): Boolean =
+    whitespace.exists(hasComment)
+
+  def breaksHaveComments(breaks: Seq[Break]): Boolean =
+    breaks.exists(hasComment)
+}
