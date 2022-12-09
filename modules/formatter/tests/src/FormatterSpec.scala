@@ -300,4 +300,60 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - multiple mixins") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |structure Struct with [
+                 |    Mixin
+                 |    Mixin
+                 |    Mixin
+                 |    Mixin
+                 |    Mixin
+                 |    Mixin
+                 |    Mixin
+                 |] {}
+                 |
+                 |structure Struct with [
+                 |    Mixin
+                 |    Mixin
+                 |] {}
+                 |
+                 |structure Struct with [
+                 |    // Just one but w/ comment
+                 |    Mixin
+                 |] {}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |structure Struct with [
+                      |    Mixin,
+                      |    Mixin,
+                      |    Mixin,
+                      |    Mixin,
+                      |    Mixin,
+                      |    Mixin,
+                      |    Mixin
+                      |] {
+                      |
+                      |}
+                      |
+                      |structure Struct with [Mixin, Mixin] {
+                      |
+                      |}
+                      |
+                      |structure Struct with [
+                      |    // Just one but w/ comment
+                      |    Mixin
+                      |] {
+                      |
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

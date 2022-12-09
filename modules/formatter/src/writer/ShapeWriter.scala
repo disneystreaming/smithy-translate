@@ -16,6 +16,7 @@ package smithytranslate
 package formatter
 package writers
 
+import ast.Comment
 import ast.shapes._
 import ast.shapes.ShapeBody._
 import ast.shapes.ShapeBody.ListStatement._
@@ -32,7 +33,7 @@ import ast.shapes.ShapeBody.StructureMembers.{
   StructureMember,
   StructureMemberType
 }
-import util.string_ops.{indent, suffix}
+import util.string_ops.{indent, suffix, isTooWide}
 import NodeWriter.{nodeObjectWriter, nodeValueWriter}
 import ShapeIdWriter.{
   absoluteRootShapeIdWriter,
@@ -85,7 +86,17 @@ object ShapeWriter {
   // *SP %s"with" *WS "[" 1*(*WS ShapeId) *WS "]"
   implicit val mixinWriter: Writer[Mixin] = Writer.write {
     case Mixin(whitespace, shapeIds, whitespace1) =>
-      s" with${whitespace.write}[${shapeIds.map(_.write).toList.mkString}${whitespace1.write}]"
+      val list = shapeIds.toList
+      val useNewLine =
+        Comment.whitespacesHaveComments(list.map(_._1)) || isTooWide(list)
+      val values =
+        if (useNewLine)
+          list
+            .map(_.write)
+            .map(indent(_, "\n", 4))
+            .mkString_("[\n", ",\n", s"\n${whitespace1.write}]")
+        else list.map(_.write).mkString_("[", ", ", s"${whitespace1.write}]")
+      s" with${whitespace.write} $values"
   }
   implicit val mapMemberTypeWriter: Writer[MapKeyType] = Writer.write {
     case ElidedMapKey(member)    => s"$$${member.write}"
