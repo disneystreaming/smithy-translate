@@ -112,7 +112,7 @@ object string_ops {
 
   def indent(value: String, delimiter: String, indentLevel: Int): String = {
     val indentation = " " * indentLevel
-    val intermediate = value
+    value
       .split(delimiter, -1)
       .toList
       .filterNot(_.isEmpty)
@@ -121,14 +121,6 @@ object string_ops {
         else (acc + delimiter + indentation + line, isFirst)
       }
       ._1
-    if (
-      (intermediate.trim.startsWith("[") || intermediate.trim.startsWith(
-        "{"
-      )) && intermediate.length < 80
-    )
-      intermediate.replaceAll(" ", "").replaceAll("\n", " ")
-    else
-      intermediate
   }
 
   def simpleIndent(spaces: Int, skipfirst: Boolean, str: String): String = {
