@@ -180,9 +180,13 @@ object ShapeWriter {
   }
 
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
-    case InlineStructure(whitespace, traitStatements, mixin, ws1, members) =>
+    case InlineStructure(whitespace, traitStatements, _mixin, ws1, members) =>
       val indented = indent(members.write, "\n", 4)
-      s" := {\n${whitespace.write}${traitStatements.write}${mixin.write}${ws1.write}${indented}\n}"
+      val blank =
+        if (traitStatements.list.nonEmpty) " "
+        else ""
+      val mixin = _mixin.map(_.write + " ").getOrElse(" ")
+      s" :=${whitespace.write}${blank}${traitStatements.write}${mixin}{\n${ws1.write}${indented}\n}"
   }
   implicit val operationInputWriter: Writer[OperationInput] = Writer.write {
     case OperationInput(ws0, members, ws1) =>

@@ -485,6 +485,22 @@ final class FormatterSpec extends munit.FunSuite {
                   |    value: String
                   |  }
                   |}
+                  |
+                  |operation Op {
+                  |  input := @someTrait {
+                  |    value: String
+                  |  }
+                  |
+                  |  output := with [Mixin] {
+                  |    value: String
+                  |  }
+                  |}
+                  |
+                  |operation Op {
+                  |    input := @someTrait with [Mixin] {
+                  |        value: String
+                  |    }
+                  |}
                   |""".stripMargin
     val expected = s"""|$$version: "2.0"
                        |
@@ -500,6 +516,23 @@ final class FormatterSpec extends munit.FunSuite {
                        |        value: String
                        |    }
                        |    output := {
+                       |        value: String
+                       |    }
+                       |}
+                       |
+                       |operation Op {
+                       |    input := @someTrait
+                       |     {
+                       |        value: String
+                       |    }
+                       |    output := with [Mixin] {
+                       |        value: String
+                       |    }
+                       |}
+                       |
+                       |operation Op {
+                       |    input := @someTrait
+                       |     with [Mixin] {
                        |        value: String
                        |    }
                        |}
