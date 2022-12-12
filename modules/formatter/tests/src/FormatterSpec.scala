@@ -663,4 +663,37 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("structure with for resource") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |resource MyResource {
+                 |    identifiers: {
+                 |        id: String
+                 |    }
+                 |}
+                 |
+                 |structure MyResourceIdentifiers for MyResource {
+                 |    $id
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |resource MyResource {
+                      |    identifiers: {
+                      |        id: String
+                      |    }
+                      |}
+                      |
+                      |structure MyResourceIdentifiers for MyResource {
+                      |    $id
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
