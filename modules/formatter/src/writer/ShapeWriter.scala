@@ -236,7 +236,7 @@ object ShapeWriter {
   }
 
   implicit val structureResource: Writer[StructureResource] = Writer.write {
-    case StructureResource(shapeId) => s"${shapeId.write}"
+    case StructureResource(shapeId) => s" for ${shapeId.write}"
   }
 
   implicit val shapeBodyWriter: Writer[ShapeBody] = Writer.write {
