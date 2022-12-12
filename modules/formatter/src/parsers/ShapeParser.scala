@@ -52,6 +52,7 @@ import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws}
 import smithytranslate.formatter.parsers.NodeParser._
 import smithytranslate.formatter.parsers.ShapeIdParser._
 import smithytranslate.formatter.parsers.ShapeParser.list_parsers.list_statement
+import smithytranslate.formatter.parsers.ShapeParser.set_parsers.set_statement
 import smithytranslate.formatter.parsers.ShapeParser.map_parsers.map_statement
 import smithytranslate.formatter.parsers.ShapeParser.operation_parsers.operation_statement
 import smithytranslate.formatter.parsers.ShapeParser.structure_parsers.structure_statement
@@ -148,13 +149,23 @@ object ShapeParser {
         case ((ws0, members), ws1) => ListMembers(ws0, members, ws1)
       }
 
-    val list_statement: Parser[ListStatement] =
+    private[parsers] def list_statement0(
+        lookingFor: String
+    ): Parser[ListStatement] =
       ((Parser.string(
-        "list"
+        lookingFor
       ) <* sp0) *> identifier ~ mixinBT.? ~ ws ~ list_members).map {
         case (((id, mixin), ws), members) =>
           ListStatement(id, mixin, ws, members)
       }
+
+    val list_statement: Parser[ListStatement] = list_statement0("list")
+  }
+
+  object set_parsers {
+    // relying on list_parsers
+    import list_parsers.list_statement0
+    val set_statement: Parser[ListStatement] = list_statement0("set")
   }
 
   object map_parsers {
@@ -326,7 +337,7 @@ object ShapeParser {
       }
 
   val shape_body: Parser[shapes.ShapeBody] =
-    simple_shape_statement | enum_shape_statement | list_statement | map_statement | structure_statement | union_statement | service_statement | operation_statement | resource_statement
+    simple_shape_statement | enum_shape_statement | list_statement | set_statement | map_statement | structure_statement | union_statement | service_statement | operation_statement | resource_statement
   val shape_statement: Parser[ShapeStatement] = {
     val traitAndBody = trait_statements.with1 ~ shape_body
     val interspersedBr =

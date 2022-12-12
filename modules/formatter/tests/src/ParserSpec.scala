@@ -204,6 +204,20 @@ operation GetFilmography {
     assertEitherIsRight(result)
   }
 
+  test("set can be parsed") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |set ASet {member:String}
+           |
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
+
   test("map w/o members") {
     val result =
       IdlParser.idlParser.parseAll(
