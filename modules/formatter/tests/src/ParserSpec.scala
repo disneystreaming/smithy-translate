@@ -131,33 +131,26 @@ operation GetFilmography {
     assertEitherIsRight(result)
   }
 
-  test("enum with no space") {
+  test("enums") {
     val result =
       IdlParser.idlParser.parseAll(
         """|$version: "2.0"
            |
            |namespace test
            |
+           |// no spaces
            |enum OtherEnum {
            |    V1 ="v1",
            |    V2 = "v2"
            |}
-           |""".stripMargin
-      )
-    assertEitherIsRight(result)
-  }
-
-  test("enum with commas") {
-    val result =
-      IdlParser.idlParser.parseAll(
-        """|$version: "2.0"
            |
-           |namespace test
-           |
+           |// with commas
            |enum OtherEnum {
            |    V1 = "v1",
            |    V2 = "v2"
            |}
+           |
+           |enum A { FOO BAR BAZ }
            |""".stripMargin
       )
     assertEitherIsRight(result)

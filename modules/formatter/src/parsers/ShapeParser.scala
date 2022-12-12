@@ -109,7 +109,7 @@ object ShapeParser {
     }
 
   val enum_shape_members: Parser[EnumShapeMembers] =
-    (openCurly *> ws.with1 ~ (trait_statements.with1 ~ identifier ~ value_assigments.? ~ ws).rep <* closeCurly)
+    (openCurly *> ws.with1 ~ (trait_statements.with1 ~ identifier ~ value_assigments.backtrack.? ~ ws).rep <* closeCurly)
       .map { case (ws, members) =>
         EnumShapeMembers(
           ws,
