@@ -28,7 +28,7 @@ import ast.{
   TraitStructureKeyValuePair
 }
 import ast.SmithyTraitBodyValue.{NodeValueCase, SmithyTraitStructureCase}
-import util.string_ops.formatEnum
+import util.string_ops.{indent, formatEnum}
 import NodeWriter.nodeValueWriter
 import ShapeIdWriter.shapeIdWriter
 import WhiteSpaceWriter.{breakWriter, wsWriter}
@@ -76,7 +76,7 @@ object SmithyTraitWriter {
     }
   implicit val applyBlockWriter: Writer[ApplyStatementBlock] = Writer.write {
     case ApplyStatementBlock(shapeId, ws0, traitStatements, br) =>
-      s"apply ${shapeId.write} ${ws0.write}{${traitStatements.write}}${br.write}"
+      s"apply ${shapeId.write} ${ws0.write}{\n${indent(traitStatements.write, "\n", 4)}\n}${br.write}"
   }
   implicit val applyStatementWriter: Writer[ApplyStatement] = Writer.write {
     _.either.write

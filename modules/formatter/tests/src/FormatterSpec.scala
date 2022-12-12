@@ -625,4 +625,28 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("format test - apply formatting") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |apply Foo$baz {
+                 |    @documentation("Hi")
+                 |    @internal
+                 |    @deprecated
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |apply Foo$baz {
+                      |    @documentation("Hi")
+                      |    @internal
+                      |    @deprecated
+                      |}
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
