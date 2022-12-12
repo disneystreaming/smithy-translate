@@ -677,6 +677,7 @@ final class FormatterSpec extends munit.FunSuite {
                  |
                  |structure MyResourceIdentifiers for MyResource {
                  |    $id
+                 |    value: SomeMember$list
                  |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
@@ -691,6 +692,39 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |structure MyResourceIdentifiers for MyResource {
                       |    $id
+                      |    value: SomeMember$list
+                      |}
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("elided member") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |list MixedList with [MixinList] {
+                 |  $member
+                 |}
+                 |
+                 |map MixedMap with [MixinMap] {
+                 |  $key
+                 |  $value
+                 |}
+                 |
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |list MixedList with [MixinList] {
+                      |    $member
+                      |}
+                      |
+                      |map MixedMap with [MixinMap] {
+                      |    $key
+                      |    $value
                       |}
                       |
                       |""".stripMargin
