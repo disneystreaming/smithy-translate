@@ -129,7 +129,7 @@ object ShapeParser {
   object list_parsers {
 
     val explicit_list_member: Parser[ExplicitListMember] =
-      Parser.string("member") *> sp0 *> Parser.string(":") *> sp0 *> shape_id
+      Parser.string("member") *> sp0 *> Parser.charIn(':') *> sp0 *> shape_id
         .map(
           ExplicitListMember
         )
@@ -195,10 +195,10 @@ object ShapeParser {
 
   object structure_parsers {
     val explicit_structure_member: Parser[ExplicitStructureMember] =
-      ((identifier <* sp0 <* Parser.string(":") <* sp0) ~ shape_id)
+      ((identifier <* sp0 <* Parser.charIn(':') <* sp0) ~ shape_id)
         .map(ExplicitStructureMember.tupled)
     val elided_structure_member: Parser[ElidedStructureMember] =
-      (Parser.string("$") *> identifier).map(ElidedStructureMember)
+      (Parser.charIn('$') *> identifier).map(ElidedStructureMember)
     val structure_member: Parser[StructureMember] = {
       ((explicit_structure_member.backtrack | elided_structure_member) ~ value_assigments.backtrack.?)
         .map { case (member, va) =>
