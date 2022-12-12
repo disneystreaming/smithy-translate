@@ -130,24 +130,6 @@ object string_ops {
     val indent = " " * spaces
     str.split("\n").mkString(if (skipfirst) "" else indent, s"\n$indent", "")
   }
-  def formatEnum(string: String): String = {
-    simpleIndent(
-      4,
-      skipfirst = true,
-      string
-        .replaceAll(" +", " ")
-        .replaceAll("\n", "")
-        .split("},", -1)
-        .mkString("},\n")
-        .split("\\[")
-        .mkString("[\n")
-    )
-      .insertBeforeLast(']', "\n")
-  }
-
-  def formatStructure(string: String): String = {
-    string.split(",").mkString(",\n")
-  }
 
   def addBrackets(
       s: String,
