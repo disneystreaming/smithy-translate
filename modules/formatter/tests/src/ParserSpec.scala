@@ -190,6 +190,20 @@ operation GetFilmography {
     assertEitherIsRight(result)
   }
 
+  test("no spacing") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |list MixinList {member:String}
+           |
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
+
   test("map w/o members") {
     val result =
       IdlParser.idlParser.parseAll(
