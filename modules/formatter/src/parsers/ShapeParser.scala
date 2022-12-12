@@ -129,7 +129,7 @@ object ShapeParser {
   object list_parsers {
 
     val explicit_list_member: Parser[ExplicitListMember] =
-      Parser.string("member") *> sp.rep0 *> Parser.string(":") *> sp *> shape_id
+      Parser.string("member") *> sp0 *> Parser.string(":") *> sp0 *> shape_id
         .map(
           ExplicitListMember
         )
