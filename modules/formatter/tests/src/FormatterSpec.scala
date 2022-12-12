@@ -628,6 +628,9 @@ final class FormatterSpec extends munit.FunSuite {
                  |operation SomeOp {
                  |    errors: [E1, E2]
                  |}
+                 |operation SomeOp {
+                 |    errors: []
+                 |}
                  |""".stripMargin
     val expected = """|$version: "2.0"
                       |
@@ -667,6 +670,10 @@ final class FormatterSpec extends munit.FunSuite {
                       |
                       |operation SomeOp {
                       |    errors: [E1, E2]
+                      |}
+                      |
+                      |operation SomeOp {
+                      |    errors: []
                       |}
                       |
                       |""".stripMargin

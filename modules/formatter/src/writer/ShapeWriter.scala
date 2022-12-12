@@ -202,15 +202,18 @@ object ShapeWriter {
       val comments = list.map(_._1)
       val useNewLine =
         Comment.whitespacesHaveComments(comments) || isTooWide(list)
-      val values = if (useNewLine) {
-        list
-          .map(_.write)
-          .map(indent(_, "\n", 4))
-          .mkString_(s"[\n", "\n", "\n]")
-      } else {
-        // no comment, just print the value
-        list.map(_._2.write).mkString_(s"[", ", ", "]")
-      }
+      val values =
+        if (list.isEmpty) {
+          "[]"
+        } else if (useNewLine) {
+          list
+            .map(_.write)
+            .map(indent(_, "\n", 4))
+            .mkString(s"[\n", "\n", "\n]")
+        } else {
+          // no comment, just print the value
+          list.map(_._2.write).mkString_(s"[", ", ", "]")
+        }
       s"errors${ws0.write}: ${ws1.write}${values}${ws3.write}"
   }
   implicit val operationBodyPart: Writer[OperationBodyPart] = Writer.write {
