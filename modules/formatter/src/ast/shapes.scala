@@ -165,11 +165,13 @@ object shapes {
         case class ExplicitMapValue(shapeId: ShapeId) extends MapValueType
       }
 
+      // Diverging from the grammar: https://smithy.io/2.0/spec/idl.html#grammar-token-smithy-MapMembers
+      // The grammar says key member and value member are mandatory but they are not in practice
       case class MapMembers(
           ws0: Whitespace,
-          mapKey: MapKey,
+          mapKey: Option[MapKey],
           ws1: Whitespace,
-          mapValue: MapValue,
+          mapValue: Option[MapValue],
           ws2: Whitespace
       )
     }
