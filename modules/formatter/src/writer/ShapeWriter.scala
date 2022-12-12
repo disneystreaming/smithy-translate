@@ -99,11 +99,11 @@ object ShapeWriter {
       s" with${whitespace.write} $values"
   }
   implicit val mapMemberTypeWriter: Writer[MapKeyType] = Writer.write {
-    case ElidedMapKey(member)    => s"$$${member.write}"
-    case ExplicitMapKey(shapeId) => s"key: ${shapeId.write}"
+    case ElidedMapKey(shapeIdMember) => shapeIdMember.write
+    case ExplicitMapKey(shapeId)     => s"key: ${shapeId.write}"
   }
   implicit val mapValueTypeWriter: Writer[MapValueType] = Writer.write {
-    case ElidedMapValue(member)    => s"$$${member.write}"
+    case ElidedMapValue(member)    => s"${member.write}"
     case ExplicitMapValue(shapeId) => s"value: ${shapeId.write}"
   }
   implicit val mapKeyWriter: Writer[MapKey] = Writer.write {
@@ -223,8 +223,8 @@ object ShapeWriter {
       s"${whitespace.write}${lines}${ws1.write}"
   }
   implicit val listMemberTypeWriter: Writer[ListMemberType] = Writer.write {
-    case ElidedListMember(shapeIdMember) => s"$$${shapeIdMember.write}"
-    case ExplicitListMember(shapeId)     => s"    member: ${shapeId.write}"
+    case ElidedListMember(shapeIdMember) => shapeIdMember.write
+    case ExplicitListMember(shapeId)     => s"member: ${shapeId.write}"
   }
   implicit val listMemberWriter: Writer[ListMember] = Writer.write {
     case ListMember(traitStatements, listMemberType) =>
@@ -262,7 +262,7 @@ object ShapeWriter {
     case OperationStatement(identifier, mixin, whitespace, operationBody) =>
       s"operation ${identifier.write} ${mixin.write}${whitespace.write}{\n${indent(operationBody.write, "\n", 4)}\n}"
     case ListStatement(identifier, mixin, whitespace, members) =>
-      s"list ${identifier.write}${mixin.write}${whitespace.write} {\n${members.write}\n}"
+      s"list ${identifier.write}${mixin.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
     case StructureStatement(
           identifier,
           resource,
