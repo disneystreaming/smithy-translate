@@ -144,7 +144,7 @@ object ShapeParser {
         }
 
     val list_members: Parser[ListMembers] =
-      (openCurly *> ws ~ list_member ~ ws <* closeCurly).map {
+      (openCurly *> ws ~ list_member.? ~ ws <* closeCurly).map {
         case ((ws0, members), ws1) => ListMembers(ws0, members, ws1)
       }
 

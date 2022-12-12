@@ -177,6 +177,26 @@ operation GetFilmography {
     assertEitherIsRight(result)
   }
 
+  test("list w/o a member") {
+    val result =
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |namespace test
+           |
+           |@mixin
+           |list MixinList {
+           |    member: String
+           |}
+           |
+           |list MixedList with [MixinList] {
+           |}
+           |
+           |""".stripMargin
+      )
+    assertEitherIsRight(result)
+  }
+
   test("parse structure body with trailing space") {
     // trailing white space on `value: String` is important
     val result =
