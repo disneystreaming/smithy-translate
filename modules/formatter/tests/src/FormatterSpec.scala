@@ -217,6 +217,11 @@ final class FormatterSpec extends munit.FunSuite {
                  |//comment 2
                  |V2 = "v2"
                  |}
+                 |
+                 |@enum([
+                 |    /// Invalid!
+                 |    { name: "X", value: "X"}
+                 |]) string Features
                  |""".stripMargin
     val expected = """|$version: "2.0"
                       |
@@ -235,6 +240,15 @@ final class FormatterSpec extends munit.FunSuite {
                       |    // comment 2
                       |    V2 = "v2"
                       |}
+                      |
+                      |@enum([
+                      |    /// Invalid!
+                      |    {
+                      |        name: "X"
+                      |        value: "X"
+                      |    }
+                      |])
+                      |string Features
                       |
                       |""".stripMargin
     formatTest(src, expected)

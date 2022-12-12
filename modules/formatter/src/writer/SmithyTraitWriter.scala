@@ -28,7 +28,7 @@ import ast.{
   TraitStructureKeyValuePair
 }
 import ast.SmithyTraitBodyValue.{NodeValueCase, SmithyTraitStructureCase}
-import util.string_ops.{indent, formatEnum}
+import util.string_ops.indent
 import NodeWriter.nodeValueWriter
 import ShapeIdWriter.shapeIdWriter
 import WhiteSpaceWriter.{breakWriter, wsWriter}
@@ -44,10 +44,7 @@ object SmithyTraitWriter {
     case SmithyTrait(shapeId, traitBody) =>
       val id = shapeId.write
       val body = traitBody.write
-      val reformatted = if (id.equalsIgnoreCase("enum")) {
-        formatEnum(body)
-      } else body
-      s"@$id$reformatted"
+      s"@$id$body"
   }
   implicit val traitBodyWriter: Writer[TraitBody] = Writer.write {
     case TraitBody(ws0, traitBodyValue, ws1) =>
