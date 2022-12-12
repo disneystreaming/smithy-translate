@@ -19,6 +19,7 @@ import com.monovore.decline._
 import cats.syntax.validated._
 import cats.syntax.apply._
 import smithytranslate.formatter.parsers.IdlParser
+import cats.parse.Parser
 
 object TestParserOpts {
   val printError: Opts[Boolean] =
@@ -48,19 +49,33 @@ object TestParser {
       .map { file =>
         val content = os.read(file)
         val res = IdlParser.idlParser.parseAll(content)
-        file -> res
+        (file, content, res)
       }
-      .collect { case (file, Left(err)) =>
-        file -> err
+      .collect { case (file, content, Left(err)) =>
+        (file, content, err)
       }
-      .foreach { case (file, err) =>
+      .foreach { case (file, content, err) =>
         if (printErr) {
+          println("=======")
           println(s"Parsing '$file' has failed with the following error:")
           println(err)
+          println(extractRelevantSource(err, content))
+          println("=======")
         } else {
           println(s"Parsing '$file' has failed.")
         }
       }
+  }
+
+  def extractRelevantSource(
+      err: Parser.Error,
+      source: String
+  ): String = {
+    val firstOffset = err.offsets.head
+    val padding = 50
+    val start = math.max(0, firstOffset - padding)
+    val end = math.min(firstOffset + padding, source.length())
+    source.substring(start, end)
   }
 }
 
