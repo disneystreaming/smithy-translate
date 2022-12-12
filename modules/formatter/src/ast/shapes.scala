@@ -117,9 +117,11 @@ object shapes {
 
       case class ExplicitListMember(shapeId: ShapeId) extends ListMemberType
 
+      // Diverging from the grammer: https://smithy.io/2.0/spec/idl.html#grammar-token-smithy-ListMember
+      // The grammar says the members is mandatory, but it isnt
       case class ListMembers(
           ws0: Whitespace,
-          members: ListMember,
+          members: Option[ListMember],
           ws1: Whitespace
       )
 
