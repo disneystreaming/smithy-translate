@@ -17,7 +17,7 @@ package smithytranslate.closure
 
 import scala.collection.mutable
 import software.amazon.smithy.model.shapes.*
-import software.amazon.smithy.model.node.{Node, ObjectNode}
+import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.traits.IdRefTrait
 
 import scala.jdk.OptionConverters.*
@@ -44,7 +44,7 @@ private[closure] final class IdRefVisitor(
           .getElements()
           .asScala
           .toList
-          .flatMap { value: Node =>
+          .flatMap { value =>
             member.accept(
               new IdRefVisitor(
                 model = model,
@@ -60,8 +60,9 @@ private[closure] final class IdRefVisitor(
   def listShape(shape: ListShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
-//  override def setShape(shape: SetShape): Set[Shape =
-//    visitSeqShape(shape.getMember())
+  @annotation.nowarn("msg=class SetShape in package shapes is deprecated")
+  override def setShape(shape: SetShape): List[Shape] =
+    visitSeqShape(shape.getMember())
 
   def mapShape(shape: MapShape): List[Shape] =
     visitSeqShape(shape.getValue())
@@ -95,9 +96,8 @@ private[closure] final class IdRefVisitor(
       value.asStringNode().toScala match {
         case None => List.empty
         case Some(stringNode) =>
-          val shapes = {
+          val shapes =
             model.getShape(ShapeId.from(stringNode.getValue())).toScala.toList
-          }
           val shapesToVisit = shapes.filterNot(visitedShapes.contains)
           val stringNodeShapes = TransitiveModel
             .computeWithVisited(
@@ -116,11 +116,11 @@ private[closure] final class IdRefVisitor(
   private def visitNamedMembersShape(
       members: Map[String, MemberShape]
   ): List[Shape] =
-    value.asObjectNode().toScala.toList.flatMap { obj: ObjectNode =>
+    value.asObjectNode().toScala.toList.flatMap { obj =>
       val entries: Map[String, Node] = obj.getStringMap().asScala.toMap
       entries.flatMap { case (name, node) =>
         members.get(name) match {
-          case None => List.empty[Shape]
+          case None => List.empty
           case Some(member) =>
             member.accept(
               new IdRefVisitor(
@@ -143,19 +143,19 @@ private[closure] final class IdRefVisitor(
 
   def memberShape(shape: MemberShape): List[Shape] = {
     val newVisitor = new IdRefVisitor(
-      model,
-      value,
-      captureTraits,
+      model = model,
+      value = value,
+      captureTraits = captureTraits,
       isInsideIdRefMember = shape.hasTrait(classOf[IdRefTrait]),
       // IdRefs have a selector of :test(string, member > string)
       // so we need to check for the trait in both of those places
-      visitedShapes
+      visitedShapes = visitedShapes
     )
     model
       .getShape(shape.getTarget())
       .toScala
       .toList
-      .flatMap { _.accept(newVisitor) }
+      .flatMap(_.accept(newVisitor))
   }
 
   def timestampShape(shape: TimestampShape): List[Shape] = List.empty
@@ -174,8 +174,8 @@ object IdRefVisitor {
       .getShape(shapeId)
       .toScala
       .toList
-      .flatMap { s0: Shape =>
-        val result = s0.accept(
+      .flatMap { s0 =>
+        s0.accept(
           new IdRefVisitor(
             model = model,
             value = trt.toNode,
@@ -184,7 +184,6 @@ object IdRefVisitor {
             visitedShapes = visitedShapes
           )
         )
-        result
       }
   }
 }
