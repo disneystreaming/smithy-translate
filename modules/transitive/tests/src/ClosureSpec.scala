@@ -212,4 +212,21 @@ class ClosureSpec extends munit.FunSuite {
     )
     assert(result.isSuccess)
   }
+
+  test("avoids stack overflow") {
+    try {
+      val model1 = inLineModel(cyclic)
+      model1
+        .transitiveClosure(
+          List(ShapeId.from("test#SomeUnion")),
+          captureTraits = true,
+          captureMetadata = true
+        )
+        .check()
+      assert(true, "Success!")
+    } catch {
+      case _: StackOverflowError =>
+        fail("StackOverflow should be avoided")
+    }
+  }
 }
