@@ -292,6 +292,24 @@ object sample_specs {
                      |integer RandomInt3
                      |""".stripMargin
 
+  val recursiveSpec = """|namespace example.test
+                         |
+                         |union MyList {
+                         |  empty: Empty,
+                         |  cons: Cons,
+                         |}
+                         |
+                         |structure Empty {}
+                         |
+                         |structure Cons {
+                         |  head: String,
+                         |  tail: MyList
+                         |}
+                         |
+                         |integer RandomInt
+                         |integer RandomInt2
+                         |""".stripMargin
+
     val cycleSpec = """|namespace example.test
                        |
                        |@trait(selector: "structure :not([trait|error])")

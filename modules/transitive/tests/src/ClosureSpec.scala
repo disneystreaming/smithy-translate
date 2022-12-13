@@ -214,7 +214,29 @@ class ClosureSpec extends munit.FunSuite {
   }
 
   test(
-    "should handle specs with cycles"
+    "should handle specs with cycles caused by recursive definitions"
+  ) {
+    val model = inLineModel(recursiveSpec)
+      .toBuilder()
+      .build()
+
+    val result =
+      model
+        .transitiveClosure(
+          List(ShapeId.from("example.test#MyList")),
+          captureTraits = true,
+          validateModel = true
+        )
+    val expected = model
+      .toBuilder
+      .removeShape(ShapeId.from("example.test#RandomInt"))
+      .removeShape(ShapeId.from("example.test#RandomInt2"))
+      .build()
+    assertEquals(result.prettyPrint, expected.prettyPrint)
+  }
+
+  test(
+    "should handle specs with cycles caused by traits"
   ) {
     val model = inLineModel(cycleSpec)
       .toBuilder()
