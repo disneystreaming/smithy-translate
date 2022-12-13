@@ -212,4 +212,22 @@ class ClosureSpec extends munit.FunSuite {
     )
     assert(result.isSuccess)
   }
+
+  test(
+    "should handle specs with cycles ------------------"
+  ) {
+    val model = inLineModel(cycleSpec)
+      .toBuilder()
+      .build()
+    
+    val result = util.Try(
+      model
+        .transitiveClosure(
+          List(ShapeId.from("example.test#SomeUnion")),
+          captureTraits = true,
+          validateModel = true
+        )
+    )
+    assert(result.isSuccess)
+  }
 }

@@ -291,4 +291,26 @@ object sample_specs {
                      |integer RandomInt2
                      |integer RandomInt3
                      |""".stripMargin
+
+    val cycleSpec = """|namespace example.test
+                       |
+                       |@trait(selector: "structure :not([trait|error])")
+                       |@idRef(failWhenMissing: true, selector: "union")
+                       |string adtMember
+                       |
+                       |union SomeUnion {
+                       |  optA: SomeOptionA,
+                       |  optB: SomeOptionB,
+                       |}
+                       |
+                       |@adtMember(SomeUnion)
+                       |structure SomeOptionA {
+                       |  a: String
+                       |}
+                       |
+                       |@adtMember(SomeUnion)
+                       |structure SomeOptionB {
+                       |  b: String
+                       |}
+                       |""".stripMargin
 }
