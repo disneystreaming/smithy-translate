@@ -90,12 +90,13 @@ object TransitiveModel {
         )
       }
 
-    entryPointsShapes ++ (if (captureTraits) allShapes
-                          else
-                            allShapes.map(
-                              clearTraitsFromShape
-                            )) ++ idRefShapesVisitResult
+    val allShapesFinal =
+      (if (captureTraits) allShapes
+       else allShapes.map(clearTraitsFromShape)) ++ idRefShapesVisitResult
+
+    allShapesFinal.toList
   }
+
   private def clearTraitsFromShape(shape: Shape): Shape = {
     shape match {
       case s: ToSmithyBuilder[_] =>

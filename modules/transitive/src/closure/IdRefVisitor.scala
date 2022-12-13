@@ -31,21 +31,19 @@ private[closure] final class IdRefVisitor(
     captureTraits: Boolean,
     isInsideIdRefMember: Boolean = false,
     visitedShapes: mutable.Set[Shape]
-) extends ShapeVisitor[Set[Shape]] {
-  def blobShape(shape: BlobShape): Set[Shape] =
-    Set.empty
+) extends ShapeVisitor[List[Shape]] {
+  def blobShape(shape: BlobShape): List[Shape] = List.empty
 
-  def booleanShape(shape: BooleanShape): Set[Shape] =
-    Set.empty
+  def booleanShape(shape: BooleanShape): List[Shape] = List.empty
 
-  private def visitSeqShape(member: MemberShape): Set[Shape] =
+  private def visitSeqShape(member: MemberShape): List[Shape] =
     value.asArrayNode().toScala match {
-      case None => Set.empty
+      case None => List.empty
       case Some(value) =>
         value
           .getElements()
           .asScala
-          .toSet
+          .toList
           .flatMap { value: Node =>
             member.accept(
               new IdRefVisitor(
@@ -59,55 +57,43 @@ private[closure] final class IdRefVisitor(
           }
     }
 
-  def listShape(shape: ListShape): Set[Shape] =
+  def listShape(shape: ListShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
 //  override def setShape(shape: SetShape): Set[Shape =
 //    visitSeqShape(shape.getMember())
 
-  def mapShape(shape: MapShape): Set[Shape] =
+  def mapShape(shape: MapShape): List[Shape] =
     visitSeqShape(shape.getValue())
 
-  def byteShape(shape: ByteShape): Set[Shape] =
-    Set.empty
+  def byteShape(shape: ByteShape): List[Shape] = List.empty
 
-  def shortShape(shape: ShortShape): Set[Shape] =
-    Set.empty
+  def shortShape(shape: ShortShape): List[Shape] = List.empty
 
-  def integerShape(shape: IntegerShape): Set[Shape] =
-    Set.empty
+  def integerShape(shape: IntegerShape): List[Shape] = List.empty
 
-  def longShape(shape: LongShape): Set[Shape] =
-    Set.empty
+  def longShape(shape: LongShape): List[Shape] = List.empty
 
-  def floatShape(shape: FloatShape): Set[Shape] =
-    Set.empty
+  def floatShape(shape: FloatShape): List[Shape] = List.empty
 
-  def documentShape(shape: DocumentShape): Set[Shape] =
-    Set.empty
+  def documentShape(shape: DocumentShape): List[Shape] = List.empty
 
-  def doubleShape(shape: DoubleShape): Set[Shape] =
-    Set.empty
+  def doubleShape(shape: DoubleShape): List[Shape] = List.empty
 
-  def bigIntegerShape(shape: BigIntegerShape): Set[Shape] =
-    Set.empty
+  def bigIntegerShape(shape: BigIntegerShape): List[Shape] = List.empty
 
-  def bigDecimalShape(shape: BigDecimalShape): Set[Shape] =
-    Set.empty
+  def bigDecimalShape(shape: BigDecimalShape): List[Shape] = List.empty
 
-  def operationShape(shape: OperationShape): Set[Shape] =
-    Set.empty
+  def operationShape(shape: OperationShape): List[Shape] = List.empty
 
-  def resourceShape(shape: ResourceShape): Set[Shape] =
-    Set.empty
+  def resourceShape(shape: ResourceShape): List[Shape] = List.empty
 
-  def serviceShape(shape: ServiceShape): Set[Shape] =
-    Set.empty
+  def serviceShape(shape: ServiceShape): List[Shape] = List.empty
 
-  def stringShape(shape: StringShape): Set[Shape] = {
+  def stringShape(shape: StringShape): List[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
       value.asStringNode().toScala match {
-        case None => Set.empty
+        case None => List.empty
         case Some(stringNode) =>
           val shapes = {
             model.getShape(ShapeId.from(stringNode.getValue())).toScala.toList
@@ -120,22 +106,21 @@ private[closure] final class IdRefVisitor(
               captureTraits = captureTraits,
               visitedShapes = visitedShapes
             )
-            .toSet
           stringNodeShapes ++ shapes
       }
     } else {
-      Set.empty
+      List.empty
     }
   }
 
   private def visitNamedMembersShape(
       members: Map[String, MemberShape]
-  ): Set[Shape] =
-    value.asObjectNode().toScala.toSet.flatMap { obj: ObjectNode =>
+  ): List[Shape] =
+    value.asObjectNode().toScala.toList.flatMap { obj: ObjectNode =>
       val entries: Map[String, Node] = obj.getStringMap().asScala.toMap
       entries.flatMap { case (name, node) =>
         members.get(name) match {
-          case None => Set.empty[Shape]
+          case None => List.empty[Shape]
           case Some(member) =>
             member.accept(
               new IdRefVisitor(
@@ -150,13 +135,13 @@ private[closure] final class IdRefVisitor(
       }
     }
 
-  def structureShape(shape: StructureShape): Set[Shape] =
+  def structureShape(shape: StructureShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def unionShape(shape: UnionShape): Set[Shape] =
+  def unionShape(shape: UnionShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def memberShape(shape: MemberShape): Set[Shape] = {
+  def memberShape(shape: MemberShape): List[Shape] = {
     val newVisitor = new IdRefVisitor(
       model,
       value,
@@ -169,14 +154,11 @@ private[closure] final class IdRefVisitor(
     model
       .getShape(shape.getTarget())
       .toScala
-      .toSet
-      .flatMap { shape: Shape =>
-        shape.accept(newVisitor)
-      }
+      .toList
+      .flatMap { _.accept(newVisitor) }
   }
 
-  def timestampShape(shape: TimestampShape): Set[Shape] =
-    Set.empty
+  def timestampShape(shape: TimestampShape): List[Shape] = List.empty
 
 }
 
@@ -187,11 +169,11 @@ object IdRefVisitor {
       shapeId: ShapeId,
       trt: Trait,
       visitedShapes: mutable.Set[Shape]
-  ): Set[Shape] = {
+  ): List[Shape] = {
     model
       .getShape(shapeId)
       .toScala
-      .toSet
+      .toList
       .flatMap { s0: Shape =>
         val result = s0.accept(
           new IdRefVisitor(
