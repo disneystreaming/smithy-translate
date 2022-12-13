@@ -83,6 +83,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
+
     intercept[RuntimeException](
       convertCheck(source, Map.empty)
     )
@@ -617,6 +618,7 @@ class CompilerRendererSuite extends FunSuite {
                    |}
                    |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
+
   }
 
   test("inline list with a union") {
@@ -687,6 +689,7 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
     convertCheck(source, Map("test/definitions.proto" -> expected))
+
   }
 
   test("uuid can be used") {
@@ -739,6 +742,7 @@ class CompilerRendererSuite extends FunSuite {
                       |}
                       |""".stripMargin
     convertCheck(source, Map("test/definitions.proto" -> expected))
+
   }
 
   test("service with protoEnabled") {

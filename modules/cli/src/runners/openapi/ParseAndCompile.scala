@@ -16,6 +16,7 @@
 package smithytranslate.cli.runners.openapi
 
 import cats.data.NonEmptyList
+import smithytranslate.cli.runners.FileUtils.readAll
 import smithytranslate.openapi.OpenApiCompiler
 import smithytranslate.cli.transformer.TranslateTransformer
 import software.amazon.smithy.model.Model
@@ -31,7 +32,7 @@ object ParseAndCompile {
       debug: Boolean
   ): OpenApiCompiler.Result[Model] = {
     val includedExtensions = List("yaml", "yml", "json")
-    val inputs = getInputs(inputPaths, includedExtensions)
+    val inputs = readAll(inputPaths, includedExtensions)
     val opts = OpenApiCompiler.Options(
       useVerboseNames,
       failOnValidationErrors,
@@ -51,7 +52,7 @@ object ParseAndCompile {
       debug: Boolean
   ): OpenApiCompiler.Result[Model] = {
     val includedExtensions = List("json")
-    val inputs = getInputs(inputPaths, includedExtensions)
+    val inputs = readAll(inputPaths, includedExtensions)
     val opts = OpenApiCompiler.Options(
       useVerboseNames,
       failOnValidationErrors,
@@ -62,29 +63,4 @@ object ParseAndCompile {
     JsonSchemaCompiler.parseAndCompile(opts, inputs: _*)
   }
 
-  private def getInputs(
-      paths: NonEmptyList[os.Path],
-      includedExtensions: List[String]
-  ): List[(NonEmptyList[String], String)] = {
-    paths.toList.flatMap { path =>
-      if (os.isDir(path)) {
-        val openapiFiles = os
-          .walk(path)
-          .filter(p => includedExtensions.contains(p.ext))
-        openapiFiles.map { in =>
-          val subParts = in
-            .relativeTo(path)
-            .segments
-            .toList
-          val baseNs = path.segments.toList.lastOption.toList
-          val nsPath =
-            baseNs ++ subParts
-          NonEmptyList.fromListUnsafe(nsPath) -> os
-            .read(in)
-        }.toList
-      } else {
-        List((NonEmptyList.of(path.last), os.read(path)))
-      }
-    }
-  }
 }

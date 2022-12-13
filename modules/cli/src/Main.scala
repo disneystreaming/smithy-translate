@@ -15,26 +15,38 @@
 
 package smithytranslate.cli
 
-import smithytranslate.cli.opts.OpenAPIJsonSchemaOpts
-import smithytranslate.cli.runners.OpenApi
-import smithytranslate.cli.opts.ProtoOpts
-import smithytranslate.cli.runners.Proto
+import com.monovore.decline.Opts
+import smithytranslate.cli.opts.{
+  FormatterOpts,
+  OpenAPIJsonSchemaOpts,
+  ProtoOpts,
+  SmithyTranslateCommand
+}
+import smithytranslate.cli.opts.SmithyTranslateCommand.{
+  Format,
+  OpenApiTranslate,
+  ProtoTranslate
+}
+import smithytranslate.cli.runners.{OpenApi, Proto}
+import smithytranslate.cli.runners.formatter.Formatter
 
 object Main
     extends smithytranslate.cli.CommandApp(
       name = "smithy-translate",
       header =
-        "Provides conversion commands to and from Smithy to other languages.",
+        "utils to convert  To and From Smithy to other Languages and to format Smithy files.",
       main = {
-        val cli = OpenAPIJsonSchemaOpts.openApiToSmithy
-          .orElse(ProtoOpts.smithyToProto)
-          .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
+        val cli: Opts[SmithyTranslateCommand] =
+          OpenAPIJsonSchemaOpts.openApiToSmithy
+            .orElse(ProtoOpts.smithyToProto)
+            .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
+            .orElse(FormatterOpts.format)
         cli map {
-          case opts: OpenAPIJsonSchemaOpts if opts.isOpenapi =>
+          case OpenApiTranslate(opts) if opts.isOpenapi =>
             OpenApi.runOpenApi(opts)
-          case opts: OpenAPIJsonSchemaOpts if !opts.isOpenapi =>
-            OpenApi.runJsonSchema(opts)
-          case opts: ProtoOpts => Proto.runFromCli(opts)
+          case OpenApiTranslate(opts) => OpenApi.runJsonSchema(opts)
+          case ProtoTranslate(opts)   => Proto.runFromCli(opts)
+          case Format(opts)           => Formatter.run(opts)
         }
       }
     )

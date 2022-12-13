@@ -90,6 +90,7 @@ class Compiler() {
 
   def compile(model: Model): List[OutputFile] = {
     validateUnionShapes(model)
+
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
 
     model.toShapeSet.toList

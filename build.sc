@@ -2,20 +2,27 @@ import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.4`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
+
+import coursier.maven.MavenRepository
 import header._
 import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
-import mill.contrib.scalapblib.ScalaPBModule
-import mill.scalalib.scalafmt.ScalafmtModule
 import mill._
+import mill.contrib.scalapblib.ScalaPBModule
+import mill.define.Sources
+import mill.define.Task
+import mill.modules.Assembly
 import mill.modules.Jvm
+import mill.scalajslib.api.ModuleKind
+import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
 import mill.scalalib.api.Util._
+import mill.scalalib.CrossVersion.Binary
 import mill.scalalib.publish._
+import mill.scalalib.scalafmt.ScalafmtModule
 import os._
 
 import scala.Ordering.Implicits._
-import coursier.maven.MavenRepository
 
 trait BaseModule extends Module with HeaderModule {
   def millSourcePath: Path = {
@@ -41,6 +48,7 @@ trait BaseModule extends Module with HeaderModule {
 }
 
 trait BasePublishModule extends BaseModule with CiReleaseModule {
+  override def publishVersion = "dev-SNAPSHOT"
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
@@ -111,6 +119,10 @@ trait BaseScalaNoPublishModule extends BaseModule with ScalaVersionModule {
 }
 
 trait BaseScalaModule extends BaseScalaNoPublishModule with BasePublishModule
+trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
+  def scalaJSVersion = "1.11.0"
+  def moduleKind = ModuleKind.CommonJSModule
+}
 
 trait BaseJavaNoPublishModule extends BaseModule with JavaModule {}
 
@@ -173,7 +185,7 @@ object cli extends BaseScalaModule {
     Deps.smithy.build
   )
 
-  def moduleDeps = Seq(openapi, proto.core, `json-schema`)
+  def moduleDeps = Seq(openapi, proto.core, `json-schema`, formatter.jvm)
 
   def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
     val inputArgs = inputs.flatMap { p =>
@@ -187,6 +199,82 @@ object cli extends BaseScalaModule {
       runClasspath().map(_.path),
       mainArgs = args
     )
+  }
+}
+
+object formatter extends BaseModule { outer =>
+  val deps = Agg(
+    ivy"org.typelevel::cats-parse::0.3.8"
+  )
+
+  object jvm extends BaseScalaModule {
+    override def ivyDeps = T { super.ivyDeps() ++ deps }
+    override def millSourcePath = outer.millSourcePath
+
+    object tests extends this.Tests with TestModule.Munit {
+      def ivyDeps = Agg(
+        Deps.munit,
+        Deps.smithy.build,
+        Deps.lihaoyi.oslib
+      )
+    }
+
+    object `parser-test` extends BaseScalaNoPublishModule {
+      def moduleDeps = Seq(formatter.jvm)
+      override def millSourcePath = outer.millSourcePath / "parser-test"
+
+      def ivyDeps = Agg(
+        Deps.decline,
+        Deps.lihaoyi.oslib
+      )
+    }
+
+    object shaded extends BaseJavaModule {
+      override def millSourcePath = outer.millSourcePath / "shaded"
+
+      override def localClasspath: T[Seq[PathRef]] =
+        formatter.jvm.localClasspath()
+
+      override def resolvedRunIvyDeps: T[Agg[PathRef]] =
+        formatter.jvm.resolvedRunIvyDeps()
+
+      override def publishXmlDeps = T.task { Agg.empty[Dependency] }
+
+      override def assemblyRules: Seq[Assembly.Rule] =
+        super.assemblyRules ++ Seq(
+          Assembly.Rule
+            .Relocate("smithytranslate.**", "smithyfmt.smithytranslate.@1"),
+          Assembly.Rule.Relocate("scala.**", "smithyfmt.scala.@1"),
+          Assembly.Rule.Relocate("cats.**", "smithyfmt.cats.@1")
+        )
+      override def jar: T[PathRef] = assembly
+    }
+
+    object `java-api` extends BaseJavaModule {
+      override def unmanagedClasspath = T {
+        super.unmanagedClasspath() ++ Agg(formatter.jvm.shaded.jar())
+      }
+      override def publishXmlDeps = T.task {
+        Agg(
+          mill.scalalib.publish.Dependency(
+            formatter.jvm.shaded.publishSelfDependency(),
+            Scope.Compile
+          )
+        )
+      }
+      override def millSourcePath = outer.millSourcePath / "java-api"
+    }
+  }
+
+  object js extends BaseScalaJSModule {
+    override def ivyDeps = T { super.ivyDeps() ++ deps }
+    override def millSourcePath = outer.millSourcePath
+
+    def jsSources = T.sources { millSourcePath / "src-js" }
+
+    override def sources: Sources = T.sources {
+      super.sources() ++ jsSources()
+    }
   }
 }
 
@@ -234,6 +322,7 @@ object `readme-validator` extends BaseScalaNoPublishModule {
     )
   }
 }
+
 object proto extends Module {
 
   object core extends BaseScalaModule {
@@ -299,6 +388,7 @@ object proto extends Module {
     )
   }
 }
+
 object transitive extends BaseScalaModule {
   def ivyDeps = Agg(
     Deps.smithy.model,
