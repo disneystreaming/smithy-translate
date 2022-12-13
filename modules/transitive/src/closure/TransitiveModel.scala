@@ -34,23 +34,27 @@ object TransitiveModel {
       captureTraits: Boolean,
       captureMetadata: Boolean,
       validateModel: Boolean
-  ): Model =
-    computeWithVisited(
+  ): Model = {
+    val shapes = computeWithVisited(
       model = model,
       entryPoints = entryPoints,
       captureTraits = captureTraits,
-      captureMetadata = captureMetadata,
-      validateModel = validateModel,
       visitedShapes = mutable.Set.empty
     )
+    createModelFromShapes(
+      initialModel = model,
+      shapes = shapes,
+      validateModel = validateModel,
+      captureMetadata = captureMetadata
+    )
+  }
+
   private[closure] def computeWithVisited(
       model: Model,
       entryPoints: List[ShapeId],
       captureTraits: Boolean,
-      captureMetadata: Boolean,
-      validateModel: Boolean,
       visitedShapes: mutable.Set[Shape]
-  ): Model = {
+  ): List[Shape] = {
     val walker = new Walker(
       if (captureTraits)
         NeighborProvider
@@ -80,46 +84,17 @@ object TransitiveModel {
         IdRefVisitor.visit(
           model = model,
           captureTraits = captureTraits,
-          captureMetadata = captureMetadata,
           shapeId = shapeId,
           trt = trt,
-          validateModel = validateModel,
           visitedShapes = visitedShapes
         )
       }
 
-    val allShapesFinal =
-      entryPointsShapes ++ (if (captureTraits) allShapes
-                            else
-                              allShapes.map(
-                                clearTraitsFromShape
-                              )) ++ idRefShapesVisitResult
-
-    if (validateModel) {
-      val assembler = Model.assembler()
-      assembler
-        .addShapes(
-          allShapesFinal.toList: _*
-        )
-      if (captureMetadata) {
-        model.getMetadata().forEach { case (k, v) =>
-          val _ = assembler.putMetadata(k, v)
-        }
-      }
-
-      assembler
-        .assemble()
-        .unwrap()
-    } else {
-      Model
-        .builder()
-        .addShapes(allShapesFinal.toList: _*)
-        .metadata(
-          if (captureMetadata) model.getMetadata()
-          else java.util.Collections.emptyMap()
-        )
-        .build()
-    }
+    entryPointsShapes ++ (if (captureTraits) allShapes
+                          else
+                            allShapes.map(
+                              clearTraitsFromShape
+                            )) ++ idRefShapesVisitResult
   }
   private def clearTraitsFromShape(shape: Shape): Shape = {
     shape match {
@@ -133,5 +108,38 @@ object TransitiveModel {
       case _ => shape
     }
 
+  }
+
+  private def createModelFromShapes(
+      initialModel: Model,
+      shapes: List[Shape],
+      validateModel: Boolean,
+      captureMetadata: Boolean
+  ): Model = {
+    if (validateModel) {
+      val assembler = Model.assembler()
+      assembler
+        .addShapes(
+          shapes: _*
+        )
+      if (captureMetadata) {
+        initialModel.getMetadata().forEach { case (k, v) =>
+          val _ = assembler.putMetadata(k, v)
+        }
+      }
+
+      assembler
+        .assemble()
+        .unwrap()
+    } else {
+      Model
+        .builder()
+        .addShapes(shapes: _*)
+        .metadata(
+          if (captureMetadata) initialModel.getMetadata()
+          else java.util.Collections.emptyMap()
+        )
+        .build()
+    }
   }
 }

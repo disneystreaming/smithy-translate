@@ -29,8 +29,6 @@ private[closure] final class IdRefVisitor(
     model: Model,
     value: Node,
     captureTraits: Boolean,
-    captureMetadata: Boolean,
-    validateModel: Boolean,
     isInsideIdRefMember: Boolean = false,
     visitedShapes: mutable.Set[Shape]
 ) extends ShapeVisitor[Set[Shape]] {
@@ -54,8 +52,6 @@ private[closure] final class IdRefVisitor(
                 model = model,
                 value = value,
                 captureTraits = captureTraits,
-                captureMetadata = captureMetadata,
-                validateModel = validateModel,
                 isInsideIdRefMember = false,
                 visitedShapes = visitedShapes
               )
@@ -122,12 +118,8 @@ private[closure] final class IdRefVisitor(
               model = model,
               entryPoints = shapesToVisit.map(_.getId),
               captureTraits = captureTraits,
-              captureMetadata = captureMetadata,
-              validateModel = validateModel,
               visitedShapes = visitedShapes
             )
-            .toSet()
-            .asScala
             .toSet
           stringNodeShapes ++ shapes
       }
@@ -150,8 +142,6 @@ private[closure] final class IdRefVisitor(
                 model = model,
                 value = node,
                 captureTraits = captureTraits,
-                captureMetadata = captureMetadata,
-                validateModel = validateModel,
                 isInsideIdRefMember = false,
                 visitedShapes = visitedShapes
               )
@@ -171,8 +161,6 @@ private[closure] final class IdRefVisitor(
       model,
       value,
       captureTraits,
-      captureMetadata,
-      validateModel,
       isInsideIdRefMember = shape.hasTrait(classOf[IdRefTrait]),
       // IdRefs have a selector of :test(string, member > string)
       // so we need to check for the trait in both of those places
@@ -196,10 +184,8 @@ object IdRefVisitor {
   def visit(
       model: Model,
       captureTraits: Boolean,
-      captureMetadata: Boolean,
       shapeId: ShapeId,
       trt: Trait,
-      validateModel: Boolean,
       visitedShapes: mutable.Set[Shape]
   ): Set[Shape] = {
     model
@@ -212,8 +198,6 @@ object IdRefVisitor {
             model = model,
             value = trt.toNode,
             captureTraits = captureTraits,
-            captureMetadata = captureMetadata,
-            validateModel = validateModel,
             isInsideIdRefMember = false,
             visitedShapes = visitedShapes
           )
