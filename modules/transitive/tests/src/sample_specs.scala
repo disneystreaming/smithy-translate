@@ -312,5 +312,7 @@ object sample_specs {
                        |structure SomeOptionB {
                        |  b: String
                        |}
+                       |integer RandomInt
+                       |integer RandomInt2
                        |""".stripMargin
 }

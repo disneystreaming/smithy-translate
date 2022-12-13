@@ -15,6 +15,7 @@
 
 package smithytranslate.closure
 
+import scala.collection.mutable
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes._
 import scala.jdk.CollectionConverters.SetHasAsScala
@@ -40,7 +41,7 @@ object TransitiveModel {
       captureTraits = captureTraits,
       captureMetadata = captureMetadata,
       validateModel = validateModel,
-      visitedShapes0 = Set.empty
+      visitedShapes = mutable.Set.empty
     )
   private[closure] def computeWithVisited(
       model: Model,
@@ -48,7 +49,7 @@ object TransitiveModel {
       captureTraits: Boolean,
       captureMetadata: Boolean,
       validateModel: Boolean,
-      visitedShapes0: Set[Shape]
+      visitedShapes: mutable.Set[Shape]
   ): Model = {
     val walker = new Walker(
       if (captureTraits)
@@ -63,7 +64,6 @@ object TransitiveModel {
       )
 
     val entryPointsShapes = entryPoints.map(model.expectShape(_))
-    val visitedShapes = visitedShapes0
     val closure =
       entryPointsShapes
         .map(walker.walkShapes)
@@ -72,36 +72,54 @@ object TransitiveModel {
 
     val allShapes =
       (closure ++ entrypointTraits).filter(s => !visitedShapes.contains(s))
+    entryPointsShapes.foreach(visitedShapes.add)
 
-    val idRefShapesVisitResult =
-      allShapes
-        .flatMap(_.getAllTraits().asScala)
-        .foldLeft(VisitResult.empty(visitedShapes)) {
-          case (previousVisitResult, (shapeId, trt)) =>
-            previousVisitResult ++ IdRefVisitor.visit(
-              model = model,
-              captureTraits = captureTraits,
-              captureMetadata = captureMetadata,
-              shapeId = shapeId,
-              trt = trt,
-              validateModel = validateModel,
-              includeStartingTrait = false,
-              visitedShapes = previousVisitResult.visited
-            )
-        }
+    val idRefShapesVisitResult = allShapes
+      .flatMap(_.getAllTraits().asScala)
+      .flatMap { case (shapeId, trt) =>
+        IdRefVisitor.visit(
+          model = model,
+          captureTraits = captureTraits,
+          captureMetadata = captureMetadata,
+          shapeId = shapeId,
+          trt = trt,
+          validateModel = validateModel,
+          visitedShapes = visitedShapes
+        )
+      }
 
     val allShapesFinal =
-      (if (captureTraits) allShapes
-       else
-         allShapes.map(clearTraitsFromShape)) ++ idRefShapesVisitResult.visited
+      entryPointsShapes ++ (if (captureTraits) allShapes
+                            else
+                              allShapes.map(
+                                clearTraitsFromShape
+                              )) ++ idRefShapesVisitResult
 
-    VisitResult(
-      entryPointsShapes.toSet ++ allShapesFinal /*inefficient?*/ ++ idRefShapesVisitResult.visited
-    ).buildModel(
-      initialModel = model,
-      validateModel = validateModel,
-      captureMetadata = captureMetadata
-    )
+    if (validateModel) {
+      val assembler = Model.assembler()
+      assembler
+        .addShapes(
+          allShapesFinal.toList: _*
+        )
+      if (captureMetadata) {
+        model.getMetadata().forEach { case (k, v) =>
+          val _ = assembler.putMetadata(k, v)
+        }
+      }
+
+      assembler
+        .assemble()
+        .unwrap()
+    } else {
+      Model
+        .builder()
+        .addShapes(allShapesFinal.toList: _*)
+        .metadata(
+          if (captureMetadata) model.getMetadata()
+          else java.util.Collections.emptyMap()
+        )
+        .build()
+    }
   }
   private def clearTraitsFromShape(shape: Shape): Shape = {
     shape match {

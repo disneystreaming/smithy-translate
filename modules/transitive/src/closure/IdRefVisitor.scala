@@ -15,11 +15,13 @@
 
 package smithytranslate.closure
 
-import software.amazon.smithy.model.shapes._
-import software.amazon.smithy.model.node.Node
+import scala.collection.mutable
+import software.amazon.smithy.model.shapes.*
+import software.amazon.smithy.model.node.{Node, ObjectNode}
 import software.amazon.smithy.model.traits.IdRefTrait
-import scala.jdk.OptionConverters._
-import scala.jdk.CollectionConverters._
+
+import scala.jdk.OptionConverters.*
+import scala.jdk.CollectionConverters.*
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.traits.Trait
 
@@ -30,142 +32,141 @@ private[closure] final class IdRefVisitor(
     captureMetadata: Boolean,
     validateModel: Boolean,
     isInsideIdRefMember: Boolean = false,
-    visitedShapes: Set[Shape]
-) extends ShapeVisitor[VisitResult] {
-  def blobShape(shape: BlobShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+    visitedShapes: mutable.Set[Shape]
+) extends ShapeVisitor[Set[Shape]] {
+  def blobShape(shape: BlobShape): Set[Shape] =
+    Set.empty
 
-  def booleanShape(shape: BooleanShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def booleanShape(shape: BooleanShape): Set[Shape] =
+    Set.empty
 
-  private def visitSeqShape(member: MemberShape): VisitResult =
+  private def visitSeqShape(member: MemberShape): Set[Shape] =
     value.asArrayNode().toScala match {
-      case None => VisitResult.empty(visitedShapes)
+      case None => Set.empty
       case Some(value) =>
         value
           .getElements()
           .asScala
-          .toList
-          .foldLeft(VisitResult.empty(visitedShapes)) {
-            (previousVisitedResult, value) =>
-              previousVisitedResult ++ member.accept(
-                new IdRefVisitor(
-                  model = model,
-                  value = value,
-                  captureTraits = captureTraits,
-                  captureMetadata = captureMetadata,
-                  validateModel = validateModel,
-                  isInsideIdRefMember = false,
-                  visitedShapes = previousVisitedResult.visited
-                )
+          .toSet
+          .flatMap { value: Node =>
+            member.accept(
+              new IdRefVisitor(
+                model = model,
+                value = value,
+                captureTraits = captureTraits,
+                captureMetadata = captureMetadata,
+                validateModel = validateModel,
+                isInsideIdRefMember = false,
+                visitedShapes = visitedShapes
               )
+            )
           }
     }
 
-  def listShape(shape: ListShape): VisitResult =
+  def listShape(shape: ListShape): Set[Shape] =
     visitSeqShape(shape.getMember())
 
-//  override def setShape(shape: SetShape): VisitResult =
+//  override def setShape(shape: SetShape): Set[Shape =
 //    visitSeqShape(shape.getMember())
 
-  def mapShape(shape: MapShape): VisitResult =
+  def mapShape(shape: MapShape): Set[Shape] =
     visitSeqShape(shape.getValue())
 
-  def byteShape(shape: ByteShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def byteShape(shape: ByteShape): Set[Shape] =
+    Set.empty
 
-  def shortShape(shape: ShortShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def shortShape(shape: ShortShape): Set[Shape] =
+    Set.empty
 
-  def integerShape(shape: IntegerShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def integerShape(shape: IntegerShape): Set[Shape] =
+    Set.empty
 
-  def longShape(shape: LongShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def longShape(shape: LongShape): Set[Shape] =
+    Set.empty
 
-  def floatShape(shape: FloatShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def floatShape(shape: FloatShape): Set[Shape] =
+    Set.empty
 
-  def documentShape(shape: DocumentShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def documentShape(shape: DocumentShape): Set[Shape] =
+    Set.empty
 
-  def doubleShape(shape: DoubleShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def doubleShape(shape: DoubleShape): Set[Shape] =
+    Set.empty
 
-  def bigIntegerShape(shape: BigIntegerShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def bigIntegerShape(shape: BigIntegerShape): Set[Shape] =
+    Set.empty
 
-  def bigDecimalShape(shape: BigDecimalShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def bigDecimalShape(shape: BigDecimalShape): Set[Shape] =
+    Set.empty
 
-  def operationShape(shape: OperationShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def operationShape(shape: OperationShape): Set[Shape] =
+    Set.empty
 
-  def resourceShape(shape: ResourceShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def resourceShape(shape: ResourceShape): Set[Shape] =
+    Set.empty
 
-  def serviceShape(shape: ServiceShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def serviceShape(shape: ServiceShape): Set[Shape] =
+    Set.empty
 
-  def stringShape(shape: StringShape): VisitResult = {
+  def stringShape(shape: StringShape): Set[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
       value.asStringNode().toScala match {
-        case None => VisitResult.empty(visitedShapes)
+        case None => Set.empty
         case Some(stringNode) =>
           val shapes = {
             model.getShape(ShapeId.from(stringNode.getValue())).toScala.toList
           }
+          val shapesToVisit = shapes.filterNot(visitedShapes.contains)
           val stringNodeShapes = TransitiveModel
             .computeWithVisited(
               model = model,
-              entryPoints = shapes.map(_.getId),
+              entryPoints = shapesToVisit.map(_.getId),
               captureTraits = captureTraits,
               captureMetadata = captureMetadata,
               validateModel = validateModel,
-              visitedShapes0 = visitedShapes
+              visitedShapes = visitedShapes
             )
             .toSet()
             .asScala
             .toSet
-          VisitResult(stringNodeShapes ++ shapes)
+          stringNodeShapes ++ shapes
       }
     } else {
-      VisitResult.empty(visitedShapes)
+      Set.empty
     }
   }
 
   private def visitNamedMembersShape(
       members: Map[String, MemberShape]
-  ): VisitResult =
-    value.asObjectNode().toScala.fold(VisitResult.empty(visitedShapes)) { obj =>
+  ): Set[Shape] =
+    value.asObjectNode().toScala.toSet.flatMap { obj: ObjectNode =>
       val entries: Map[String, Node] = obj.getStringMap().asScala.toMap
-      entries.foldLeft(VisitResult.empty(visitedShapes)) {
-        case (previousVisitedResult, (name, node)) =>
-          members.get(name) match {
-            case None => previousVisitedResult
-            case Some(member) =>
-              previousVisitedResult ++ member.accept(
-                new IdRefVisitor(
-                  model = model,
-                  value = node,
-                  captureTraits = captureTraits,
-                  captureMetadata = captureMetadata,
-                  validateModel = validateModel,
-                  isInsideIdRefMember = false,
-                  visitedShapes = previousVisitedResult.visited
-                )
+      entries.flatMap { case (name, node) =>
+        members.get(name) match {
+          case None => Set.empty[Shape]
+          case Some(member) =>
+            member.accept(
+              new IdRefVisitor(
+                model = model,
+                value = node,
+                captureTraits = captureTraits,
+                captureMetadata = captureMetadata,
+                validateModel = validateModel,
+                isInsideIdRefMember = false,
+                visitedShapes = visitedShapes
               )
-          }
+            )
+        }
       }
     }
 
-  def structureShape(shape: StructureShape): VisitResult =
+  def structureShape(shape: StructureShape): Set[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def unionShape(shape: UnionShape): VisitResult =
+  def unionShape(shape: UnionShape): Set[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def memberShape(shape: MemberShape): VisitResult = {
+  def memberShape(shape: MemberShape): Set[Shape] = {
     val newVisitor = new IdRefVisitor(
       model,
       value,
@@ -180,13 +181,14 @@ private[closure] final class IdRefVisitor(
     model
       .getShape(shape.getTarget())
       .toScala
-      .fold(VisitResult.empty(visitedShapes)) {
-        _.accept(newVisitor)
+      .toSet
+      .flatMap { shape: Shape =>
+        shape.accept(newVisitor)
       }
   }
 
-  def timestampShape(shape: TimestampShape): VisitResult =
-    VisitResult.empty(visitedShapes)
+  def timestampShape(shape: TimestampShape): Set[Shape] =
+    Set.empty
 
 }
 
@@ -198,13 +200,13 @@ object IdRefVisitor {
       shapeId: ShapeId,
       trt: Trait,
       validateModel: Boolean,
-      includeStartingTrait: Boolean = false,
-      visitedShapes: Set[Shape]
-  ): VisitResult = {
+      visitedShapes: mutable.Set[Shape]
+  ): Set[Shape] = {
     model
       .getShape(shapeId)
       .toScala
-      .fold(VisitResult.empty(visitedShapes)) { s0 =>
+      .toSet
+      .flatMap { s0: Shape =>
         val result = s0.accept(
           new IdRefVisitor(
             model = model,
@@ -216,7 +218,7 @@ object IdRefVisitor {
             visitedShapes = visitedShapes
           )
         )
-        if (includeStartingTrait) result + s0 else result
+        result
       }
   }
 }
