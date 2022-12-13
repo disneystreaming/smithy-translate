@@ -1,6 +1,6 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.3`
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.4`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
 
 import coursier.maven.MavenRepository
@@ -340,6 +340,17 @@ object proto extends Module {
       )
       def scalaPBVersion = Deps.scalapb.version
 
+      // There are no sources to generate in this module.
+      // We use scalaPB to unpack some files.
+      // Changes in the 0.10.10 version mill removed a check
+      // that ensures the directory existed before running the
+      // compiler and that breaks this build.
+      // See: https://github.com/com-lihaoyi/mill/pull/2126/files
+      def compileScalaPB = T {
+        val out = T.dest
+        PathRef(out)
+      }
+
       def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
 
       def resources = T.sources {
@@ -419,7 +430,7 @@ object Deps {
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
   val decline = ivy"com.monovore::decline:2.4.0"
   object lihaoyi {
-    val oslib = ivy"com.lihaoyi::os-lib:0.8.1"
+    val oslib = ivy"com.lihaoyi::os-lib:0.9.0"
   }
 
   val munit = ivy"org.scalameta::munit:0.7.29"
