@@ -71,17 +71,19 @@ private[closure] final class IdRefVisitor(
       value.asStringNode().toScala match {
         case None => List.empty
         case Some(stringNode) =>
-          val shapes =
-            model.getShape(ShapeId.from(stringNode.getValue())).toScala.toList
-          val shapesToVisit = shapes.filterNot(visitedShapes.contains)
-          val stringNodeShapes = TransitiveModel
-            .computeWithVisited(
-              model = model,
-              entryPoints = shapesToVisit.map(_.getId),
-              captureTraits = captureTraits,
-              visitedShapes = visitedShapes
-            )
-          stringNodeShapes ++ shapes
+          val shape = model.expectShape(ShapeId.from(stringNode.getValue()))
+          val stringNodeShapes = if (visitedShapes.contains(shape)) {
+            Nil
+          } else {
+            TransitiveModel
+              .computeWithVisited(
+                model = model,
+                entryPoints = List(shape.getId()),
+                captureTraits = captureTraits,
+                visitedShapes = visitedShapes
+              )
+          }
+          stringNodeShapes ++ List(shape)
       }
     } else {
       List.empty
