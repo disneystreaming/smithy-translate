@@ -31,10 +31,8 @@ private[closure] final class IdRefVisitor(
     captureTraits: Boolean,
     isInsideIdRefMember: Boolean = false,
     visitedShapes: mutable.Set[Shape]
-) extends ShapeVisitor[List[Shape]] {
-  def blobShape(shape: BlobShape): List[Shape] = List.empty
-
-  def booleanShape(shape: BooleanShape): List[Shape] = List.empty
+) extends ShapeVisitor.Default[List[Shape]] {
+  override def getDefault(_shape: Shape): List[Shape] = List.empty
 
   private def visitSeqShape(member: MemberShape): List[Shape] =
     value.asArrayNode().toScala match {
@@ -57,41 +55,17 @@ private[closure] final class IdRefVisitor(
           }
     }
 
-  def listShape(shape: ListShape): List[Shape] =
+  override def listShape(shape: ListShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
   @annotation.nowarn("msg=class SetShape in package shapes is deprecated")
   override def setShape(shape: SetShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
-  def mapShape(shape: MapShape): List[Shape] =
+  override def mapShape(shape: MapShape): List[Shape] =
     visitSeqShape(shape.getValue())
 
-  def byteShape(shape: ByteShape): List[Shape] = List.empty
-
-  def shortShape(shape: ShortShape): List[Shape] = List.empty
-
-  def integerShape(shape: IntegerShape): List[Shape] = List.empty
-
-  def longShape(shape: LongShape): List[Shape] = List.empty
-
-  def floatShape(shape: FloatShape): List[Shape] = List.empty
-
-  def documentShape(shape: DocumentShape): List[Shape] = List.empty
-
-  def doubleShape(shape: DoubleShape): List[Shape] = List.empty
-
-  def bigIntegerShape(shape: BigIntegerShape): List[Shape] = List.empty
-
-  def bigDecimalShape(shape: BigDecimalShape): List[Shape] = List.empty
-
-  def operationShape(shape: OperationShape): List[Shape] = List.empty
-
-  def resourceShape(shape: ResourceShape): List[Shape] = List.empty
-
-  def serviceShape(shape: ServiceShape): List[Shape] = List.empty
-
-  def stringShape(shape: StringShape): List[Shape] = {
+  override def stringShape(shape: StringShape): List[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
       value.asStringNode().toScala match {
         case None => List.empty
@@ -135,13 +109,13 @@ private[closure] final class IdRefVisitor(
       }
     }
 
-  def structureShape(shape: StructureShape): List[Shape] =
+  override def structureShape(shape: StructureShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def unionShape(shape: UnionShape): List[Shape] =
+  override def unionShape(shape: UnionShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def memberShape(shape: MemberShape): List[Shape] = {
+  override def memberShape(shape: MemberShape): List[Shape] = {
     val newVisitor = new IdRefVisitor(
       model = model,
       value = value,
@@ -157,9 +131,6 @@ private[closure] final class IdRefVisitor(
       .toList
       .flatMap(_.accept(newVisitor))
   }
-
-  def timestampShape(shape: TimestampShape): List[Shape] = List.empty
-
 }
 
 object IdRefVisitor {
