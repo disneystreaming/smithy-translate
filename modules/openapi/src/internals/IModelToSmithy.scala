@@ -99,11 +99,17 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         val builder =
           UnionShape.builder().id(id.toSmithy).addHints(hints)
         altNames.foreach { alt =>
+          val memName = alt.id.memberName.value.toString
+          val nameWillNeedChange = sanitizeMemberName(memName) != memName
+          val jsonNameHint =
+            if (nameWillNeedChange)
+              List(Hint.JsonName(memName))
+            else List.empty
           val member = MemberShape
             .builder()
             .id(alt.id.toSmithy)
             .target(alt.tpe.toSmithy)
-            .addHints(alt.hints)
+            .addHints(alt.hints ++ jsonNameHint)
             .build()
           builder.addMember(member)
         }
