@@ -402,6 +402,7 @@ final class StructureSpec extends munit.FunSuite {
     val expectedString = """|namespace foo
                       |
                       |structure Object {
+                      | @jsonName("version3.1")
                       | version31: String
                       |}
                       |""".stripMargin

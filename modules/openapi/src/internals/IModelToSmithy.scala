@@ -49,8 +49,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       case Structure(id, fields, _, structHints) =>
         val members = fields.map { case Field(id, tpe, hints) =>
           val memName = id.memberName.value.toString
-          val nameWillNeedChange =
-            memName.headOption.exists(_.isDigit) || memName.contains("-")
+          val nameWillNeedChange = sanitizeMemberName(memName) != memName
           def isHeaderOrQuery = hints.exists {
             case Header(_)     => true
             case QueryParam(_) => true
