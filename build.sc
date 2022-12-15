@@ -417,9 +417,9 @@ object Deps {
     )
   }
   object smithy {
-    val version = "1.26.0"
-    val model = ivy"software.amazon.smithy:smithy-model:$version"
-    val build = ivy"software.amazon.smithy:smithy-build:$version"
+    val smithyVersion = "1.26.0"
+    val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
+    val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.0"
