@@ -392,8 +392,7 @@ object proto extends Module {
 object transitive extends BaseScalaModule {
   def ivyDeps = Agg(
     Deps.smithy.model,
-    Deps.smithy.build,
-    Deps.smithy.diff
+    Deps.smithy.build
   )
   object tests extends Tests with BaseMunitTests
 }
@@ -421,7 +420,6 @@ object Deps {
     val version = "1.26.0"
     val model = ivy"software.amazon.smithy:smithy-model:$version"
     val build = ivy"software.amazon.smithy:smithy-build:$version"
-    val diff = ivy"software.amazon.smithy:smithy-diff:$version"
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.0"
