@@ -18,7 +18,6 @@ package smithytranslate.json_schema.internals
 import cats.Parallel
 import scala.jdk.CollectionConverters._
 import cats.data._
-import smithytranslate.openapi.internals.Primitive._
 import cats.syntax.all._
 import smithytranslate.openapi.ModelError
 import smithytranslate.openapi.ModelError._
@@ -310,25 +309,4 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       DefId(Namespace(List("alloy")), Name.stdLib(name)),
       hints.toList
     )
-
-  // format: off
-  def idFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
-    primitive match {
-      case PInt       => std("Integer")
-      case PBoolean   => std("Boolean")
-      case PString    => std("String")
-      case PLong      => std("Long")
-      case PByte      => std("Byte")
-      case PFloat     => std("Float")
-      case PDouble    => std("Double")
-      case PShort     => std("Short")
-      case PBytes     => std("Blob")
-      case PFreeForm  => std("Document")
-      case PUUID      => alloy("UUID")
-      case PDate      => std("Timestamp", Hint.Timestamp(TimestampFormat.SimpleDate))
-      case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
-      case PTimestamp => std("Timestamp")
-    }
-    // format: on
-
 }
