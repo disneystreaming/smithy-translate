@@ -222,9 +222,21 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         ShapeId.fromParts(
           sanitizeNamespace(modelId.namespace.show),
           sanitizeName(modelId.name.segments.mkString_("")),
-          sanitizeForDigitStart(memberName.value.toString).replaceAll("-", "_")
+          sanitizeMemberName(memberName.value.toString)
         )
     }
+  }
+
+  private def removeInvalidCharactersForName(s: String): String = {
+    s.filter(c =>
+      c.isLetterOrDigit || c == '_'
+    ) // names can only contain letters, digits, and underscores
+  }
+
+  private def removeInvalidCharactersForNamespace(s: String): String = {
+    s.filter(c =>
+      c.isLetterOrDigit || c == '_' || c == '.'
+    ) // names can only contain letters, digits, underscores, and dots
   }
 
   // if name starts with a number, prefix with n
@@ -233,15 +245,21 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     else id
 
   private def sanitizeNamespace(id: String): String = {
-    sanitizeForDigitStart(id).replaceAll("-", "_")
+    removeInvalidCharactersForNamespace(
+      sanitizeForDigitStart(id).replaceAll("-", "_")
+    )
   }
 
   private def sanitizeName(id: String): String = {
-    StringUtil.toCamelCase(sanitizeForDigitStart(id))
+    removeInvalidCharactersForName(
+      StringUtil.toCamelCase(sanitizeForDigitStart(id))
+    )
   }
 
   private def sanitizeMemberName(id: String): String = {
-    sanitizeForDigitStart(id).replaceAll("-", "_")
+    removeInvalidCharactersForName(
+      sanitizeForDigitStart(id).replaceAll("-", "_")
+    )
   }
 
   /** Used to replace things like `/path/{some-case}/rest with
