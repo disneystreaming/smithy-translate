@@ -84,9 +84,9 @@ final class TimestampSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |use alloy#dateOnly
+                      |use alloy#dateFormat
                       |
-                      |@dateOnly
+                      |@dateFormat
                       |string MyDate
                       |""".stripMargin
 

@@ -19,7 +19,7 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.{EnumShape, _}
 
 import scala.jdk.CollectionConverters._
-import alloy.DateOnlyTrait
+import alloy.DateFormatTrait
 import alloy.DiscriminatedUnionTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
@@ -341,7 +341,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.Timestamp(format) =>
       format match {
         case DateTime   => List(new TimestampFormatTrait("date-time"))
-        case SimpleDate => List(new DateOnlyTrait())
+        case SimpleDate => List(new DateFormatTrait())
       }
     case _ => List.empty
   }
