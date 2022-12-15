@@ -77,17 +77,17 @@ final class TimestampSpec extends munit.FunSuite {
                      |paths: {}
                      |components:
                      |  schemas:
-                     |    MyTimestamp:
+                     |    MyDate:
                      |      type: string
                      |      format: date
                      |""".stripMargin
 
     val expectedString = """|namespace foo
                       |
-                      |use smithytranslate#dateOnly
+                      |use alloy#dateOnly
                       |
                       |@dateOnly
-                      |timestamp MyTimestamp
+                      |string MyDate
                       |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)

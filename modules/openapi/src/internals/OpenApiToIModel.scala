@@ -111,7 +111,7 @@ object OpenApiToIModel {
       case PBytes     => std("Blob")
       case PFreeForm  => std("Document")
       case PUUID      => alloy("UUID")
-      case PDate      => std("Timestamp", Hint.Timestamp(TimestampFormat.SimpleDate))
+      case PDate      => std("String", Hint.Timestamp(TimestampFormat.SimpleDate))
       case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
       case PTimestamp => std("Timestamp")
     }

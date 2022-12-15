@@ -19,15 +19,16 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.{EnumShape, _}
 
 import scala.jdk.CollectionConverters._
-import alloy.UntaggedUnionTrait
+import alloy.DateOnlyTrait
 import alloy.DiscriminatedUnionTrait
+import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
 import software.amazon.smithy.model.traits.HttpTrait
 import software.amazon.smithy.model.pattern.UriPattern
 import software.amazon.smithy.model.traits._
 import smithytranslate.OpenApiExtensionsTrait
 import software.amazon.smithy.model.node.Node
-import smithytranslate.{ErrorMessageTrait, DateOnlyTrait}
+import smithytranslate.ErrorMessageTrait
 import smithytranslate.openapi.internals.TimestampFormat.DateTime
 import smithytranslate.openapi.internals.TimestampFormat.SimpleDate
 import smithytranslate.ContentTypeTrait

@@ -96,11 +96,11 @@ final class SpecialFormatSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#dateOnly
+                            |use alloy#dateOnly
                             |
                             |structure Test {
-                            | @dateOnly
-                            | id: Timestamp
+                            |    @dateOnly
+                            |    id: String
                             |}
                             |""".stripMargin
 
