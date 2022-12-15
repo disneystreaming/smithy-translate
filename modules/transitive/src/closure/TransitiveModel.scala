@@ -76,7 +76,7 @@ object TransitiveModel {
 
     val allShapes =
       (closure ++ entrypointTraits).filter(s => !visitedShapes.contains(s))
-    entryPointsShapes.foreach(visitedShapes.add)
+    visitedShapes ++= allShapes
 
     val idRefShapesVisitResult = allShapes
       .flatMap(_.getAllTraits().asScala)
