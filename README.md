@@ -127,7 +127,7 @@ Smithy.
 | string            |                    | String                     |                               |
 | string            | timestamp          | Timestamp                  |                               |
 | string            | date-time          | Timestamp                  | @timestampFormat("date-time") |
-| string            | date               | Timestamp                  | smithytranslate#dateOnly      |
+| string            | date               | String                     | alloy#dateFormat              |
 | string            | uuid               | alloy#UUID                 |                               |
 | string            | binary             | Blob                       |                               |
 | string            | byte               | Blob                       |                               |

@@ -25,10 +25,6 @@ map openapiExtensions {
   value: Document
 }
 
-@trait(selector: ":test(timestamp, member > timestamp)")
-structure dateOnly {
-}
-
 @trait(selector: "structure")
 structure nullFormat {
 }
