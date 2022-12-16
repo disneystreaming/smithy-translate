@@ -48,7 +48,6 @@ trait BaseModule extends Module with HeaderModule {
 }
 
 trait BasePublishModule extends BaseModule with CiReleaseModule {
-  override def publishVersion = "dev-SNAPSHOT"
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
