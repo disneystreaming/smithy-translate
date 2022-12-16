@@ -510,4 +510,57 @@ final class UnionSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
+
+  test("unions - sanitize names") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Number:
+                     |      type: object
+                     |      properties:
+                     |        3three:
+                     |          type: integer
+                     |      required:
+                     |        - 3three
+                     |    Text:
+                     |      type: object
+                     |      properties:
+                     |        version1.1:
+                     |          type: string
+                     |      required:
+                     |        - version1.1
+                     |    TestUnion:
+                     |      oneOf:
+                     |        - $ref: '#/components/schemas/Number'
+                     |        - $ref: '#/components/schemas/Text'
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |structure Number {
+                      |    @required
+                      |    @jsonName("3three")
+                      |    n3three: Integer,
+                      |}
+                      |
+                      |structure Text {
+                      |    @required
+                      |    @jsonName("version1.1")
+                      |    version11: String,
+                      |}
+                      |
+                      |union TestUnion {
+                      |    @jsonName("3three")
+                      |    n3three: Integer,
+                      |    @jsonName("version1.1")
+                      |    version11: String
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
 }
