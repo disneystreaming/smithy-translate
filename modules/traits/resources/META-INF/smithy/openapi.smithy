@@ -19,12 +19,6 @@ string contentType
 @trait(selector: "*")
 string errorMessage
 
-@trait
-map openapiExtensions {
-  key: String,
-  value: Document
-}
-
 @trait(selector: "structure")
 structure nullFormat {
 }

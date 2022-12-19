@@ -1,5 +1,4 @@
 smithytranslate.ErrorMessageTrait$Provider
-smithytranslate.OpenApiExtensionsTrait$Provider
 smithytranslate.ContentTypeTrait$Provider
 smithytranslate.ContentTypeDiscriminatedTrait$Provider
 smithytranslate.NullFormatTrait$Provider

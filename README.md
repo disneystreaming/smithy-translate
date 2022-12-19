@@ -886,7 +886,7 @@ components:
 
 Smithy:
 ```smithy
-use smithytranslate#openapiExtensions
+use alloy.openapi#openapiExtensions
 
 @openapiExtensions(
  "x-float": 1.0,

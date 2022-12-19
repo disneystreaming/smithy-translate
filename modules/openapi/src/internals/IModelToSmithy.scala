@@ -26,7 +26,7 @@ import alloy.UuidFormatTrait
 import software.amazon.smithy.model.traits.HttpTrait
 import software.amazon.smithy.model.pattern.UriPattern
 import software.amazon.smithy.model.traits._
-import smithytranslate.OpenApiExtensionsTrait
+import alloy.openapi.OpenApiExtensionsTrait
 import software.amazon.smithy.model.node.Node
 import smithytranslate.ErrorMessageTrait
 import smithytranslate.openapi.internals.TimestampFormat.DateTime

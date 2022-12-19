@@ -45,7 +45,7 @@ final class OpenapiV2Spec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |use smithytranslate#openapiExtensions
+                      |use alloy.openapi#openapiExtensions
                       |use smithytranslate#contentType
                       |
                       |@openapiExtensions(
