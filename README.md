@@ -53,9 +53,9 @@ _Note: this library is published to work on Java 8 and above. However, you will 
   - [Options](#options)
     - [Stringly typed options](#stringly-typed-options)
     - [Example](#example)
-- [Formatter](#formatter)
+- [formatter](#formatter)
   - [CLI Usage](#cli-usage-3)
-  - [Capabilities and Design](#capabilities-and-design)
+  - [Capabilities and Design](#capabilities-and-design-2)
 
 
 ## Alloy
