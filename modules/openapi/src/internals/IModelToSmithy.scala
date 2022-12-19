@@ -188,15 +188,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         .build()
     } else {
       val enumBuilder = EnumShape.builder().id(id.toSmithy)
-      values.foreach(v =>
-        enumBuilder.addMember(
-          MemberShape
-            .builder()
-            .id(s"${id.toSmithy}$$$v")
-            .target(UnitTypeTrait.UNIT)
-            .build()
-        )
-      )
+      values.foreach(v => enumBuilder.addMember(sanitizeMemberName(v), v))
       enumBuilder.addHints(hints).build()
     }
 
