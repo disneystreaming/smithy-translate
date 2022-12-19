@@ -384,4 +384,30 @@ final class StructureSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("structures - property name sanitization") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      properties:
+                     |        version3.1:
+                     |          type: string
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |structure Object {
+                      | @jsonName("version3.1")
+                      | version31: String
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
 }

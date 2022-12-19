@@ -48,7 +48,6 @@ trait BaseModule extends Module with HeaderModule {
 }
 
 trait BasePublishModule extends BaseModule with CiReleaseModule {
-  override def publishVersion = "dev-SNAPSHOT"
   def artifactName =
     s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
 
@@ -392,15 +391,14 @@ object proto extends Module {
 object transitive extends BaseScalaModule {
   def ivyDeps = Agg(
     Deps.smithy.model,
-    Deps.smithy.build,
-    Deps.smithy.diff
+    Deps.smithy.build
   )
   object tests extends Tests with BaseMunitTests
 }
 
 object Deps {
   object alloy {
-    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.2"
+    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.4"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.3"
@@ -418,17 +416,16 @@ object Deps {
     )
   }
   object smithy {
-    val version = "1.26.0"
-    val model = ivy"software.amazon.smithy:smithy-model:$version"
-    val build = ivy"software.amazon.smithy:smithy-build:$version"
-    val diff = ivy"software.amazon.smithy:smithy-diff:$version"
+    val smithyVersion = "1.26.4"
+    val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
+    val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.0"
     val parse = ivy"org.typelevel::cats-parse:0.3.8"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
-  val decline = ivy"com.monovore::decline:2.4.0"
+  val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.9.0"
   }
