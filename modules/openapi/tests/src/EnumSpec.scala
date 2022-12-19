@@ -47,6 +47,34 @@ final class EnumSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("enum - number starting name") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Numbers:
+                     |      type: string
+                     |      enum:
+                     |        - 3three
+                     |        - four
+                     |        - 5five
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |enum Numbers {
+                            |    n3three = "3three"
+                            |    four
+                            |    n5five = "5five"
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("enum - v1") {
     val openapiString = """|openapi: '3.0.'
                      |info:
