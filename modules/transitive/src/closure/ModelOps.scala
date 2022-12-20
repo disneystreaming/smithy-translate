@@ -56,11 +56,11 @@ object ModelOps {
         validateModel: Boolean = true
     ): Model = {
       TransitiveModel.compute(
-        model,
-        shapeIds,
-        captureTraits,
-        captureMetadata,
-        validateModel
+        model = model,
+        entryPoints = shapeIds,
+        captureTraits = captureTraits,
+        captureMetadata = captureMetadata,
+        validateModel = validateModel
       )
     }
   }

@@ -291,4 +291,46 @@ object sample_specs {
                      |integer RandomInt2
                      |integer RandomInt3
                      |""".stripMargin
+
+  val recursiveSpec = """|namespace example.test
+                         |
+                         |union MyList {
+                         |  empty: Empty,
+                         |  cons: Cons,
+                         |}
+                         |
+                         |structure Empty {}
+                         |
+                         |structure Cons {
+                         |  head: String,
+                         |  tail: MyList
+                         |}
+                         |
+                         |integer RandomInt
+                         |integer RandomInt2
+                         |""".stripMargin
+
+    val cycleSpec = """|namespace example.test
+                       |
+                       |@trait(selector: "structure :not([trait|error])")
+                       |@idRef(failWhenMissing: true, selector: "union")
+                       |string adtMember
+                       |
+                       |union SomeUnion {
+                       |  optA: SomeOptionA,
+                       |  optB: SomeOptionB,
+                       |}
+                       |
+                       |@adtMember(SomeUnion)
+                       |structure SomeOptionA {
+                       |  a: String
+                       |}
+                       |
+                       |@adtMember(SomeUnion)
+                       |structure SomeOptionB {
+                       |  b: String
+                       |}
+                       |integer RandomInt
+                       |integer RandomInt2
+                       |""".stripMargin
 }
