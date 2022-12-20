@@ -63,8 +63,7 @@ private[closure] final class IdRefVisitor(
     visitSeqShape(shape.getMember())
 
   override def mapShape(shape: MapShape): List[Shape] =
-    visitSeqShape(shape.getKey()) ++
-      visitSeqShape(shape.getValue())
+    visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
   override def stringShape(shape: StringShape): List[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
