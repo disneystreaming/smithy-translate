@@ -234,7 +234,7 @@ final class RefSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |structure Test {
                             | one: IdList

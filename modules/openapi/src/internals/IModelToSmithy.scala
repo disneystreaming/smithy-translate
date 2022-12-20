@@ -15,32 +15,31 @@
 
 package smithytranslate.openapi.internals
 
-import software.amazon.smithy.model.Model
-import software.amazon.smithy.model.shapes.{EnumShape, _}
-
-import scala.jdk.CollectionConverters._
 import alloy.DateFormatTrait
 import alloy.DiscriminatedUnionTrait
+import alloy.NullableTrait
+import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
-import software.amazon.smithy.model.traits.HttpTrait
-import software.amazon.smithy.model.pattern.UriPattern
-import software.amazon.smithy.model.traits._
-import alloy.openapi.OpenApiExtensionsTrait
-import software.amazon.smithy.model.node.Node
-import smithytranslate.ErrorMessageTrait
-import smithytranslate.openapi.internals.TimestampFormat.DateTime
-import smithytranslate.openapi.internals.TimestampFormat.SimpleDate
-import smithytranslate.ContentTypeTrait
-import smithytranslate.ContentTypeDiscriminatedTrait
-import smithytranslate.openapi.internals.SecurityScheme
-import smithytranslate.openapi.internals.ApiKeyLocation
-import smithytranslate.DefaultValueTrait
-import smithytranslate.NullableTrait
 import cats.syntax.all._
+import smithytranslate.ContentTypeDiscriminatedTrait
+import smithytranslate.ContentTypeTrait
+import smithytranslate.ErrorMessageTrait
 import smithytranslate.NullFormatTrait
+import smithytranslate.openapi.internals.ApiKeyLocation
 import smithytranslate.openapi.internals.Hint.Header
 import smithytranslate.openapi.internals.Hint.QueryParam
+import smithytranslate.openapi.internals.SecurityScheme
+import smithytranslate.openapi.internals.TimestampFormat.DateTime
+import smithytranslate.openapi.internals.TimestampFormat.SimpleDate
+import software.amazon.smithy.model.Model
+import software.amazon.smithy.model.node.Node
+import software.amazon.smithy.model.pattern.UriPattern
+import software.amazon.smithy.model.shapes.{EnumShape, _}
+import software.amazon.smithy.model.traits._
+import software.amazon.smithy.model.traits.HttpTrait
+
+import scala.jdk.CollectionConverters._
 
 final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
@@ -293,7 +292,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.Pattern(value)          => List(new PatternTrait(value))
     case Hint.Sensitive               => List(new SensitiveTrait())
     case Hint.ContentTypeLabel(value) => List(new ContentTypeTrait(value))
-    case Hint.DefaultValue(value)     => List(new DefaultValueTrait(value))
+    case Hint.DefaultValue(value)     => List(new DefaultTrait(value))
     case Hint.UniqueItems             => List(new UniqueItemsTrait())
     case Hint.Nullable                => List(new NullableTrait())
     case Hint.JsonName(value)         => List(new JsonNameTrait(value))

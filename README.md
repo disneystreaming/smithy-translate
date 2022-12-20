@@ -937,7 +937,7 @@ we will outline any differences that exist. Everything else is the same.
 
 #### Default Values
 
-Default values from JSON Schema will be captured in the `smithytranslate#defaultValue` trait. 
+Default values from JSON Schema will be captured in the `smithy.api#default` trait.
 
 JSON Schema:
 ```json
@@ -957,15 +957,11 @@ JSON Schema:
 
 Smithy:
 ```smithy
-use smithytranslate#defaultValue
-
 structure Person {
- @defaultValue("Sally")
+ @default("Sally")
  firstName: String
 }
 ```
-
-_Note, this is a different trait from the Smithy 2.0 `smithy.api#default` trait._
 
 #### Null Values
 
@@ -991,7 +987,7 @@ JSON Schema:
 
 Smithy:
 ```smithy
-use smithytranslate#nullable
+use alloy#nullable
 
 structure Foo {
  @required
@@ -1000,7 +996,7 @@ structure Foo {
 }
 ```
 
-In most protocols, the there is likely no difference between an optional field and a nullable optional field.
+In most protocols, there is likely no difference between an optional field and a nullable optional field.
 Similarly, some protocols may not allow for required fields to be nullable. These considerations are left
 up to the protocol itself.
 

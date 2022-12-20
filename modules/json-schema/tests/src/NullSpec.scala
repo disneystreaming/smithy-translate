@@ -65,11 +65,10 @@ final class NullSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |structure Foo {
-                            | @defaultValue(null)
+                            | @default(null)
                             | @nullable
                             | foo: String
                             |}
@@ -100,11 +99,10 @@ final class NullSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |structure Foo {
-                            | @defaultValue(null)
+                            | @default(null)
                             | foo: NullableString
                             |}
                             |
@@ -164,7 +162,7 @@ final class NullSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |structure Foo {
                             | @nullable
@@ -196,7 +194,7 @@ final class NullSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |structure Foo {
                             | bar: Bar
@@ -232,7 +230,7 @@ final class NullSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#nullable
+                            |use alloy#nullable
                             |
                             |@nullable
                             |structure Foo {

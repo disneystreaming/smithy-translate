@@ -26,12 +26,3 @@ structure nullFormat {
 @nullFormat
 structure Null {
 }
-
-@trait(
-  selector: "structure > member :test(> :is(simpleType, list, map))",
-  conflicts: [required]
-)
-document defaultValue
-
-@trait()
-structure nullable {}
