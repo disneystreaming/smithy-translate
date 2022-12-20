@@ -140,12 +140,11 @@ object IdRefVisitor {
   def visit(
       model: Model,
       captureTraits: Boolean,
-      shapeId: ShapeId,
       trt: Trait,
       visitedShapes: mutable.Set[Shape]
   ): List[Shape] = {
     model
-      .getShape(shapeId)
+      .getShape(trt.toShapeId())
       .toScala
       .toList
       .flatMap { s0 =>

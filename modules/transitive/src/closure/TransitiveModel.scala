@@ -80,11 +80,10 @@ object TransitiveModel {
 
     val idRefShapesVisitResult = allShapes
       .flatMap(_.getAllTraits().asScala)
-      .flatMap { case (shapeId, trt) =>
+      .flatMap { case (_, trt) =>
         IdRefVisitor.visit(
           model = model,
           captureTraits = captureTraits,
-          shapeId = shapeId,
           trt = trt,
           visitedShapes = visitedShapes
         )
