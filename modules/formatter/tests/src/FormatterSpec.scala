@@ -863,4 +863,29 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("sort use statements") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |use a#a
+                 |use b#c
+                 |use b#a
+                 |use a#b
+                 |use a#b
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |use a#a
+                      |use a#b
+                      |use a#b
+                      |use b#a
+                      |use b#c
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

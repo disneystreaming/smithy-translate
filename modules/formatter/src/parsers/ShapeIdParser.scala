@@ -45,7 +45,7 @@ object ShapeIdParser {
       .map(Namespace.tupled)
   val absolute_root_shape_id: Parser[AbsoluteRootShapeId] =
     ((namespace <* Parser.char('#')) ~ identifier)
-      .map(AbsoluteRootShapeId.tupled)
+      .map(AbsoluteRootShapeId.apply.tupled)
   val root_shape_id: Parser[RootShapeId] =
     absolute_root_shape_id.backtrack
       .eitherOr(identifier)

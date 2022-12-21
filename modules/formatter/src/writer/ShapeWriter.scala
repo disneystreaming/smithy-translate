@@ -58,7 +58,7 @@ object ShapeWriter {
   }
   implicit val useSectionWriter: Writer[UseSection] = Writer.write {
     case UseSection(use_statements) =>
-      use_statements.writeN("", "", "\n")
+      use_statements.sortBy(_.absoluteRootShapeId).writeN("", "", "\n")
   }
 
   implicit val shapeSectionWriter: Writer[ShapeSection] = Writer.write {

@@ -24,6 +24,20 @@ case class ShapeId(
 case class RootShapeId(either: Either[AbsoluteRootShapeId, Identifier])
 
 case class AbsoluteRootShapeId(nameSpace: Namespace, identifier: Identifier)
+object AbsoluteRootShapeId {
+  implicit val ord: Ordering[AbsoluteRootShapeId] =
+    new Ordering[AbsoluteRootShapeId] {
+      import writers.Writer._
+      import writers.ShapeIdWriter._
+      override def compare(
+          x: AbsoluteRootShapeId,
+          y: AbsoluteRootShapeId
+      ): Int = {
+        Ordering[String].compare(x.write, y.write)
+      }
+
+    }
+}
 
 case class Namespace(identifier: Identifier, suffix: List[Identifier])
 
