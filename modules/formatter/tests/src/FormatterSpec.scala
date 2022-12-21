@@ -37,6 +37,99 @@ final class FormatterSpec extends munit.FunSuite {
       )
   }
 
+  test("control - 0") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("control - 1") {
+    val src = """|$version: "2.0" //comment
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|$version: "2.0" // comment
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("control - 2") {
+    val src = """|$version: "2.0" /// comment
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|$version: "2.0" /// comment
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("control - 3") {
+    val src = """|/// triple comment
+                 |/// on multiline
+                 |$version: "2.0"
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|/// triple comment
+                      |/// on multiline
+                      |$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("control - 4") {
+    val src = """|// double comment
+                 |// on multiline
+                 |$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |""".stripMargin
+    val expected = """|// double comment
+                      |// on multiline
+                      |$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("control - 5") {
+    val src = """|// double comment
+                 |/// and triple
+                 |// on multiline
+                 |$version: "2.0"
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|// double comment
+                      |/// and triple
+                      |// on multiline
+                      |$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("format test - keep new line after control section") {
     val src = """|$version: "2.0"
                  |
