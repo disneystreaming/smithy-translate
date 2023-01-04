@@ -374,7 +374,7 @@ object ShapeParser {
 
 /*
 ShapeSection =
-    [NamespaceStatement UseSection ShapeStatements]
+    [NamespaceStatement UseSection [ShapeStatements]]
 
 NamespaceStatement =
     %s"namespace" SP Namespace BR
