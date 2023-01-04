@@ -177,7 +177,8 @@ QuotedText =
     DQUOTE *QuotedChar DQUOTE
 
 QuotedChar =
-    %x20-21     ; space - "!"
+    %x09        ; tab
+  / %x20-21     ; space - "!"
   / %x23-5B     ; "#" - "["
   / %x5D-10FFFF ; "]"+
   / EscapedChar
