@@ -104,4 +104,6 @@ object EscapedChar {
       extends EscapedChar
 }
 
-case class TextBlock(quotedChars: List[QuotedChar])
+case class TextBlock(content: List[TextBlockContent])
+
+case class TextBlockContent(dquotes: List[Char], char: QuotedChar)

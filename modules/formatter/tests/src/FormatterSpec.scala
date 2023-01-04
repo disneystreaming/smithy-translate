@@ -524,6 +524,34 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
+  test("format test - regular triple dquote") {
+    val tq = "\"\"\""
+    val src = s"""|$$version: "2.0"
+                  |
+                  |namespace test
+                  |
+                  |@documentation(${tq}
+                  |  a
+                  |  "b
+                  |  ""c
+                  |${tq})
+                  |string Value
+                  |""".stripMargin
+    val expected = s"""|$$version: "2.0"
+                       |
+                       |namespace test
+                       |
+                       |@documentation(${tq}
+                       |  a
+                       |  "b
+                       |  ""c
+                       |${tq})
+                       |string Value
+                       |
+                       |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("format test - large documentation trait") {
     val tq = "\"\"\""
     val src = s"""|$$version: "2.0"

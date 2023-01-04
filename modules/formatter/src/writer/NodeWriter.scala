@@ -26,7 +26,15 @@ import ast.NodeValue.{
   NodeStringValue,
   SmithyNumber
 }
-import ast.{Comment, EscapedChar, NodeValue, QuotedChar, QuotedText, TextBlock}
+import ast.{
+  Comment,
+  EscapedChar,
+  NodeValue,
+  QuotedChar,
+  QuotedText,
+  TextBlock,
+  TextBlockContent
+}
 import ast.EscapedChar.{CharCase, UnicodeEscape}
 import ast.NodeValue.NodeStringValue.{
   QuotedTextCase,
@@ -129,6 +137,10 @@ object NodeWriter {
   implicit val quotedTextWriter: Writer[QuotedText] = Writer.write {
     case QuotedText(text) =>
       s"\"${text.map(_.write).mkString}\""
+  }
+  implicit val textBlockContentWriter: Writer[TextBlockContent] = Writer.write {
+    case TextBlockContent(quotes, text) =>
+      quotes.writeN + text.write
   }
   implicit val textBlockWriter: Writer[TextBlock] = Writer.write {
     case TextBlock(text) =>

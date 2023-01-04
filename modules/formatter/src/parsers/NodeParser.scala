@@ -38,7 +38,8 @@ import smithytranslate.formatter.ast.{
   NodeValue,
   QuotedChar,
   QuotedText,
-  TextBlock
+  TextBlock,
+  TextBlockContent
 }
 import smithytranslate.formatter.parsers.ShapeIdParser.{identifier, shape_id}
 
@@ -53,17 +54,21 @@ object NodeParser {
 
   val escaped_char: Parser[EscapedChar] =
     escape *> (Parser.charIn(escapeChars).map(CharCase) | unicode_escape)
-  val QuotedChar: Parser[QuotedChar] =
+  val quoted_char: Parser[QuotedChar] =
     qChar.backtrack.map(SimpleCharCase) |
       escaped_char.backtrack.map(EscapedCharCase) |
       nl.as(NewLineCase)
 
-  val ThreeDquotes = dquote ~ dquote ~ dquote
+  val three_dquotes: Parser[Unit] = dquote *> dquote *> dquote
+  val text_block_content: Parser[TextBlockContent] =
+    (Parser.charIn('"').rep0(0, 2).soft.with1 ~ quoted_char).map {
+      case (quotes, char) => TextBlockContent(quotes, char)
+    }
   val text_block: Parser[TextBlock] =
-    ((ThreeDquotes ~ sp0 *> nl) *> QuotedChar.rep0 <* ThreeDquotes)
+    ((three_dquotes ~ sp0 *> nl) *> text_block_content.rep0 <* three_dquotes)
       .map(TextBlock)
   val quoted_text: Parser[QuotedText] =
-    (dquote *> QuotedChar.rep0 <* dquote).map(QuotedText)
+    (dquote *> quoted_char.rep0 <* dquote).map(QuotedText)
   val node_string_value: Parser[NodeStringValue] = shape_id.backtrack.map(
     ShapeIdCase
   ) | text_block.backtrack.map(TextBlockCase) | quoted_text.backtrack
@@ -194,7 +199,10 @@ Escape =
     %x5C ; backslash
 
 TextBlock =
-    ThreeDquotes *SP NL *QuotedChar ThreeDquotes
+    ThreeDquotes *SP NL *TextBlockContent ThreeDquotes
+
+TextBlockContent =
+    QuotedChar / (1*2DQUOTE 1*QuotedChar)
 
 ThreeDquotes =
     DQUOTE DQUOTE DQUOTE
