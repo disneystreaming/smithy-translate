@@ -179,10 +179,10 @@ QuotedChar =
   / EscapedChar
   / NL
 
-EscapedChar =
-    Escape (Escape / "'" / DQUOTE / %s"b"
-            / %s"f" / %s"n" / %s"r" / %s"t"
-            / "/" / UnicodeEscape)
+  EscapedChar =
+      Escape (Escape / DQUOTE / %s"b" / %s"f"
+    / %s"n" / %s"r" / %s"t" / "/"
+    / UnicodeEscape
 
 UnicodeEscape =
     %s"u" Hex Hex Hex Hex
