@@ -13,27 +13,26 @@
  * limitations under the License.
  */
 
-package closure
+package smithytranslate.closure
 
-import software.amazon.smithy.model.shapes._
+import scala.collection.mutable
+import software.amazon.smithy.model.shapes.*
 import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.traits.IdRefTrait
-import scala.jdk.OptionConverters._
-import scala.jdk.CollectionConverters._
+
+import scala.jdk.OptionConverters.*
+import scala.jdk.CollectionConverters.*
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.traits.Trait
-import smithytranslate.closure.TransitiveModel
 
-final class IdRefVisitor(
+private[closure] final class IdRefVisitor(
     model: Model,
     value: Node,
     captureTraits: Boolean,
-    validateModel: Boolean,
-    isInsideIdRefMember: Boolean = false
-) extends ShapeVisitor[List[Shape]] {
-  def blobShape(shape: BlobShape): List[Shape] = List.empty
-
-  def booleanShape(shape: BooleanShape): List[Shape] = List.empty
+    isInsideIdRefMember: Boolean = false,
+    visitedShapes: mutable.Set[Shape]
+) extends ShapeVisitor.Default[List[Shape]] {
+  override def getDefault(_shape: Shape): List[Shape] = List.empty
 
   private def visitSeqShape(member: MemberShape): List[Shape] =
     value.asArrayNode().toScala match {
@@ -43,65 +42,47 @@ final class IdRefVisitor(
           .getElements()
           .asScala
           .toList
-          .flatMap(value =>
+          .flatMap { value =>
             member.accept(
-              new IdRefVisitor(model, value, captureTraits, validateModel)
+              new IdRefVisitor(
+                model = model,
+                value = value,
+                captureTraits = captureTraits,
+                isInsideIdRefMember = false,
+                visitedShapes = visitedShapes
+              )
             )
-          )
+          }
     }
 
-  def listShape(shape: ListShape): List[Shape] =
+  override def listShape(shape: ListShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
   @annotation.nowarn("msg=class SetShape in package shapes is deprecated")
   override def setShape(shape: SetShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
-  def mapShape(shape: MapShape): List[Shape] =
-    visitSeqShape(shape.getValue())
+  override def mapShape(shape: MapShape): List[Shape] =
+    visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def byteShape(shape: ByteShape): List[Shape] = List.empty
-
-  def shortShape(shape: ShortShape): List[Shape] = List.empty
-
-  def integerShape(shape: IntegerShape): List[Shape] = List.empty
-
-  def longShape(shape: LongShape): List[Shape] = List.empty
-
-  def floatShape(shape: FloatShape): List[Shape] = List.empty
-
-  def documentShape(shape: DocumentShape): List[Shape] = List.empty
-
-  def doubleShape(shape: DoubleShape): List[Shape] = List.empty
-
-  def bigIntegerShape(shape: BigIntegerShape): List[Shape] = List.empty
-
-  def bigDecimalShape(shape: BigDecimalShape): List[Shape] = List.empty
-
-  def operationShape(shape: OperationShape): List[Shape] = List.empty
-
-  def resourceShape(shape: ResourceShape): List[Shape] = List.empty
-
-  def serviceShape(shape: ServiceShape): List[Shape] = List.empty
-
-  def stringShape(shape: StringShape): List[Shape] = {
+  override def stringShape(shape: StringShape): List[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
       value.asStringNode().toScala match {
         case None => List.empty
         case Some(stringNode) =>
-          val shapes =
-            model.getShape(ShapeId.from(stringNode.getValue())).toScala.toList
-          TransitiveModel
-            .compute(
-              model,
-              shapes.map(_.getId),
-              captureTraits,
-              captureMetadata = false,
-              validateModel
-            )
-            .toSet()
-            .asScala
-            .toList ++ shapes
+          val shape = model.expectShape(ShapeId.from(stringNode.getValue()))
+          val stringNodeShapes = if (visitedShapes.contains(shape)) {
+            Nil
+          } else {
+            TransitiveModel
+              .computeWithVisited(
+                model = model,
+                entryPoints = List(shape.getId()),
+                captureTraits = captureTraits,
+                visitedShapes = visitedShapes
+              )
+          }
+          stringNodeShapes ++ List(shape)
       }
     } else {
       List.empty
@@ -118,27 +99,33 @@ final class IdRefVisitor(
           case None => List.empty
           case Some(member) =>
             member.accept(
-              new IdRefVisitor(model, node, captureTraits, validateModel)
+              new IdRefVisitor(
+                model = model,
+                value = node,
+                captureTraits = captureTraits,
+                isInsideIdRefMember = false,
+                visitedShapes = visitedShapes
+              )
             )
         }
       }
     }
 
-  def structureShape(shape: StructureShape): List[Shape] =
+  override def structureShape(shape: StructureShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def unionShape(shape: UnionShape): List[Shape] =
+  override def unionShape(shape: UnionShape): List[Shape] =
     visitNamedMembersShape(shape.getAllMembers().asScala.toMap)
 
-  def memberShape(shape: MemberShape): List[Shape] = {
+  override def memberShape(shape: MemberShape): List[Shape] = {
     val newVisitor = new IdRefVisitor(
-      model,
-      value,
-      captureTraits,
-      validateModel,
-      isInsideIdRefMember = shape.hasTrait(classOf[IdRefTrait])
+      model = model,
+      value = value,
+      captureTraits = captureTraits,
+      isInsideIdRefMember = shape.hasTrait(classOf[IdRefTrait]),
       // IdRefs have a selector of :test(string, member > string)
       // so we need to check for the trait in both of those places
+      visitedShapes = visitedShapes
     )
     model
       .getShape(shape.getTarget())
@@ -146,32 +133,27 @@ final class IdRefVisitor(
       .toList
       .flatMap(_.accept(newVisitor))
   }
-
-  def timestampShape(shape: TimestampShape): List[Shape] = List.empty
-
 }
 
 object IdRefVisitor {
   def visit(
       model: Model,
       captureTraits: Boolean,
-      shapeId: ShapeId,
       trt: Trait,
-      validateModel: Boolean,
-      includeStartingTrait: Boolean = false
+      visitedShapes: mutable.Set[Shape]
   ): List[Shape] = {
     model
-      .getShape(shapeId)
+      .getShape(trt.toShapeId())
       .toScala
       .toList
       .flatMap { s0 =>
-        val s = if (includeStartingTrait) List(s0) else Nil
-        s ++ s0.accept(
+        s0.accept(
           new IdRefVisitor(
-            model,
-            trt.toNode,
-            captureTraits,
-            validateModel
+            model = model,
+            value = trt.toNode,
+            captureTraits = captureTraits,
+            isInsideIdRefMember = false,
+            visitedShapes = visitedShapes
           )
         )
       }

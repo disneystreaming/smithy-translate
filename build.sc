@@ -1,6 +1,6 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.4`
+import $ivy.`io.chris-kipp::mill-ci-release::0.1.5`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
 
 import coursier.maven.MavenRepository
@@ -416,7 +416,7 @@ object Deps {
     )
   }
   object smithy {
-    val smithyVersion = "1.26.4"
+    val smithyVersion = "1.27.0"
     val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
     val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
@@ -432,12 +432,12 @@ object Deps {
 
   val munit = ivy"org.scalameta::munit:0.7.29"
   object grpc {
-    val version = "1.42.1"
+    val version = "1.51.1"
     val netty = ivy"io.grpc:grpc-netty:$version"
     val services = ivy"io.grpc:grpc-services:$version"
   }
   object scalapb {
-    val version = "0.11.10"
+    val version = "0.11.12"
     val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
     val compilerPlugin =
       ivy"com.thesamet.scalapb::compilerplugin:$version"
