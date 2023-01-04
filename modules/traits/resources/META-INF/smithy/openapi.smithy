@@ -19,16 +19,6 @@ string contentType
 @trait(selector: "*")
 string errorMessage
 
-@trait
-map openapiExtensions {
-  key: String,
-  value: Document
-}
-
-@trait(selector: ":test(timestamp, member > timestamp)")
-structure dateOnly {
-}
-
 @trait(selector: "structure")
 structure nullFormat {
 }
@@ -36,12 +26,3 @@ structure nullFormat {
 @nullFormat
 structure Null {
 }
-
-@trait(
-  selector: "structure > member :test(> :is(simpleType, list, map))",
-  conflicts: [required]
-)
-document defaultValue
-
-@trait()
-structure nullable {}

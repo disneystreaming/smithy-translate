@@ -41,7 +41,7 @@ final class ExtensionsSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |use smithytranslate#openapiExtensions
+                      |use alloy.openapi#openapiExtensions
                       |
                       |@openapiExtensions(
                       | "x-float": 1.0,
@@ -100,7 +100,7 @@ final class ExtensionsSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |use smithytranslate#openapiExtensions
+                      |use alloy.openapi#openapiExtensions
                       |use smithytranslate#contentType
                       |
                       |@openapiExtensions("x-service": "foo")

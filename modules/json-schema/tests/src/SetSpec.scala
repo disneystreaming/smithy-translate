@@ -59,7 +59,7 @@ final class SetSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#openapiExtensions
+                            |use alloy.openapi#openapiExtensions
                             |
                             |@length(
                             |    min: 1,

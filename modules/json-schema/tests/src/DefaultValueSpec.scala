@@ -34,10 +34,8 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |structure Person {
-                            | @defaultValue("Testing this out.")
+                            | @default("Testing this out.")
                             | firstName: String
                             |}
                             |""".stripMargin
@@ -62,10 +60,8 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |structure Test {
-                            | @defaultValue(2022)
+                            | @default(2022)
                             | one: Integer
                             |}
                             |""".stripMargin
@@ -90,10 +86,8 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |structure Test {
-                            | @defaultValue(2022.17)
+                            | @default(2022.17)
                             | one: Double
                             |}
                             |""".stripMargin
@@ -121,14 +115,12 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |list One {
                             | member: String
                             |}
                             |
                             |structure Test {
-                            | @defaultValue([])
+                            | @default([])
                             | one: One
                             |}
                             |""".stripMargin
@@ -158,13 +150,10 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |string Name
                             |
                             |structure Person {
-                            | @defaultValue("Testing this out.")
-                            | firstName: Name
+                            | firstName: Name = "Testing this out."
                             |}
                             |""".stripMargin
 
@@ -196,14 +185,12 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |list OneList {
                             | member: String
                             |}
                             |
                             |structure Test {
-                            | @defaultValue([])
+                            | @default([])
                             | one: OneList
                             |}
                             |""".stripMargin
@@ -229,10 +216,8 @@ final class DefaultValueSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |use smithytranslate#defaultValue
-                            |
                             |structure Person {
-                            | @defaultValue("Testing this out.")
+                            | @default("Testing this out.")
                             | firstName1: String
                             |}
                             |""".stripMargin
