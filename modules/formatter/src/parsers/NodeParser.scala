@@ -30,14 +30,12 @@ import smithytranslate.formatter.ast.NodeValue._
 import smithytranslate.formatter.ast.QuotedChar.{
   EscapedCharCase,
   NewLineCase,
-  PreservedDoubleCase,
   SimpleCharCase
 }
 import smithytranslate.formatter.parsers.WhitespaceParser.{nl, sp0, ws}
 import smithytranslate.formatter.ast.{
   EscapedChar,
   NodeValue,
-  PreservedDouble,
   QuotedChar,
   QuotedText,
   TextBlock
@@ -48,8 +46,6 @@ object NodeParser {
 
   val opParser: Parser[Char] = Parser.charIn(op)
   val qChar: Parser[Char] = Parser.charIn(allQuotable)
-  val preserved_double: Parser[PreservedDouble] = escape *> qChar
-    .map(PreservedDouble)
   val unicode_escape: Parser[UnicodeEscape] =
     (Parser.char('u') *> hexdig ~ hexdig ~ hexdig).map { case ((a, b), c) =>
       UnicodeEscape(a, b, c)
@@ -60,7 +56,6 @@ object NodeParser {
   val QuotedChar: Parser[QuotedChar] =
     qChar.backtrack.map(SimpleCharCase) |
       escaped_char.backtrack.map(EscapedCharCase) |
-      preserved_double.map(PreservedDoubleCase) |
       nl.as(NewLineCase)
 
   val ThreeDquotes = dquote ~ dquote ~ dquote
@@ -182,7 +177,6 @@ QuotedChar =
   / %x23-5B     ; "#" - "["
   / %x5D-10FFFF ; "]"+
   / EscapedChar
-  / PreservedDouble
   / NL
 
 EscapedChar =
@@ -195,9 +189,6 @@ UnicodeEscape =
 
 Hex =
     DIGIT / %x41-46 / %x61-66
-
-PreservedDouble =
-    Escape (%x20-21 / %x23-5B / %x5D-10FFFF)
 
 Escape =
     %x5C ; backslash

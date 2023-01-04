@@ -89,9 +89,6 @@ object QuotedChar {
 
   case class EscapedCharCase(char: EscapedChar) extends QuotedChar
 
-  case class PreservedDoubleCase(preservedDouble: PreservedDouble)
-      extends QuotedChar
-
   case object NewLineCase extends QuotedChar
 }
 
@@ -106,7 +103,5 @@ object EscapedChar {
   case class UnicodeEscape(hex: Char, hex2: Char, hex3: Char)
       extends EscapedChar
 }
-
-case class PreservedDouble(char: Char)
 
 case class TextBlock(quotedChars: List[QuotedChar])
