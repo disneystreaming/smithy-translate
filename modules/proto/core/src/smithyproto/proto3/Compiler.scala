@@ -132,8 +132,22 @@ class Compiler() {
     prefix :+ fileName
   }
 
-  private def toSnakeCase(name: String): String =
-    name.split("(?=\\p{Upper})").map(_.toLowerCase).mkString("_")
+  private def toSnakeCase(name: String): String = {
+    val (_, result) = name
+      .foldLeft((false, "")) { case ((wasLastUpper, acc), i) =>
+        val hasTrailingUnderscore = acc.lastOption.contains('_')
+        val maybeUnderscore =
+          if (
+            i.isUpper &&
+            acc.nonEmpty &&
+            !wasLastUpper &&
+            !hasTrailingUnderscore
+          ) "_"
+          else ""
+        (i.isUpper, acc + maybeUnderscore + i.toLower)
+      }
+    result
+  }
 
   private def findFieldIndex(m: MemberShape): Option[Int] =
     m.getTrait(classOf[ProtoIndexTrait]).toScala.map(_.getNumber)
