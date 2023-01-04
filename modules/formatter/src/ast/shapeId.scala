@@ -24,6 +24,13 @@ case class ShapeId(
 case class RootShapeId(either: Either[AbsoluteRootShapeId, Identifier])
 
 case class AbsoluteRootShapeId(nameSpace: Namespace, identifier: Identifier)
+object AbsoluteRootShapeId {
+  implicit val ord: Ordering[AbsoluteRootShapeId] = {
+    import writers.Writer._
+    import writers.ShapeIdWriter._
+    Ordering.by(_.write)
+  }
+}
 
 case class Namespace(identifier: Identifier, suffix: List[Identifier])
 

@@ -28,10 +28,12 @@ object WhitespaceParser {
   val comma: Parser[Unit] = Parser.char(',')
   // requires defer due to cyclic dependency between Break and Comment
   // deviates from ABNF due to the fact that in examples provided there can be multiple new lines in a row between shapes
-  lazy val br: Parser[Break] =
+  val br: Parser[Break] =
     Parser
-      .defer(sp.rep0.with1 *> commentOrNewline.rep <* ws)
-      .map(list => Break(list.toList.flatten))
+      .defer(sp.rep0.with1 *> commentOrNewline ~ ws)
+      .map { case (inlineComment, ws) =>
+        Break(inlineComment, ws.comments)
+      }
   private val not_newline: Parser0[String] =
     Parser.until(nl).?.map(_.getOrElse(""))
   val line_comment: Parser[Line] = Parser.string("//").as(Line)

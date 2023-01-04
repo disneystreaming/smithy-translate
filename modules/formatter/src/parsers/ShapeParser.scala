@@ -341,7 +341,7 @@ object ShapeParser {
   val shape_statement: Parser[ShapeStatement] = {
     val traitAndBody = trait_statements.with1 ~ shape_body
     val interspersedBr =
-      (traitAndBody.soft ~ br) | traitAndBody.map(_ -> Break(Nil))
+      (traitAndBody.soft ~ br) | traitAndBody.map(_ -> Break(None, Nil))
     interspersedBr.map { case ((a, b), c) =>
       ShapeStatement(a, b, c)
     }
