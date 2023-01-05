@@ -908,6 +908,10 @@ final class FormatterSpec extends munit.FunSuite {
                  |map MixedMap with [MixinMap] {
                  |  $key
                  |  $value
+                 |}
+                 |
+                 |map MixedMap with [MixinMap] {
+                 |  value: String
                  |}""".stripMargin
     val expected = """|$version: "2.0"
                       |
@@ -920,6 +924,10 @@ final class FormatterSpec extends munit.FunSuite {
                       |map MixedMap with [MixinMap] {
                       |    $key
                       |    $value
+                      |}
+                      |
+                      |map MixedMap with [MixinMap] {
+                      |    value: String
                       |}
                       |""".stripMargin
     formatTest(src, expected)
