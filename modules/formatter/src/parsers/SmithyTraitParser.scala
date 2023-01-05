@@ -97,11 +97,11 @@ TraitStructureKvp =
     NodeObjectKey *WS ":" *WS NodeValue
 
 ApplyStatement =
-    (ApplyStatementSingular / ApplyStatementBlock)
+    ApplyStatementSingular / ApplyStatementBlock
 
 ApplyStatementSingular =
-    %s"apply" WS ShapeId WS Trait BR
+    %s"apply" WS ShapeId WS Trait
 
 ApplyStatementBlock =
-    %s"apply" SP ShapeId WS "{" TraitStatements "}" BR
+    %s"apply" SP ShapeId WS "{" TraitStatements "}"
  */
