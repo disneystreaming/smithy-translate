@@ -76,6 +76,21 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
+  test("w/o trailing newline w/ shape with whitespace") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |string Value  """.stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |string Value
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("control - 0") {
     val src = """|$version: "2.0"
                  |

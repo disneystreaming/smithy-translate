@@ -350,7 +350,7 @@ object ShapeParser {
   // The optional trailing BR is not in the spec but it exists in a lot of
   // files.
   val shape_statements: Parser0[ShapeStatements] =
-    (shape_statement_or_apply ~ (br ~ shape_statement_or_apply).backtrack.rep0 <* br.?)
+    (shape_statement_or_apply ~ (br ~ shape_statement_or_apply).backtrack.rep0 <* (ws.? *> br.?))
       .map { case (firstStatement, others) =>
         ShapeStatements(firstStatement, others)
       }
