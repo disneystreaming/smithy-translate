@@ -26,9 +26,9 @@ import ShapeParser.shape_section
 object IdlParser {
 
   val idlParser: Parser0[Idl] =
-    (ws ~ control_section ~ metadata_section ~ shape_section).map {
-      case (((whitespace, control), metadata), shape) =>
+    (ws ~ control_section ~ metadata_section ~ shape_section)
+      .map { case (((whitespace, control), metadata), shape) =>
         Idl(whitespace, control, metadata, shape)
-    }
+      }
 
 }

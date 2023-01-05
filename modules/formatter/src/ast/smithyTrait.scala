@@ -64,14 +64,12 @@ case class ApplyStatementSingular(
     ws0: Whitespace,
     shapeId: ShapeId,
     ws1: Whitespace,
-    strait: SmithyTrait,
-    break: Break
+    strait: SmithyTrait
 )
 case class ApplyStatementBlock(
     shapeId: ShapeId,
     ws0: Whitespace,
-    traitStatements: TraitStatements,
-    break: Break
+    traitStatements: TraitStatements
 )
 case class ApplyStatement(
     either: Either[ApplyStatementSingular, ApplyStatementBlock]
