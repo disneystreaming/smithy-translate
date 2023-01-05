@@ -30,10 +30,10 @@ import ast.{
   Comment,
   EscapedChar,
   NodeValue,
-  PreservedDouble,
   QuotedChar,
   QuotedText,
-  TextBlock
+  TextBlock,
+  TextBlockContent
 }
 import ast.EscapedChar.{CharCase, UnicodeEscape}
 import ast.NodeValue.NodeStringValue.{
@@ -42,12 +42,7 @@ import ast.NodeValue.NodeStringValue.{
   TextBlockCase
 }
 import ast.NodeValue.Number.{Exp, Frac}
-import ast.QuotedChar.{
-  EscapedCharCase,
-  NewLineCase,
-  PreservedDoubleCase,
-  SimpleCharCase
-}
+import ast.QuotedChar.{EscapedCharCase, NewLineCase, SimpleCharCase}
 import util.string_ops.{addBrackets, indent, isTooWide}
 import ShapeIdWriter.{identifierWriter, shapeIdWriter}
 import WhiteSpaceWriter.wsWriter
@@ -134,18 +129,18 @@ object NodeWriter {
     case UnicodeEscape(hex, hex2, hex3) =>
       s"\\u${hex.write}${hex2.write}${hex3.write}"
   }
-  implicit val preservedDoubleWriter: Writer[PreservedDouble] = Writer.write {
-    case PreservedDouble(char) => s"\\${char.write}"
-  }
   implicit val quotedCharWriter: Writer[QuotedChar] = Writer.write {
-    case SimpleCharCase(char)                 => s"${char.write}"
-    case EscapedCharCase(escapedChar)         => escapedChar.write
-    case PreservedDoubleCase(preservedDouble) => preservedDouble.write
-    case NewLineCase                          => "\n"
+    case SimpleCharCase(char)         => s"${char.write}"
+    case EscapedCharCase(escapedChar) => escapedChar.write
+    case NewLineCase                  => "\n"
   }
   implicit val quotedTextWriter: Writer[QuotedText] = Writer.write {
     case QuotedText(text) =>
       s"\"${text.map(_.write).mkString}\""
+  }
+  implicit val textBlockContentWriter: Writer[TextBlockContent] = Writer.write {
+    case TextBlockContent(quotes, text) =>
+      quotes.writeN + text.write
   }
   implicit val textBlockWriter: Writer[TextBlock] = Writer.write {
     case TextBlock(text) =>
@@ -158,96 +153,4 @@ object NodeWriter {
     case Exp(symbol, op, digits) =>
       s"${symbol.write}${op.write}${digits.write}"
   }
-
-  /*
-  NodeValue =
-      NodeArray
-    / NodeObject
-    / Number
-    / NodeKeywords
-    / NodeStringValue
-
-  NodeArray =
-      "[" *WS *(NodeValue *WS) "]"
-
-  NodeObject =
-      "{" *WS [NodeObjectKvp *(WS NodeObjectKvp)] *WS "}"
-
-  NodeObjectKvp =
-      NodeObjectKey *WS ":" *WS NodeValue
-
-  NodeObjectKey =
-      QuotedText / Identifier
-
-  Number =
-      [Minus] Int [Frac] [Exp]
-
-  DecimalPoint =
-      %x2E ; .
-
-  DigitOneToNine =
-      %x31-39 ; 1-9
-
-  E =
-      %x65 / %x45 ; e E
-
-  Exp =
-      E [Minus / Plus] 1*DIGIT
-
-  Frac =
-      DecimalPoint 1*DIGIT
-
-  Int =
-      Zero / (DigitOneToNine *DIGIT)
-
-  Minus =
-      %x2D ; -
-
-  Plus =
-      %x2B ; +
-
-  Zero =
-      %x30 ; 0
-
-  NodeKeywords =
-      %s"true" / %s"false" / %s"null"
-
-  NodeStringValue =
-      ShapeId / TextBlock / QuotedText
-
-  QuotedText =
-      DQUOTE *QuotedChar DQUOTE
-
-  QuotedChar =
-      %x20-21     ; space - "!"
-    / %x23-5B     ; "#" - "["
-    / %x5D-10FFFF ; "]"+
-    / EscapedChar
-    / PreservedDouble
-    / NL
-
-  EscapedChar =
-      Escape (Escape / "'" / DQUOTE / %s"b"
-              / %s"f" / %s"n" / %s"r" / %s"t"
-              / "/" / UnicodeEscape)
-
-  UnicodeEscape =
-      %s"u" Hex Hex Hex Hex
-
-  Hex =
-      DIGIT / %x41-46 / %x61-66
-
-  PreservedDouble =
-      Escape (%x20-21 / %x23-5B / %x5D-10FFFF)
-
-  Escape =
-      %x5C ; backslash
-
-  TextBlock =
-      ThreeDquotes *SP NL *QuotedChar ThreeDquotes
-
-  ThreeDquotes =
-      DQUOTE DQUOTE DQUOTE
-   */
-
 }

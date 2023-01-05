@@ -29,7 +29,7 @@ object shapes {
   // UseSection and ShapeStatements are both Optional , however encoded via Lists . see https://github.com/awslabs/smithy/issues/1249
   case class ShapeSection(
       all: Option[
-        (NamespaceStatement, UseSection, ShapeStatements)
+        (NamespaceStatement, UseSection, Option[ShapeStatements])
       ]
   )
 
@@ -45,7 +45,10 @@ object shapes {
       break: Break
   )
 
-  case class ShapeStatements(statements: List[ShapeStatementsCase])
+  case class ShapeStatements(
+      first: ShapeStatementsCase,
+      others: List[(Break, ShapeStatementsCase)]
+  )
 
   sealed trait ShapeStatementsCase
 
@@ -59,8 +62,7 @@ object shapes {
 
   case class ShapeStatement(
       traitStatements: TraitStatements,
-      shapeBody: ShapeBody,
-      br: Break
+      shapeBody: ShapeBody
   )
 
   /*  case class ShapeMemberKvp(
@@ -117,8 +119,6 @@ object shapes {
 
       case class ExplicitListMember(shapeId: ShapeId) extends ListMemberType
 
-      // Diverging from the grammer: https://smithy.io/2.0/spec/idl.html#grammar-token-smithy-ListMember
-      // The grammar says the members is mandatory, but it isnt
       case class ListMembers(
           ws0: Whitespace,
           members: Option[ListMember],
@@ -165,8 +165,6 @@ object shapes {
         case class ExplicitMapValue(shapeId: ShapeId) extends MapValueType
       }
 
-      // Diverging from the grammar: https://smithy.io/2.0/spec/idl.html#grammar-token-smithy-MapMembers
-      // The grammar says key member and value member are mandatory but they are not in practice
       case class MapMembers(
           ws0: Whitespace,
           mapKey: Option[MapKey],

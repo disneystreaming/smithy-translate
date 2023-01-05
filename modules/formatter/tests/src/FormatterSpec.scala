@@ -37,6 +37,60 @@ final class FormatterSpec extends munit.FunSuite {
       )
   }
 
+  test("w/ trailing newline") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("w/o trailing newline w/o shape".ignore) {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("w/o trailing newline w/ shape") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |string Value""".stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |string Value
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("w/o trailing newline w/ shape with whitespace") {
+    val src = """|$version: "2.0"
+                 |
+                 |namespace test
+                 |
+                 |string Value  """.stripMargin
+    val expected = """|$version: "2.0"
+                      |
+                      |namespace test
+                      |
+                      |string Value
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("control - 0") {
     val src = """|$version: "2.0"
                  |
@@ -146,7 +200,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |use alloy#uuidFormat
                       |
                       |long TargetingRuleId
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -182,7 +235,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -211,7 +263,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -236,7 +287,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -261,7 +311,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -288,7 +337,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |string PartnerName
                       |
                       |integer FeatureVersion
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -342,7 +390,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    }
                       |])
                       |string Features
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -395,7 +442,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    /// some comment
                       |    orThat: Integer
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -436,7 +482,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    this: String
                       |    orThat: Integer
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -463,7 +508,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    // other doc
                       |    value: Milestone
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -519,8 +563,34 @@ final class FormatterSpec extends munit.FunSuite {
                       |] {
                       |
                       |}
-                      |
                       |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("format test - regular triple dquote") {
+    val tq = "\"\"\""
+    val src = s"""|$$version: "2.0"
+                  |
+                  |namespace test
+                  |
+                  |@documentation(${tq}
+                  |  a
+                  |  "b
+                  |  ""c
+                  |${tq})
+                  |string Value
+                  |""".stripMargin
+    val expected = s"""|$$version: "2.0"
+                       |
+                       |namespace test
+                       |
+                       |@documentation(${tq}
+                       |  a
+                       |  "b
+                       |  ""c
+                       |${tq})
+                       |string Value
+                       |""".stripMargin
     formatTest(src, expected)
   }
 
@@ -555,7 +625,6 @@ final class FormatterSpec extends munit.FunSuite {
                        |  is
                        |  multiline${tq})
                        |string Value
-                       |
                        |""".stripMargin
     formatTest(src, expected)
   }
@@ -629,7 +698,6 @@ final class FormatterSpec extends munit.FunSuite {
                        |        value: String
                        |    }
                        |}
-                       |
                        |""".stripMargin
     formatTest(src, expected)
   }
@@ -662,7 +730,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |service Service {
                       |
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -685,7 +752,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    @range(a: -1.0, b: 2, c: 1E10, d: -1.12E-10)
                       |    a: Int
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -768,7 +834,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |operation SomeOp {
                       |    errors: []
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -827,7 +892,6 @@ final class FormatterSpec extends munit.FunSuite {
                       |    $id
                       |    value: SomeMember$list
                       |}
-                      |
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -846,7 +910,9 @@ final class FormatterSpec extends munit.FunSuite {
                  |  $value
                  |}
                  |
-                 |""".stripMargin
+                 |map MixedMap with [MixinMap] {
+                 |  value: String
+                 |}""".stripMargin
     val expected = """|$version: "2.0"
                       |
                       |namespace test
@@ -860,6 +926,9 @@ final class FormatterSpec extends munit.FunSuite {
                       |    $value
                       |}
                       |
+                      |map MixedMap with [MixinMap] {
+                      |    value: String
+                      |}
                       |""".stripMargin
     formatTest(src, expected)
   }

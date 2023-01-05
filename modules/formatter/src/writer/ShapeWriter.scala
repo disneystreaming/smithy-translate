@@ -66,8 +66,8 @@ object ShapeWriter {
       shapeSection.all.write
   }
   implicit val shapeStatementWriter: Writer[ShapeStatement] = Writer.write {
-    case ShapeStatement(traits, body, br) =>
-      s"${traits.write}${body.write}\n${br.write}"
+    case ShapeStatement(traits, body) =>
+      s"${traits.write}${body.write}"
   }
   implicit val shapeStatementsCaseWriter: Writer[ShapeStatementsCase] =
     Writer.write {
@@ -77,8 +77,9 @@ object ShapeWriter {
         apply.write
     }
   implicit val shapeStatementsWriter: Writer[ShapeStatements] = Writer.write {
-    case ShapeStatements(shape_statements) =>
-      shape_statements.writeN
+    case ShapeStatements(firstStatement, others) =>
+      firstStatement.write + (if (others.isEmpty) "\n" else "") +
+        others.writeN("\n", "\n", "\n")
   }
   implicit val simpleTypeNameWriter: Writer[SimpleTypeName] = Writer.write {
     case SimpleTypeName(name) => name.write

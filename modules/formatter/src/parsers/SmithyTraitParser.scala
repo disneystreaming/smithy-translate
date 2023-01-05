@@ -21,7 +21,7 @@ import smithytranslate.formatter.ast.SmithyTraitBodyValue.{
   NodeValueCase,
   SmithyTraitStructureCase
 }
-import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, ws}
+import smithytranslate.formatter.parsers.WhitespaceParser.{sp, ws}
 import smithytranslate.formatter.ast.*
 import smithytranslate.formatter.parsers.NodeParser.{
   node_object_key,
@@ -61,16 +61,16 @@ object SmithyTraitParser {
       TraitStatements(traits, ws)
     }
   val apply_singular: Parser[ApplyStatementSingular] =
-    (Parser.string("apply") *> (ws ~ shape_id ~ ws ~ strait ~ br)).map {
-      case ((((a, b), c), d), e) => ApplyStatementSingular(a, b, c, d, e)
+    (Parser.string("apply") *> (ws ~ shape_id ~ ws ~ strait)).map {
+      case (((a, b), c), d) => ApplyStatementSingular(a, b, c, d)
     }
 
   val apply_block: Parser[ApplyStatementBlock] =
-    Parser.string(
+    (Parser.string(
       "apply"
-    ) *> ((sp *> shape_id ~ ws <* openCurly) ~ trait_statements ~ (closeCurly *> br))
-      .map { case (((a, b), c), d) =>
-        ApplyStatementBlock(a, b, c, d)
+    ) *> ((sp *> shape_id ~ ws <* openCurly) ~ trait_statements <* closeCurly))
+      .map { case ((a, b), c) =>
+        ApplyStatementBlock(a, b, c)
       }
   val apply_statement: Parser[ApplyStatement] =
     apply_block.backtrack.eitherOr(apply_singular).map(ApplyStatement)
@@ -97,11 +97,11 @@ TraitStructureKvp =
     NodeObjectKey *WS ":" *WS NodeValue
 
 ApplyStatement =
-    (ApplyStatementSingular / ApplyStatementBlock)
+    ApplyStatementSingular / ApplyStatementBlock
 
 ApplyStatementSingular =
-    %s"apply" WS ShapeId WS Trait BR
+    %s"apply" WS ShapeId WS Trait
 
 ApplyStatementBlock =
-    %s"apply" SP ShapeId WS "{" TraitStatements "}" BR
+    %s"apply" SP ShapeId WS "{" TraitStatements "}"
  */

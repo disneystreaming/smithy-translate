@@ -17,7 +17,7 @@ package formatter
 package parsers
 
 import cats.parse.{Parser, Parser0}
-import smithytranslate.formatter.ast.{ShapeId, Break, Whitespace, shapes}
+import smithytranslate.formatter.ast.{ShapeId, Whitespace, shapes}
 import smithytranslate.formatter.ast.shapes._
 import smithytranslate.formatter.ast.shapes.ShapeBody._
 import smithytranslate.formatter.ast.shapes.ShapeBody.ListStatement.{
@@ -339,21 +339,21 @@ object ShapeParser {
   val shape_body: Parser[shapes.ShapeBody] =
     simple_shape_statement | enum_shape_statement | list_statement | set_statement | map_statement | structure_statement | union_statement | service_statement | operation_statement | resource_statement
   val shape_statement: Parser[ShapeStatement] = {
-    val traitAndBody = trait_statements.with1 ~ shape_body
-    val interspersedBr =
-      (traitAndBody.soft ~ br) | traitAndBody.map(_ -> Break(None, Nil))
-    interspersedBr.map { case ((a, b), c) =>
-      ShapeStatement(a, b, c)
+    (trait_statements.with1 ~ shape_body).map { case (a, b) =>
+      ShapeStatement(a, b)
     }
   }
-  val shape_statements: Parser0[ShapeStatements] = (shape_statement
-    .map(
-      ShapeStatementCase
-    ) | apply_statement.map(
-    ApplyStatementCase
-  )).rep0.map {
-    ShapeStatements
-  }
+  val shape_statement_or_apply: Parser[ShapeStatementsCase] =
+    shape_statement.map(ShapeStatementCase) |
+      apply_statement.map(ApplyStatementCase)
+
+  // The optional trailing BR is not in the spec but it exists in a lot of
+  // files.
+  val shape_statements: Parser0[ShapeStatements] =
+    (shape_statement_or_apply ~ (br ~ shape_statement_or_apply).backtrack.rep0 <* (ws.? *> br.?))
+      .map { case (firstStatement, others) =>
+        ShapeStatements(firstStatement, others)
+      }
 
   val namespace_statement: Parser[NamespaceStatement] =
     Parser.string("namespace") *> (sp *> namespace ~ br).map { case (ns, br) =>
@@ -365,7 +365,7 @@ object ShapeParser {
     }
   val use_section: Parser0[UseSection] = use_statement.rep0.map(UseSection)
   val shape_section: Parser0[ShapeSection] =
-    (namespace_statement ~ use_section ~ shape_statements).?.map { op =>
+    (namespace_statement ~ use_section ~ shape_statements.?).?.map { op =>
       ShapeSection(op.map { case ((ns, use), ss) =>
         (ns, use, ss)
       })
@@ -374,7 +374,7 @@ object ShapeParser {
 
 /*
 ShapeSection =
-    [NamespaceStatement UseSection ShapeStatements]
+    [NamespaceStatement UseSection [ShapeStatements]]
 
 NamespaceStatement =
     %s"namespace" SP Namespace BR
@@ -386,10 +386,13 @@ UseStatement =
     %s"use" SP AbsoluteRootShapeId BR
 
 ShapeStatements =
- *(ShapeStatement / ApplyStatement)
+  ShapeOrApplyStatement *(BR ShapeOrApplyStatement)
+
+ShapeOrApplyStatement =
+  ShapeStatement / ApplyStatement
 
 ShapeStatement =
-    TraitStatements ShapeBody BR
+  TraitStatements ShapeBody
 
 ShapeBody =
     SimpleShapeStatement
@@ -445,7 +448,7 @@ MapStatement =
     %s"map" SP Identifier [Mixins] *WS MapMembers
 
 MapMembers =
-    "{" *WS MapKey WS MapValue *WS "}"
+    "{" *WS [MapKey / MapValue / (MapKey WS MapValue)] *WS "}"
 
 MapKey =
     [TraitStatements] (ElidedMapKey / ExplicitMapKey)

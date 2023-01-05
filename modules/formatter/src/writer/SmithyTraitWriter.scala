@@ -31,7 +31,7 @@ import ast.SmithyTraitBodyValue.{NodeValueCase, SmithyTraitStructureCase}
 import util.string_ops.indent
 import NodeWriter.nodeValueWriter
 import ShapeIdWriter.shapeIdWriter
-import WhiteSpaceWriter.{breakWriter, wsWriter}
+import WhiteSpaceWriter.wsWriter
 import Writer.{WriterOps, WriterOpsIterable}
 
 object SmithyTraitWriter {
@@ -68,12 +68,12 @@ object SmithyTraitWriter {
     }
 
   implicit val applySingularWriter: Writer[ApplyStatementSingular] =
-    Writer.write { case ApplyStatementSingular(ws0, shapeId, ws1, strait, br) =>
-      s"apply ${shapeId.write} ${ws0.write}${strait.write}${ws1.write}${br.write}"
+    Writer.write { case ApplyStatementSingular(ws0, shapeId, ws1, strait) =>
+      s"apply ${shapeId.write} ${ws0.write}${strait.write}${ws1.write}"
     }
   implicit val applyBlockWriter: Writer[ApplyStatementBlock] = Writer.write {
-    case ApplyStatementBlock(shapeId, ws0, traitStatements, br) =>
-      s"apply ${shapeId.write} ${ws0.write}{\n${indent(traitStatements.write, "\n", 4)}\n}${br.write}"
+    case ApplyStatementBlock(shapeId, ws0, traitStatements) =>
+      s"apply ${shapeId.write} ${ws0.write}{\n${indent(traitStatements.write, "\n", 4)}\n}"
   }
   implicit val applyStatementWriter: Writer[ApplyStatement] = Writer.write {
     _.either.write
