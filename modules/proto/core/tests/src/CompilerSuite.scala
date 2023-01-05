@@ -22,6 +22,25 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.StringShape
 
 class CompilerSuite extends FunSuite {
+
+  private val someString = TopLevelDef.MessageDef(
+    Message(
+      "SomeString",
+      List(
+        MessageElement.FieldElement(
+          Field(
+            repeated = false,
+            deprecated = false,
+            Type.String,
+            "value",
+            1
+          )
+        )
+      ),
+      Nil
+    )
+  )
+
   test("compile a simple smithy model") {
     val namespace = "com.example"
     val sut = new Compiler()
@@ -45,23 +64,63 @@ class CompilerSuite extends FunSuite {
           ),
           List(
             TopLevelStatement(
-              TopLevelDef.MessageDef(
-                Message(
-                  "SomeString",
-                  List(
-                    MessageElement.FieldElement(
-                      Field(
-                        repeated = false,
-                        deprecated = false,
-                        Type.String,
-                        "value",
-                        1
-                      )
-                    )
-                  ),
-                  Nil
-                )
-              )
+              someString
+            )
+          ),
+          List.empty
+        )
+      )
+    )
+
+    Assertions.assertEquals(actual, expected)
+  }
+
+  test("correctly choose file name - all caps") {
+    namespaceTest("com.EXAMPLE", List("com", "example.proto"))
+  }
+
+  test("correctly choose file name - underscore") {
+    namespaceTest("com.some_example", List("com", "some_example.proto"))
+  }
+
+  test("correctly choose file name - leading underscore") {
+    namespaceTest("com._example", List("com", "_example.proto"))
+    namespaceTest("com._EXAMPLE", List("com", "_example.proto"))
+    namespaceTest("com._Example", List("com", "_example.proto"))
+  }
+
+  test("correctly choose file name - underscore and caps") {
+    namespaceTest("com.some_EXAMPLE", List("com", "some_example.proto"))
+    namespaceTest("com.SOME_EXAMPLE", List("com", "some_example.proto"))
+    namespaceTest("com.Some_Example", List("com", "some_example.proto"))
+    namespaceTest(
+      "com.Some_OTHER_Example",
+      List("com", "some_other_example.proto")
+    )
+  }
+
+  private def namespaceTest(namespace: String, expectedFilePath: List[String])(
+      implicit loc: Location
+  ): Unit = {
+    val sut = new Compiler()
+    val model = {
+      val mb = Model.builder()
+      mb.addShape(
+        StringShape.builder().id(s"$namespace#SomeString").build()
+      )
+      mb.build()
+    }
+    val actual = sut.compile(model)
+    val expected = List(
+      OutputFile(
+        expectedFilePath,
+        CompilationUnit(
+          Some(
+            namespace
+          ),
+          List(
+            TopLevelStatement(
+              someString
             )
           ),
           List.empty
