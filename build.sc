@@ -203,7 +203,7 @@ object cli extends BaseScalaModule {
 
 object formatter extends BaseModule { outer =>
   val deps = Agg(
-    ivy"org.typelevel::cats-parse::0.3.8"
+    ivy"org.typelevel::cats-parse::0.3.9"
   )
 
   object jvm extends BaseScalaModule {
@@ -422,7 +422,7 @@ object Deps {
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.0"
-    val parse = ivy"org.typelevel::cats-parse:0.3.8"
+    val parse = ivy"org.typelevel::cats-parse:0.3.9"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
   val decline = ivy"com.monovore::decline:2.4.1"
