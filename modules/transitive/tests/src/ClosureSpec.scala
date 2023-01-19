@@ -227,8 +227,7 @@ class ClosureSpec extends munit.FunSuite {
           captureTraits = true,
           validateModel = true
         )
-    val expected = model
-      .toBuilder
+    val expected = model.toBuilder
       .removeShape(ShapeId.from("example.test#RandomInt"))
       .removeShape(ShapeId.from("example.test#RandomInt2"))
       .build()
@@ -241,7 +240,7 @@ class ClosureSpec extends munit.FunSuite {
     val model = inLineModel(cycleSpec)
       .toBuilder()
       .build()
-    
+
     val result =
       model
         .transitiveClosure(
@@ -249,8 +248,7 @@ class ClosureSpec extends munit.FunSuite {
           captureTraits = true,
           validateModel = true
         )
-    val expected = model
-      .toBuilder
+    val expected = model.toBuilder
       .removeShape(ShapeId.from("example.test#RandomInt"))
       .removeShape(ShapeId.from("example.test#RandomInt2"))
       .build()
