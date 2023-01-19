@@ -310,7 +310,7 @@ object sample_specs {
                          |integer RandomInt2
                          |""".stripMargin
 
-    val cycleSpec = """|namespace example.test
+  val cycleSpec = """|namespace example.test
                        |
                        |@trait(selector: "structure :not([trait|error])")
                        |@idRef(failWhenMissing: true, selector: "union")
