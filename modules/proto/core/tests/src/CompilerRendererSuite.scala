@@ -556,8 +556,30 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |package com.example;
                     |
+                    |message StringList {
+                    |  repeated string value = 1;
+                    |}
+                    |
                     |message Foo {
-                    |  repeated string strings = 1;
+                    |  com.example.StringList strings = 1;
+                    |}
+                    |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
+  }
+
+  test("top level - lists") {
+    val source = """|namespace com.example
+                  |
+                  |list StringList {
+                  |   member: String
+                  |}
+                  |""".stripMargin
+    val expected = """|syntax = "proto3";
+                    |
+                    |package com.example;
+                    |
+                    |message StringList {
+                    |  repeated string value = 1;
                     |}
                     |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
@@ -581,8 +603,12 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |import "google/protobuf/wrappers.proto";
                     |
+                    |message StringList {
+                    |  repeated google.protobuf.StringValue value = 1;
+                    |}
+                    |
                     |message Foo {
-                    |  repeated google.protobuf.StringValue strings = 1;
+                    |  com.example.StringList strings = 1;
                     |}
                     |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
@@ -613,8 +639,12 @@ class CompilerRendererSuite extends FunSuite {
                    |  string name = 1;
                    |}
                    |
+                   |message List {
+                   |  repeated com.example.ListItem value = 1;
+                   |}
+                   |
                    |message Foo {
-                   |  repeated com.example.ListItem strings = 1;
+                   |  com.example.List strings = 1;
                    |}
                    |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
@@ -654,8 +684,12 @@ class CompilerRendererSuite extends FunSuite {
                       |  }
                       |}
                       |
+                      |message ListOfUnion {
+                      |  repeated com.example.UnionStruct value = 1;
+                      |}
+                      |
                       |message Unions {
-                      |  repeated com.example.UnionStruct values = 1;
+                      |  com.example.ListOfUnion values = 1;
                       |}""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
   }
@@ -861,7 +895,11 @@ class CompilerRendererSuite extends FunSuite {
                       |package avoid.cyclic.in.namespace;
                       |
                       |message One {
-                      |  repeated avoid.cyclic.in.namespace.Two twos = 1;
+                      |  avoid.cyclic.in.namespace.TwoList twos = 1;
+                      |}
+                      |
+                      |message TwoList {
+                      |  repeated avoid.cyclic.in.namespace.Two value = 1;
                       |}
                       |
                       |message Two {

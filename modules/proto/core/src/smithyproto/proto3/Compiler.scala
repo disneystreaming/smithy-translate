@@ -205,11 +205,11 @@ class Compiler() {
 
   private def compileVisitor(model: Model): ShapeVisitor[Mappings] =
     new ShapeVisitor.Default[Mappings] {
-      private def topLevelMessage(shape: Shape, ty: Type) = {
+      private def topLevelMessage(shape: Shape, ty: Type, repeated: Boolean) = {
         val name = shape.getId.getName
         val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
         val field =
-          Field(repeated = false, deprecated = isDeprecated, ty, "value", 1)
+          Field(repeated, deprecated = isDeprecated, ty, "value", 1)
         val message =
           Message(name, List(MessageElement.FieldElement(field)), Nil)
         List(TopLevelDef.MessageDef(message))
@@ -217,14 +217,14 @@ class Compiler() {
       override def getDefault(shape: Shape): Mappings = Nil
 
       override def bigIntegerShape(shape: BigIntegerShape): Mappings = {
-        topLevelMessage(shape, Type.BigInteger)
+        topLevelMessage(shape, Type.BigInteger, repeated = false)
       }
 
       override def bigDecimalShape(shape: BigDecimalShape): Mappings = {
-        topLevelMessage(shape, Type.BigDecimal)
+        topLevelMessage(shape, Type.BigDecimal, repeated = false)
       }
       override def timestampShape(shape: TimestampShape): Mappings = {
-        topLevelMessage(shape, Type.Timestamp)
+        topLevelMessage(shape, Type.Timestamp, repeated = false)
       }
 
       // TODO: streaming requests and response types
@@ -242,35 +242,35 @@ class Compiler() {
         } else Nil
 
       override def booleanShape(shape: BooleanShape): Mappings = {
-        topLevelMessage(shape, Type.Bool)
+        topLevelMessage(shape, Type.Bool, repeated = false)
       }
 
       override def blobShape(shape: BlobShape): Mappings = {
-        topLevelMessage(shape, Type.Bytes)
+        topLevelMessage(shape, Type.Bytes, repeated = false)
       }
 
       override def integerShape(shape: IntegerShape): Mappings = {
-        topLevelMessage(shape, Type.Int32)
+        topLevelMessage(shape, Type.Int32, repeated = false)
       }
 
       override def longShape(shape: LongShape): Mappings = {
-        topLevelMessage(shape, Type.Int64)
+        topLevelMessage(shape, Type.Int64, repeated = false)
       }
 
       override def doubleShape(shape: DoubleShape): Mappings = {
-        topLevelMessage(shape, Type.Double)
+        topLevelMessage(shape, Type.Double, repeated = false)
       }
 
       override def shortShape(shape: ShortShape): Mappings = {
-        topLevelMessage(shape, Type.Int32)
+        topLevelMessage(shape, Type.Int32, repeated = false)
       }
 
       override def floatShape(shape: FloatShape): Mappings = {
-        topLevelMessage(shape, Type.Float)
+        topLevelMessage(shape, Type.Float, repeated = false)
       }
 
       override def documentShape(shape: DocumentShape): Mappings = {
-        topLevelMessage(shape, Type.Any)
+        topLevelMessage(shape, Type.Any, repeated = false)
       }
 
       override def stringShape(shape: StringShape): Mappings = {
@@ -297,7 +297,7 @@ class Compiler() {
 
           List(TopLevelDef.EnumDef(Enum(name, elements, reserved)))
         } getOrElse {
-          topLevelMessage(shape, Type.String)
+          topLevelMessage(shape, Type.String, repeated = false)
         }
       }
 
@@ -327,6 +327,18 @@ class Compiler() {
             Enum(shape.getId.getName, elements, reserved)
           )
         )
+      }
+
+      override def listShape(shape: ListShape): Mappings = {
+        val memberShape = model.getShape(shape.getMember().getTarget()).get
+        // to do sparse & numtype
+        memberShape
+          .accept(
+            typeVisitor(model, isRequired = !isSparse(shape), numType = None)
+          )
+          .toList
+          .map(Type.ListType(_))
+          .flatMap(typ => topLevelMessage(shape, typ, repeated = true))
       }
 
       override def structureShape(shape: StructureShape): Mappings = {
@@ -571,13 +583,12 @@ class Compiler() {
         }
       }
       def listShape(shape: ListShape): Option[Type] = {
-        val memberShape = model.getShape(shape.getMember().getTarget()).get
-        // to do sparse & numtype
-        memberShape
-          .accept(
-            typeVisitor(model, isRequired = !isSparse(shape), numType = None)
+        Some(
+          Type.MessageType(
+            Namespacing.shapeIdToFqn(shape.getId),
+            Namespacing.shapeIdToImportFqn(shape.getId())
           )
-          .map(Type.ListType(_))
+        )
       }
       def longShape(shape: LongShape): Option[Type] = {
         if (Prelude.isPreludeShape(shape.getId())) {
