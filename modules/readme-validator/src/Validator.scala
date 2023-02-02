@@ -128,7 +128,11 @@ object Validator {
       smithy: String
   ): List[ValidationError] = {
     val namespace = "foo"
-    val actualSmithy = s"namespace $namespace\n" + smithy
+    val actualSmithy = s"""|$$version: "2"
+                           |
+                           |namespace $namespace
+                           |
+                           |$smithy""".stripMargin
     val options =
       OpenApiCompiler.Options(
         useVerboseNames = false,
@@ -168,7 +172,7 @@ object Validator {
 
   private def validateProto(
       smithy: String,
-      protoInputs: NonEmptyList[String]
+      proto: String
   ): List[ValidationError] = {
     val lines = smithy.split("\n")
     val maybeNamespace =
@@ -197,7 +201,7 @@ object Validator {
             |$proto""".stripMargin
       }
     }
-    val ActualProto = protoInputs.map(getActualProto).toList.sorted
+    val ActualProto = List(getActualProto(proto))
     val compiler = new ProtoCompiler()
     val inputModel = Model
       .assembler()
