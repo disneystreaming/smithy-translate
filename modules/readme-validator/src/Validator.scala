@@ -128,7 +128,11 @@ object Validator {
       smithy: String
   ): List[ValidationError] = {
     val namespace = "foo"
-    val actualSmithy = s"namespace $namespace\n" + smithy
+    val actualSmithy = s"""|$$version: "2"
+                           |
+                           |namespace $namespace
+                           |
+                           |$smithy""".stripMargin
     val options =
       OpenApiCompiler.Options(
         useVerboseNames = false,
