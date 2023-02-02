@@ -21,7 +21,38 @@ import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
 
-  test("top level - union (not used within a structure) are not exported") {
+  test("top level - union (used within a list) are exported") {
+    val source = """|namespace com.example
+                    |
+                    |list Unions {
+                    |  member: MyUnion
+                    |}
+                    |
+                    |union MyUnion {
+                    |  name: String,
+                    |  id: Integer
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message Unions {
+                      |  repeated com.example.MyUnion value = 1;
+                      |}
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    string name = 1;
+                      |    int32 id = 2;
+                      |  }
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
+  }
+
+  test("top level - union") {
     val source = """|namespace com.example
                     |
                     |union MyUnion {
@@ -29,7 +60,19 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
-    convertCheck(source, Map.empty)
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    string name = 1;
+                      |    int32 id = 2;
+                      |  }
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - union (used within only one data structure)") {
@@ -56,11 +99,15 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |message WithUnion {
                       |  int32 age = 1;
-                      |  oneof myUnion {
-                      |    string name = 2;
-                      |    int32 id = 3;
+                      |  com.example.MyUnion myUnion = 2;
+                      |  string other = 3;
+                      |}
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    string name = 1;
+                      |    int32 id = 2;
                       |  }
-                      |  string other = 4;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example.proto" -> expected))
@@ -83,10 +130,26 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
-
-    intercept[RuntimeException](
-      convertCheck(source, Map.empty)
-    )
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message WithUnion {
+                      |  com.example.MyUnion myUnion = 1;
+                      |}
+                      |
+                      |message OfUnion {
+                      |  repeated com.example.MyUnion value = 1;
+                      |}
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    string name = 1;
+                      |    int32 id = 2;
+                      |  }
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
   test("top level - document") {
@@ -677,11 +740,15 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package com.example;
                       |
-                      |message UnionStruct {
-                      |  oneof value {
+                      |message MyUnion {
+                      |  oneof definition {
                       |    string name = 1;
                       |    int32 id = 2;
                       |  }
+                      |}
+                      |
+                      |message UnionStruct {
+                      |  com.example.MyUnion value = 1;
                       |}
                       |
                       |message ListOfUnion {

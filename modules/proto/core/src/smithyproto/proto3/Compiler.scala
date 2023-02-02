@@ -67,30 +67,7 @@ class Compiler() {
       excludeInternal(s) || Prelude.isPreludeShape(s) || traitShapes(s)
   }
 
-  /** Unused union shape are not exported.
-    *
-    * Union shapes used exactly once are exported within the structure that uses
-    * them.
-    *
-    * If they're used more than once, this function will throw.
-    */
-  private def validateUnionShapes(model: Model): Unit = {
-    model
-      .getUnionShapes()
-      .asScala
-      .foreach { shape =>
-        val count = unionUsageCount(model, shape)
-        if (count > 1) {
-          sys.error(
-            s"Protobuf unions are defined within a message. Therefore, the union shape can only be used within at most one structure."
-          )
-        }
-      }
-  }
-
   def compile(model: Model): List[OutputFile] = {
-    validateUnionShapes(model)
-
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
 
     model.toShapeSet.toList
@@ -195,13 +172,7 @@ class Compiler() {
   }
 
   type Mappings = List[TopLevelDef]
-
-  private def unionUsageCount(model: Model, shape: UnionShape): Int = {
-    model
-      .getMemberShapes()
-      .asScala
-      .count(_.getTarget() == shape.getId())
-  }
+  type UnionMappings = Map[ShapeId, TopLevelDef]
 
   private def compileVisitor(model: Model): ShapeVisitor[Mappings] =
     new ShapeVisitor.Default[Mappings] {
@@ -341,63 +312,11 @@ class Compiler() {
           .flatMap(typ => topLevelMessage(shape, typ, repeated = true))
       }
 
-      override def structureShape(shape: StructureShape): Mappings = {
-        val name = shape.getId.getName
-        val messageElements =
-          shape.members.asScala.toList
-            // using foldLeft to accumulate the field count when we fork to
-            // process a union
-            .foldLeft((List.empty[MessageElement], 0)) {
-              case ((fields, fieldCount), m) =>
-                val fieldName = m.getMemberName
-                val fieldIndex = findFieldIndex(m).getOrElse(fieldCount + 1)
-                // We assume the model is well-formed so the result should be non-null
-                val targetShape = model.getShape(m.getTarget).get
-                targetShape
-                  .asUnionShape()
-                  .toScala
-                  .map { union =>
-                    val field = MessageElement.OneofElement(
-                      proccessUnion(fieldName, union, fieldIndex)
-                    )
-                    (fields :+ field, fieldCount + field.oneof.fields.size)
-                  }
-                  .getOrElse {
-                    val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
-                    val isBoxed = isRequired(m) || isRequired(targetShape)
-                    val numType = extractNumType(m)
-                    val fieldType =
-                      targetShape
-                        .accept(typeVisitor(model, isBoxed, numType))
-                        .get
-                    val field = MessageElement.FieldElement(
-                      Field(
-                        repeated = false,
-                        deprecated = isDeprecated,
-                        fieldType,
-                        fieldName,
-                        fieldIndex
-                      )
-                    )
-                    (fields :+ field, fieldCount + 1)
-                  }
-            }
-            ._1
-
-        val reserved = getReservedValues(shape)
-        val message = Message(name, messageElements, reserved)
-        List(TopLevelDef.MessageDef(message))
-      }
-
-      private def proccessUnion(
-          name: String,
-          shape: UnionShape,
-          indexStart: Int
-      ): Oneof = {
+      override def unionShape(shape: UnionShape): Mappings = {
         val fields = shape.members.asScala.toList.zipWithIndex.map {
           case (m, fn) =>
             val fieldName = m.getMemberName
-            val fieldIndex = findFieldIndex(m).getOrElse(indexStart + fn)
+            val fieldIndex = findFieldIndex(m).getOrElse(fn + 1)
             // We assume the model is well-formed so the result should be non-null
             val targetShape = model.getShape(m.getTarget).get
             val numType = extractNumType(m)
@@ -414,7 +333,43 @@ class Compiler() {
               fieldIndex
             )
         }
-        Oneof(name, fields)
+        val element = MessageElement.OneofElement(Oneof("definition", fields))
+        val name = shape.getId.getName
+        val reserved = getReservedValues(shape)
+        val message = Message(name, List(element), reserved)
+        List(TopLevelDef.MessageDef(message))
+      }
+
+      override def structureShape(shape: StructureShape): Mappings = {
+        val name = shape.getId.getName
+        val messageElements =
+          shape.members.asScala.toList.zipWithIndex
+            .map { case (m, count) =>
+              val fieldName = m.getMemberName
+              val fieldIndex = findFieldIndex(m).getOrElse(count + 1)
+              // We assume the model is well-formed so the result should be non-null
+              val targetShape = model.getShape(m.getTarget).get
+              val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
+              val isBoxed = isRequired(m) || isRequired(targetShape)
+              val numType = extractNumType(m)
+              val fieldType =
+                targetShape
+                  .accept(typeVisitor(model, isBoxed, numType))
+                  .get
+              MessageElement.FieldElement(
+                Field(
+                  repeated = false,
+                  deprecated = isDeprecated,
+                  fieldType,
+                  fieldName,
+                  fieldIndex
+                )
+              )
+            }
+
+        val reserved = getReservedValues(shape)
+        val message = Message(name, messageElements, reserved)
+        List(TopLevelDef.MessageDef(message))
       }
     }
 
