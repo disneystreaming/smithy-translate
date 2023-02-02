@@ -7,12 +7,15 @@ _Note: this library is published to work on Java 8 and above. However, you will 
 
 ## Table of Contents <!-- omit in toc -->
 
+- [formatter](#formatter)
+  - [CLI Usage](#cli-usage)
+  - [Capabilities and Design](#capabilities-and-design)
 - [Alloy](#alloy)
 - [CLI](#cli)
   - [Installation](#installation)
 - [OpenAPI](#openapi)
-  - [CLI Usage](#cli-usage)
-  - [Capabilities and Design](#capabilities-and-design)
+  - [CLI Usage](#cli-usage-1)
+  - [Capabilities and Design](#capabilities-and-design-1)
     - [Primitives](#primitives)
     - [Aggregate Shapes](#aggregate-shapes)
       - [Structure](#structure)
@@ -32,14 +35,14 @@ _Note: this library is published to work on Java 8 and above. However, you will 
       - [Operation with multiple content types](#operation-with-multiple-content-types)
     - [Extensions](#extensions)
 - [JSON Schema](#json-schema)
-  - [CLI Usage](#cli-usage-1)
+  - [CLI Usage](#cli-usage-2)
   - [Differences from OpenAPI](#differences-from-openapi)
     - [Default Values](#default-values)
     - [Null Values](#null-values)
     - [Maps](#maps)
 - [Protobuf](#protobuf)
-  - [CLI Usage](#cli-usage-2)
-  - [Capabilities and Design](#capabilities-and-design-1)
+  - [CLI Usage](#cli-usage-3)
+  - [Capabilities and Design](#capabilities-and-design-2)
     - [Primitives](#primitives-1)
     - [Aggregate Types](#aggregate-types)
       - [Structure](#structure-1)
@@ -53,9 +56,34 @@ _Note: this library is published to work on Java 8 and above. However, you will 
   - [Options](#options)
     - [Stringly typed options](#stringly-typed-options)
     - [Example](#example)
-- [formatter](#formatter)
-  - [CLI Usage](#cli-usage-3)
-  - [Capabilities and Design](#capabilities-and-design-2)
+
+## formatter
+
+
+### CLI Usage
+
+The `smithytranslate` CLI will recursively go through all child directories of the
+input directory provided and format any Smithy files it finds. The output 
+
+```
+> smithytranslate format --help
+
+Usage: smithy-translate format [--no-clobber] <path to Smithy file or directory containing Smithy files>...
+
+validates and formats smithy files
+
+Options and flags:
+    --help
+        Display this help text.
+    --no-clobber
+        dont overwrite existing file instead create a new file with the word 'formatted' appended so test.smithy -> test_formatted.smithy
+```
+
+### Capabilities and Design
+ - The formatter is based off the ABNF defined at [Smithy-Idl-ABNF](https://smithy.io/2.0/spec/idl.html#smithy-idl-abnf) 
+ - The formatter assumes the file is a valid Smithy file and must be able to pass the Model Assembler validation , otherwise it will return an error
+ - use --no-clobber to create a new file to avoid overwriting the original file
+ - actual formatting rules are still WIP and will be updated as the formatter is developed
 
 
 ## Alloy
@@ -1343,31 +1371,3 @@ message MyString {
   string value = 1;
 }
 ```
-
-## formatter
-
-
-### CLI Usage
-
-The `smithytranslate` CLI will recursively go through all child directories of the
-input directory provided and format any Smithy files it finds. The output 
-
-```
-> smithytranslate format --help
-
-Usage: smithy-translate format [--no-clobber] <path to Smithy file or directory containing Smithy files>...
-
-validates and formats smithy files
-
-Options and flags:
-    --help
-        Display this help text.
-    --no-clobber
-        dont overwrite existing file instead create a new file with the word 'formatted' appended so test.smithy -> test_formatted.smithy
-```
-
-### Capabilities and Design
- - The formatter is based off the ABNF defined at [Smithy-Idl-ABNF](https://smithy.io/2.0/spec/idl.html#smithy-idl-abnf) 
- - The formatter assumes the file is a valid Smithy file and must be able to pass the Model Assembler validation , otherwise it will return an error
- - use --no-clobber to create a new file to avoid overwriting the original file
- - actual formatting rules are still WIP and will be updated as the formatter is developed
