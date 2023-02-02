@@ -87,7 +87,12 @@ object ReadmeParser {
       section.rep <* lf.rep0 // possible empty new lines at end of file
     exampleParser
       .parseAll(input)
-      .bimap(_.toString, in => ParserResult(in.toList))
+      .bimap(failedParsing, in => ParserResult(in.toList))
   }
+
+  private def failedParsing(err: Parser.Error): Nothing =
+    throw new RuntimeException(
+      s"Unable to parse. Failed at position ${err.failedAtOffset}"
+    )
 
 }
