@@ -172,7 +172,7 @@ object Validator {
 
   private def validateProto(
       smithy: String,
-      protoInputs: NonEmptyList[String]
+      proto: String
   ): List[ValidationError] = {
     val lines = smithy.split("\n")
     val maybeNamespace =
@@ -201,7 +201,7 @@ object Validator {
             |$proto""".stripMargin
       }
     }
-    val ActualProto = protoInputs.map(getActualProto).toList.sorted
+    val ActualProto = List(getActualProto(proto))
     val compiler = new ProtoCompiler()
     val inputModel = Model
       .assembler()

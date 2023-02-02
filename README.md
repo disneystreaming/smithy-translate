@@ -1266,7 +1266,7 @@ structure TestInput {
 }
 ```
 
-definitions.proto:
+Proto:
 ```proto
 import "google/protobuf/wrappers.proto";
 
