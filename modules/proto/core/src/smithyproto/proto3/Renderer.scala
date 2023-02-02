@@ -162,7 +162,7 @@ object Renderer {
       case Bytes    => "bytes"
       case ty @ MapType(_, valueType) =>
         s"map<${renderType(ty.foldedKeyType)}, ${renderType(valueType)}>"
-      case ListType(valueType) => s"repeated ${renderType(valueType)}"
+      case ListType(valueType) => renderType(valueType)
       case MessageType(fqn, _) => fqn.render
       case EnumType(fqn, _)    => fqn.render
       case Any                 => Any.fqn.render
