@@ -21,7 +21,7 @@ import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
 
-  test("top level - union (not used within a structure) are not exported") {
+  test("top level - union") {
     val source = """|namespace com.example
                     |
                     |union MyUnion {
@@ -29,11 +29,25 @@ class CompilerRendererSuite extends FunSuite {
                     |  id: Integer
                     |}
                     |""".stripMargin
-    convertCheck(source, Map.empty)
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    string name = 1;
+                      |    int32 id = 2;
+                      |  }
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example.proto" -> expected))
   }
 
-  test("top level - union (used within only one data structure)") {
+  test("@protoInlinedOneOf union - used within only one data structure") {
     val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoInlinedOneOf
                     |
                     |structure WithUnion {
                     |  @required
@@ -44,6 +58,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  other: String
                     |}
                     |
+                    |@protoInlinedOneOf
                     |union MyUnion {
                     |  name: String,
                     |  id: Integer
@@ -66,8 +81,12 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("com/example.proto" -> expected))
   }
 
-  test("top level - union (used within multiple data structures)") {
+  test(
+    "@protoInlinedOneOf union - cannot be used within multiple data structures"
+  ) {
     val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoInlinedOneOf
                     |
                     |structure WithUnion {
                     |  @required
@@ -78,12 +97,34 @@ class CompilerRendererSuite extends FunSuite {
                     |  member: MyUnion
                     |}
                     |
+                    |@protoInlinedOneOf
                     |union MyUnion {
                     |  name: String,
                     |  id: Integer
                     |}
                     |""".stripMargin
 
+    // The error is thrown by the validator associated with the `protoInlinedOneOf`
+    // annotation.
+    intercept[RuntimeException](
+      convertCheck(source, Map.empty)
+    )
+  }
+
+  test("@protoInlinedOneOf union - cannot be unused") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoInlinedOneOf
+                    |
+                    |@protoInlinedOneOf
+                    |union MyUnion {
+                    |  name: String,
+                    |  id: Integer
+                    |}
+                    |""".stripMargin
+
+    // The error is thrown by the validator associated with the `protoInlinedOneOf`
+    // annotation.
     intercept[RuntimeException](
       convertCheck(source, Map.empty)
     )
@@ -647,11 +688,15 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package com.example;
                       |
-                      |message UnionStruct {
-                      |  oneof value {
+                      |message MyUnion {
+                      |  oneof definition {
                       |    string name = 1;
                       |    int32 id = 2;
                       |  }
+                      |}
+                      |
+                      |message UnionStruct {
+                      |  com.example.MyUnion value = 1;
                       |}
                       |
                       |message Unions {
