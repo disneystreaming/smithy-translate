@@ -209,7 +209,7 @@ class Compiler() {
         val name = shape.getId.getName
         val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
         val field =
-          Field(repeated = false, deprecated = isDeprecated, ty, "value", 1)
+          Field(deprecated = isDeprecated, ty, "value", 1)
         val message =
           Message(name, List(MessageElement.FieldElement(field)), Nil)
         List(TopLevelDef.MessageDef(message))
@@ -360,7 +360,6 @@ class Compiler() {
                         .get
                     val field = MessageElement.FieldElement(
                       Field(
-                        repeated = false,
                         deprecated = isDeprecated,
                         fieldType,
                         fieldName,
@@ -395,7 +394,6 @@ class Compiler() {
                 .get
             val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
             Field(
-              repeated = false,
               deprecated = isDeprecated,
               fieldType,
               fieldName,

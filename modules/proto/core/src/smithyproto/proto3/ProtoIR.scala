@@ -54,7 +54,6 @@ object ProtoIR {
   final case class Oneof(name: String, fields: List[Field])
 
   final case class Field(
-      repeated: Boolean,
       deprecated: Boolean,
       ty: Type,
       name: String,
