@@ -17,6 +17,7 @@ package smithyproto.proto3
 
 import munit._
 import software.amazon.smithy.model.Model
+import software.amazon.smithy.model.validation.ValidatedResultException
 import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
@@ -106,7 +107,7 @@ class CompilerRendererSuite extends FunSuite {
 
     // The error is thrown by the validator associated with the `protoInlinedOneOf`
     // annotation.
-    intercept[RuntimeException](
+    intercept[ValidatedResultException](
       convertCheck(source, Map.empty)
     )
   }
@@ -125,7 +126,7 @@ class CompilerRendererSuite extends FunSuite {
 
     // The error is thrown by the validator associated with the `protoInlinedOneOf`
     // annotation.
-    intercept[RuntimeException](
+    intercept[ValidatedResultException](
       convertCheck(source, Map.empty)
     )
   }
@@ -883,6 +884,159 @@ class CompilerRendererSuite extends FunSuite {
       source,
       Map("test/definitions.proto" -> expected)
     )
+  }
+
+  test("union with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |union SomeUnion {
+                    |  @protoIndex(2)
+                    |  name: String
+                    |  @protoIndex(3)
+                    |  age: Integer
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message SomeUnion {
+                      |  oneof definition {
+                      |    string name = 2;
+                      |    int32 age = 3;
+                      |  }
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("union with @protoInlinedOneOf and @protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |use alloy.proto#protoInlinedOneOf
+                    |
+                    |@protoInlinedOneOf
+                    |union SomeUnion {
+                    |  @protoIndex(2)
+                    |  name: String
+                    |  @protoIndex(3)
+                    |  age: Integer
+                    |}
+                    |
+                    |// because union use protoInlinedOneOf and have
+                    |// @protoIndex on its field, this structure's member
+                    |// should have `protoIndex` as well
+                    |structure SomeStructure {
+                    |  info: SomeUnion,
+                    |  @required
+                    |  otherValue: Integer
+                    |}
+                    |""".stripMargin
+
+    // The error is thrown by the validator associated with the `protoInlinedOneOf`
+    // annotation.
+    intercept[ValidatedResultException](
+      convertCheck(source, Map.empty)
+    )
+  }
+
+  test("union with @protoInlinedOneOf and @protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |use alloy.proto#protoInlinedOneOf
+                    |
+                    |@protoInlinedOneOf
+                    |union SomeUnion {
+                    |  @protoIndex(2)
+                    |  name: String
+                    |  @protoIndex(3)
+                    |  age: Integer
+                    |}
+                    |
+                    |structure SomeStructure {
+                    |  info: SomeUnion,
+                    |  @required
+                    |  @protoIndex(4)
+                    |  otherValue: Integer
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message SomeStructure {
+                      |  oneof info {
+                      |    string name = 2;
+                      |    int32 age = 3;
+                      |  }
+                      |  int32 otherValue = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(source, Map("test/definitions.proto" -> expected))
+  }
+
+  test("both type of union can be used from a structure") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |use alloy.proto#protoInlinedOneOf
+                    |
+                    |@protoInlinedOneOf
+                    |union InlinedUnion {
+                    |  @protoIndex(2)
+                    |  name: String
+                    |  @protoIndex(3)
+                    |  age: Integer
+                    |}
+                    |
+                    |union RequestData {
+                    |  value: String
+                    |  size: Integer
+                    |}
+                    |
+                    |structure SomeStructure {
+                    |  info: InlinedUnion,
+                    |  @required
+                    |  @protoIndex(4)
+                    |  otherValue: RequestData
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message RequestData {
+                      |  oneof definition {
+                      |    string value = 1;
+                      |    int32 size = 2;
+                      |  }
+                      |}
+                      |
+                      |message SomeStructure {
+                      |  oneof info {
+                      |    string name = 2;
+                      |    int32 age = 3;
+                      |  }
+                      |  test.RequestData otherValue = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(source, Map("test/definitions.proto" -> expected))
   }
 
   test("cycle") {
