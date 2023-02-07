@@ -374,6 +374,8 @@ object proto extends Module {
     def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
 
     def runCli() = T.command {
+      os.remove.all(cliRunOutput)
+      os.makeDir.all(cliRunOutput)
       val input = smithyFiles().toList.map(_.path)
       val f = cli.runProtoAux()
       f(input, cliRunOutput)
