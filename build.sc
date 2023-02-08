@@ -440,7 +440,7 @@ object Deps {
     val services = ivy"io.grpc:grpc-services:$version"
   }
   object scalapb {
-    val version = "0.11.12"
+    val version = "0.11.13"
     val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
     val compilerPlugin =
       ivy"com.thesamet.scalapb::compilerplugin:$version"
