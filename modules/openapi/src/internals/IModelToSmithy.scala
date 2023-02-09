@@ -225,11 +225,6 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
           sanitizeMemberName(memberName.value.toString)
         )
     }
-
-    def jsonName: Option[String] = id match {
-      case MemberId(_, memberName) => Some(memberName.value.toString)
-      case _                       => None
-    }
   }
 
   private def removeInvalidCharactersForName(s: String): String = {
