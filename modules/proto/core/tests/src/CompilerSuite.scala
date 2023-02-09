@@ -29,7 +29,6 @@ class CompilerSuite extends FunSuite {
       List(
         MessageElement.FieldElement(
           Field(
-            repeated = false,
             deprecated = false,
             Type.String,
             "value",

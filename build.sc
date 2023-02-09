@@ -374,6 +374,8 @@ object proto extends Module {
     def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
 
     def runCli() = T.command {
+      os.remove.all(cliRunOutput)
+      os.makeDir.all(cliRunOutput)
       val input = smithyFiles().toList.map(_.path)
       val f = cli.runProtoAux()
       f(input, cliRunOutput)
@@ -398,7 +400,8 @@ object transitive extends BaseScalaModule {
 
 object Deps {
   object alloy {
-    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.9"
+    val core =
+      ivy"com.disneystreaming.alloy:alloy-core:0.1.11"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.3"

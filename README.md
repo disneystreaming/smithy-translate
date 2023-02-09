@@ -1169,6 +1169,8 @@ message Testing {
 
 ##### Union
 
+Unions in Smithy are tricky to translate to Protobuf because of the nature of `oneOf`. The default encoding will create a top-level `message` that contains a `definition` field which is the `oneOf`. For example:
+
 Smithy:
 ```smithy
 structure Union {
@@ -1184,6 +1186,45 @@ union TestUnion {
 
 Proto:
 ```proto
+message Union {
+  foo.TestUnion value = 1;
+}
+
+message TestUnion {
+  oneof definition {
+    int32 num = 1;
+    string txt = 2;
+  }
+}
+```
+
+But you can also use `@protoInlinedOneOf` from `alloy` to render the `oneOf` inside of a specific message. This encoding can be harder to maintain because the `oneOf` field indices are flattened with the outer `message` field indices. On the other hand, this encoding is more compact.
+
+For example:
+
+Smithy:
+```smithy
+
+use alloy.proto#protoInlinedOneOf
+
+structure Union {
+  @required
+  value: TestUnion
+}
+
+@protoInlinedOneOf
+union TestUnion {
+    num: Integer,
+    txt: String
+}
+```
+
+Proto:
+```proto
+syntax = "proto3";
+
+package foo;
+
 message Union {
   oneof value {
     int32 num = 1;
