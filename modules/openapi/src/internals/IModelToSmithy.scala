@@ -188,7 +188,10 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         .build()
     } else {
       val enumBuilder = EnumShape.builder().id(id.toSmithy)
-      values.foreach(v => enumBuilder.addMember(sanitizeMemberName(v), v))
+      values.zipWithIndex.foreach { case (value, idx) =>
+        val name = sanitizeEnumMember(value, idx)
+        enumBuilder.addMember(name, value)
+      }
       enumBuilder.addHints(hints).build()
     }
 
@@ -254,9 +257,15 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
   }
 
   private def sanitizeMemberName(id: String): String = {
-    removeInvalidCharactersForName(
-      sanitizeForDigitStart(id).replaceAll("-", "_")
+    sanitizeForDigitStart(
+      removeInvalidCharactersForName(id.replaceAll("-", "_"))
     )
+  }
+
+  private def sanitizeEnumMember(value: String, idx: Int): String = {
+    val out = sanitizeMemberName(value)
+    if (out.isEmpty()) s"MEMBER_$idx"
+    else out
   }
 
   /** Used to replace things like `/path/{some-case}/rest with

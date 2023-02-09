@@ -136,7 +136,9 @@ object OpenApiToIModel {
 
           case OpenApiEnum(context, values) =>
             val defId = id(context)
-            recordDef(Enumeration(defId, values, context.hints)).as(defId)
+            recordDef(
+              Enumeration(defId, values.filterNot(_ == null), context.hints)
+            ).as(defId)
 
           case OpenApiNull(context) =>
             val ntId = id(context)

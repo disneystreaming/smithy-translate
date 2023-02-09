@@ -108,6 +108,40 @@ final class EnumSpec extends munit.FunSuite {
     )
   }
 
+  test("enum - weird enum values") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    path:
+                           |      type: string
+                           |      enum:
+                           |        - "/"
+                           |        - "/docs"
+                           |        - "/1value"
+                           |        - null
+                           |      default: "/"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |enum Path {
+                            |    MEMBER_0 = "/"
+                            |    docs = "/docs"
+                            |    n1value = "/1value"
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(
+      openapiString,
+      expectedString,
+      SmithyVersion.Two
+    )
+  }
+
   test("enum - description") {
     val openapiString = """|openapi: '3.0.'
                      |info:
