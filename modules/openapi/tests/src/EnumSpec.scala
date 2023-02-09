@@ -108,7 +108,7 @@ final class EnumSpec extends munit.FunSuite {
     )
   }
 
-  test("enum - v1".only) {
+  test("enum - weird enum values") {
     val openapiString = """|openapi: '3.0.'
                            |info:
                            |  title: test
