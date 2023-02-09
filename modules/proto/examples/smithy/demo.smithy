@@ -3,6 +3,7 @@ $version: "2"
 namespace demo
 
 use alloy.proto#protoIndex
+use alloy.proto#protoInlinedOneOf
 use alloy.proto#protoEnabled
 use alloy.proto#protoReservedFields
 use alloy.proto#protoNumType
@@ -77,6 +78,7 @@ structure UseApiStruct {
   ts: Timestamp
 }
 
+@protoInlinedOneOf
 union ApiUnion {
   @protoIndex(4)
   version: String,

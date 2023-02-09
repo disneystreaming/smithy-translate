@@ -28,8 +28,7 @@ object ReadmeParser {
   object Example {
     final case class OpenApi(openapi: String, smithy: String) extends Example
     final case class JsonSchema(json: String, smithy: String) extends Example
-    final case class Proto(smithy: String, proto: NonEmptyList[String])
-        extends Example
+    final case class Proto(smithy: String, proto: String) extends Example
   }
   final case class ParserResult(examples: List[Example])
 
@@ -76,19 +75,24 @@ object ReadmeParser {
         .map(_.map(_.head))
         .map(Example.JsonSchema.tupled)
     val protoSection =
-      sectionParser(smithyHeader, protoHeader, Some(string("Smithy:"))).map(
-        Example.Proto.tupled
-      )
+      sectionParser(smithyHeader, protoHeader)
+        .map(_.map(_.head))
+        .map(Example.Proto.tupled)
     val section = openapiSection.backtrack
-      .orElse(protoSection)
-      .backtrack
       .orElse(jsonSection)
+      .backtrack
+      .orElse(protoSection)
       .backtrack
     val exampleParser =
       section.rep <* lf.rep0 // possible empty new lines at end of file
     exampleParser
       .parseAll(input)
-      .bimap(_.toString, in => ParserResult(in.toList))
+      .bimap(failedParsing, in => ParserResult(in.toList))
   }
+
+  private def failedParsing(err: Parser.Error): Nothing =
+    throw new RuntimeException(
+      s"Unable to parse. Failed at position ${err.failedAtOffset}"
+    )
 
 }

@@ -374,6 +374,8 @@ object proto extends Module {
     def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
 
     def runCli() = T.command {
+      os.remove.all(cliRunOutput)
+      os.makeDir.all(cliRunOutput)
       val input = smithyFiles().toList.map(_.path)
       val f = cli.runProtoAux()
       f(input, cliRunOutput)
@@ -398,7 +400,8 @@ object transitive extends BaseScalaModule {
 
 object Deps {
   object alloy {
-    val core = ivy"com.disneystreaming.alloy:alloy-core:0.1.8"
+    val core =
+      ivy"com.disneystreaming.alloy:alloy-core:0.1.11"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.3"
@@ -416,7 +419,7 @@ object Deps {
     )
   }
   object smithy {
-    val smithyVersion = "1.27.1"
+    val smithyVersion = "1.27.2"
     val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
     val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
@@ -437,7 +440,7 @@ object Deps {
     val services = ivy"io.grpc:grpc-services:$version"
   }
   object scalapb {
-    val version = "0.11.12"
+    val version = "0.11.13"
     val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
     val compilerPlugin =
       ivy"com.thesamet.scalapb::compilerplugin:$version"

@@ -67,30 +67,7 @@ class Compiler() {
       excludeInternal(s) || Prelude.isPreludeShape(s) || traitShapes(s)
   }
 
-  /** Unused union shape are not exported.
-    *
-    * Union shapes used exactly once are exported within the structure that uses
-    * them.
-    *
-    * If they're used more than once, this function will throw.
-    */
-  private def validateUnionShapes(model: Model): Unit = {
-    model
-      .getUnionShapes()
-      .asScala
-      .foreach { shape =>
-        val count = unionUsageCount(model, shape)
-        if (count > 1) {
-          sys.error(
-            s"Protobuf unions are defined within a message. Therefore, the union shape can only be used within at most one structure."
-          )
-        }
-      }
-  }
-
   def compile(model: Model): List[OutputFile] = {
-    validateUnionShapes(model)
-
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
 
     model.toShapeSet.toList
@@ -195,13 +172,7 @@ class Compiler() {
   }
 
   type Mappings = List[TopLevelDef]
-
-  private def unionUsageCount(model: Model, shape: UnionShape): Int = {
-    model
-      .getMemberShapes()
-      .asScala
-      .count(_.getTarget() == shape.getId())
-  }
+  type UnionMappings = Map[ShapeId, TopLevelDef]
 
   private def compileVisitor(model: Model): ShapeVisitor[Mappings] =
     new ShapeVisitor.Default[Mappings] {
@@ -209,7 +180,7 @@ class Compiler() {
         val name = shape.getId.getName
         val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
         val field =
-          Field(repeated = false, deprecated = isDeprecated, ty, "value", 1)
+          Field(deprecated = isDeprecated, ty, "value", 1)
         val message =
           Message(name, List(MessageElement.FieldElement(field)), Nil)
         List(TopLevelDef.MessageDef(message))
@@ -329,6 +300,23 @@ class Compiler() {
         )
       }
 
+      private def unionShouldBeInlined(shape: UnionShape): Boolean = {
+        shape.hasTrait(classOf[alloy.proto.ProtoInlinedOneOfTrait])
+      }
+
+      override def unionShape(shape: UnionShape): Mappings = {
+        if (!unionShouldBeInlined(shape)) {
+          val element =
+            MessageElement.OneofElement(processUnion("definition", shape, 1))
+          val name = shape.getId.getName
+          val reserved = getReservedValues(shape)
+          val message = Message(name, List(element), reserved)
+          List(TopLevelDef.MessageDef(message))
+        } else {
+          List.empty
+        }
+      }
+
       override def structureShape(shape: StructureShape): Mappings = {
         val name = shape.getId.getName
         val messageElements =
@@ -344,9 +332,10 @@ class Compiler() {
                 targetShape
                   .asUnionShape()
                   .toScala
+                  .filter(unionShape => unionShouldBeInlined(unionShape))
                   .map { union =>
                     val field = MessageElement.OneofElement(
-                      proccessUnion(fieldName, union, fieldIndex)
+                      processUnion(fieldName, union, fieldIndex)
                     )
                     (fields :+ field, fieldCount + field.oneof.fields.size)
                   }
@@ -360,7 +349,6 @@ class Compiler() {
                         .get
                     val field = MessageElement.FieldElement(
                       Field(
-                        repeated = false,
                         deprecated = isDeprecated,
                         fieldType,
                         fieldName,
@@ -377,7 +365,7 @@ class Compiler() {
         List(TopLevelDef.MessageDef(message))
       }
 
-      private def proccessUnion(
+      private def processUnion(
           name: String,
           shape: UnionShape,
           indexStart: Int
@@ -395,7 +383,6 @@ class Compiler() {
                 .get
             val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
             Field(
-              repeated = false,
               deprecated = isDeprecated,
               fieldType,
               fieldName,

@@ -33,7 +33,6 @@ class RendererSuite extends FunSuite {
               List(
                 MessageElement.FieldElement(
                   Field(
-                    repeated = false,
                     deprecated = false,
                     Type.Int32,
                     "a",
@@ -42,9 +41,8 @@ class RendererSuite extends FunSuite {
                 ),
                 MessageElement.FieldElement(
                   Field(
-                    repeated = true,
                     deprecated = false,
-                    Type.String,
+                    Type.ListType(Type.String),
                     "b",
                     2
                   )
@@ -78,10 +76,10 @@ class RendererSuite extends FunSuite {
       "Foo",
       List(
         MessageElement.FieldElement(
-          Field(repeated = false, deprecated = false, Type.Int32, "a", 1)
+          Field(deprecated = false, Type.Int32, "a", 1)
         ),
         MessageElement.FieldElement(
-          Field(repeated = true, deprecated = false, Type.String, "b", 2)
+          Field(deprecated = false, Type.ListType(Type.String), "b", 2)
         )
       ),
       List(
@@ -143,16 +141,14 @@ class RendererSuite extends FunSuite {
                     "foo_oneof",
                     List(
                       Field(
-                        repeated = false,
                         deprecated = false,
                         Type.Int32,
                         "a",
                         1
                       ),
                       Field(
-                        repeated = true,
                         deprecated = true,
-                        Type.String,
+                        Type.ListType(Type.String),
                         "b",
                         2
                       )
