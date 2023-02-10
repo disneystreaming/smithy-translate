@@ -155,45 +155,84 @@ class ModelPrePocessorSpec extends FunSuite {
     }
   }
 
-  /** Here, only BigInteger is used. We expect smithytranslate#BigInteger to be
-    * included, but not smithytranslate#BigDecimal or smithytranslate#Timestamp
-    */
-  test(
-    "apply PreludeReplacements to add big int (and others) if they're used"
-  ) {
-    val smithy = s"""|namespace test
-                     |
-                     |use alloy.proto#protoEnabled
-                     |
-                     |@protoEnabled
-                     |structure Test {
-                     |  s: BigInteger
-                     |}
-                     |""".stripMargin
-    checkTransformer(smithy, ModelPreProcessor.transformers.Transitive(None)) {
-      case (_, pruned) =>
+  def testPreludeReplacements(
+      name: String,
+      smithyShape: String,
+      kept: Set[ShapeId],
+      removed: Set[ShapeId]
+  ) = {
+
+    /** Here, only BigInteger is used. We expect smithytranslate#BigInteger to
+      * be included, but not smithytranslate#BigDecimal or
+      * smithytranslate#Timestamp
+      */
+    test(
+      s"PreludeReplacements - $name"
+    ) {
+      val smithy = s"""|namespace test
+                       |
+                       |use alloy.proto#protoEnabled
+                       |
+                       |@protoEnabled
+                       |structure Test {
+                       |  s: $smithyShape
+                       |}
+                       |""".stripMargin
+      checkTransformer(
+        smithy,
+        ModelPreProcessor.transformers.Transitive(None)
+      ) { case (_, pruned) =>
         val resultModel = process(
           pruned,
           ModelPreProcessor.transformers.PreludeReplacements
-        )
-        val kept = Set(
-          ShapeId.from("smithytranslate#BigInteger")
         )
         kept.foreach { sId =>
           assertEquals(pruned.getShape(sId).isPresent(), false)
           assertEquals(resultModel.getShape(sId).isPresent(), true)
         }
-
-        val removed = Set(
-          ShapeId.from("smithytranslate#BigDecimal"),
-          ShapeId.from("smithytranslate#Timestamp")
-        )
         removed.foreach { sId =>
           assertEquals(pruned.getShape(sId).isPresent(), false)
           assertEquals(resultModel.getShape(sId).isPresent(), false)
         }
+      }
     }
   }
+
+  testPreludeReplacements(
+    "keep big int",
+    "BigInteger",
+    Set(
+      ShapeId.from("smithytranslate#BigInteger")
+    ),
+    Set(
+      ShapeId.from("smithytranslate#BigDecimal"),
+      ShapeId.from("smithytranslate#Timestamp")
+    )
+  )
+
+  testPreludeReplacements(
+    "keep timestamp",
+    "Timestamp",
+    Set(
+      ShapeId.from("smithytranslate#Timestamp")
+    ),
+    Set(
+      ShapeId.from("smithytranslate#BigDecimal"),
+      ShapeId.from("smithytranslate#BigInteger")
+    )
+  )
+
+  testPreludeReplacements(
+    "keep big decimal",
+    "BigDecimal",
+    Set(
+      ShapeId.from("smithytranslate#BigDecimal")
+    ),
+    Set(
+      ShapeId.from("smithytranslate#Timestamp"),
+      ShapeId.from("smithytranslate#BigInteger")
+    )
+  )
 
   test("apply PreventEnumConflicts") {
     val smithy =

@@ -20,6 +20,7 @@ import software.amazon.smithy.model.loader.Prelude;
 import software.amazon.smithy.model.traits.RequiredTrait;
 
 final public class BigInteger {
+  static public ShapeId target = ShapeId.fromParts(Prelude.NAMESPACE, "String");
 	static public Shape shape =
     StructureShape
       .builder()
@@ -27,7 +28,7 @@ final public class BigInteger {
       .addMember(
         MemberShape.builder()
           .id("smithytranslate#BigInteger$value")
-          .target(ShapeId.fromParts(Prelude.NAMESPACE, "String"))
+          .target(target)
           .addTrait(new RequiredTrait())
           .build()
       )

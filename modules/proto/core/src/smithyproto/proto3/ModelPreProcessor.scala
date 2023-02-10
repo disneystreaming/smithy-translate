@@ -25,7 +25,6 @@ import software.amazon.smithy.model.loader.Prelude
 import software.amazon.smithy.model.shapes._
 
 import scala.jdk.CollectionConverters.*
-import scala.jdk.OptionConverters.*
 
 object ModelPreProcessor {
 
@@ -61,11 +60,13 @@ object ModelPreProcessor {
       * @return
       */
     val PreludeReplacements = new ProjectionTransformer() {
+      // Prelude.getPreludeModel is not accessible
+      private val preludeModel = Model.assembler().assemble().unwrap()
       private val addIfUsed = Map(
         // format: off
-        ShapeId.fromParts(Prelude.NAMESPACE, "BigInteger") -> smithytranslate.BigInteger.shape,
-        ShapeId.fromParts(Prelude.NAMESPACE, "BigDecimal") -> smithytranslate.BigDecimal.shape,
-        ShapeId.fromParts(Prelude.NAMESPACE, "Timestamp") -> smithytranslate.Timestamp.shape
+        classOf[BigIntegerShape] -> (smithytranslate.BigInteger.shape, smithytranslate.BigInteger.target),
+        classOf[BigDecimalShape] -> (smithytranslate.BigDecimal.shape, smithytranslate.BigDecimal.target),
+        classOf[TimestampShape] -> (smithytranslate.Timestamp.shape, smithytranslate.Timestamp.target)
         // format: on
       )
 
@@ -73,8 +74,10 @@ object ModelPreProcessor {
       def transform(x: TransformContext): Model = {
         val m = x.getModel()
         val toAdd =
-          addIfUsed.flatMap { case (key, value) =>
-            m.getShape(key).toScala.map { _ => value }
+          addIfUsed.flatMap { case (clazz, (shape, preludeShapeId)) =>
+            if (m.toSet(clazz).size() > 0) {
+              List(shape, preludeModel.expectShape(preludeShapeId))
+            } else List.empty
           }.toList
 
         m.toBuilder()
