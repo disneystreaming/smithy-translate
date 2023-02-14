@@ -20,6 +20,7 @@ import software.amazon.smithy.model.loader.Prelude;
 import software.amazon.smithy.model.traits.RequiredTrait;
 
 final public class Timestamp {
+  static public ShapeId target = ShapeId.fromParts(Prelude.NAMESPACE, "Long");
   static public Shape shape =
     StructureShape
       .builder()
@@ -27,7 +28,7 @@ final public class Timestamp {
       .addMember(
         MemberShape.builder()
           .id("smithytranslate#Timestamp$value")
-          .target(ShapeId.fromParts(Prelude.NAMESPACE, "Long"))
+          .target(target)
           .addTrait(new RequiredTrait())
           .build()
       )
