@@ -549,20 +549,14 @@ final class FormatterSpec extends munit.FunSuite {
                       |    Mixin,
                       |    Mixin,
                       |    Mixin
-                      |] {
+                      |] {}
                       |
-                      |}
-                      |
-                      |structure Struct with [Mixin, Mixin] {
-                      |
-                      |}
+                      |structure Struct with [Mixin, Mixin] {}
                       |
                       |structure Struct with [
                       |    // Just one but w/ comment
                       |    Mixin
-                      |] {
-                      |
-                      |}
+                      |] {}
                       |""".stripMargin
     formatTest(src, expected)
   }
@@ -629,7 +623,7 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
-  test("format test - support empty inline structure") {
+  test("format test - support empty structure") {
     val src = s"""|$$version: "2.0"
                   |
                   |namespace test
@@ -643,6 +637,8 @@ final class FormatterSpec extends munit.FunSuite {
                   |      // empty for X reason
                   |    }
                   |}
+                  |
+                  |structure Empty {}
                   |""".stripMargin
     val expected = s"""|$$version: "2.0"
                        |
@@ -655,6 +651,8 @@ final class FormatterSpec extends munit.FunSuite {
                        |        // empty for X reason
                        |    }
                        |}
+                       |
+                       |structure Empty {}
                        |""".stripMargin
     formatTest(src, expected)
   }

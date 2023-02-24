@@ -284,7 +284,10 @@ object ShapeWriter {
           whitespace,
           members
         ) =>
-      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
+      val content =
+        if (members.members.isEmpty) "{}"
+        else s"{\n${indent(members.write, "\n", 4)}\n}"
+      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} $content"
 
   }
 
