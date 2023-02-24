@@ -182,12 +182,18 @@ object ShapeWriter {
 
   implicit val inlineStructureWriter: Writer[InlineStructure] = Writer.write {
     case InlineStructure(whitespace, traitStatements, _mixin, ws1, members) =>
-      val indented = indent(members.write, "\n", 4)
+      val content =
+        if (members.members.isEmpty && !Comment.hasComment(members.ws0))
+          "{}"
+        else {
+          val indented = indent(members.write, "\n", 4)
+          s"{\n${indented}\n}"
+        }
       val blank =
         if (traitStatements.list.nonEmpty) " "
         else ""
       val mixin = _mixin.map(_.write + " ").getOrElse(" ")
-      s" :=${whitespace.write}${blank}${traitStatements.write}${mixin}{\n${ws1.write}${indented}\n}"
+      s" :=${whitespace.write}${blank}${traitStatements.write}${mixin}${ws1.write}${content}"
   }
   implicit val operationInputWriter: Writer[OperationInput] = Writer.write {
     case OperationInput(ws0, members, ws1) =>
@@ -278,7 +284,10 @@ object ShapeWriter {
           whitespace,
           members
         ) =>
-      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} {\n${indent(members.write, "\n", 4)}\n}"
+      val content =
+        if (members.members.isEmpty) "{}"
+        else s"{\n${indent(members.write, "\n", 4)}\n}"
+      s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} $content"
 
   }
 
