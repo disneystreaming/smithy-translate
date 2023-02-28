@@ -32,7 +32,7 @@ import smithytranslate.cli.runners.formatter.Formatter
 
 object Main
     extends smithytranslate.cli.CommandApp(
-      name = "smithy-translate",
+      name = "smithytranslate",
       header =
         "utils to convert  To and From Smithy to other Languages and to format Smithy files.",
       main = {
