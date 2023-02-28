@@ -68,7 +68,7 @@ input directory provided and format any Smithy files it finds. The output
 ```
 > smithytranslate format --help
 
-Usage: smithy-translate format [--no-clobber] <path to Smithy file or directory containing Smithy files>...
+Usage: smithytranslate format [--no-clobber] <path to Smithy file or directory containing Smithy files>...
 
 validates and formats smithy files
 
@@ -88,7 +88,7 @@ Options and flags:
 
 ## Alloy
 
-Throughout smithy-translate you will see references to [alloy](https://github.com/disneystreaming/alloy). Alloy is a lightweight library that houses some common smithy shapes that are used across our open source projects such as [smithy4s](https://github.com/disneystreaming/smithy4s). This is to provide better interoperability between our tools at a lower cost to end users.
+Throughout smithytranslate you will see references to [alloy](https://github.com/disneystreaming/alloy). Alloy is a lightweight library that houses some common smithy shapes that are used across our open source projects such as [smithy4s](https://github.com/disneystreaming/smithy4s). This is to provide better interoperability between our tools at a lower cost to end users.
 
 ## CLI
 
@@ -113,7 +113,7 @@ input directory provided and convert any openapi files ending with an extension 
 ```
 > smithytranslate openapi-to-smithy --help
 
-Usage: smithy-translate openapi-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
+Usage: smithytranslate openapi-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
 
 Take Open API specs as input and produce Smithy files as output.
 
@@ -935,9 +935,9 @@ string MyString
 ### CLI Usage
 
 ```
-> smithy-translate json-schema-to-smithy --help
+> smithytranslate json-schema-to-smithy --help
 
-Usage: smithy-translate json-schema-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
+Usage: smithytranslate json-schema-to-smithy --input <path> [--input <path>]... [--verboseNames] [--failOnValidationErrors] [--useEnumTraitSyntax] [--outputJson] <directory>
 
 Take Json Schema specs as input and produce Smithy files as output.
 
@@ -956,7 +956,7 @@ Options and flags:
         changes output format to be json representations of the smithy models
 ```
 
-Run `smithy-translate json-schema-to-smithy --help` for all usage information.
+Run `smithytranslate json-schema-to-smithy --help` for all usage information.
 
 ### Differences from OpenAPI
 
@@ -1062,9 +1062,9 @@ map TestMap {
 ### CLI Usage
 
 ```
-> smithy-translate smithy-to-proto --help
+> smithytranslate smithy-to-proto --help
 
-Usage: smithy-translate smithy-to-proto --input <path> [--input <path>]... [--dependency <string>]... [--repository <string>]... <directory>
+Usage: smithytranslate smithy-to-proto --input <path> [--input <path>]... [--dependency <string>]... [--repository <string>]... <directory>
 
 Take Smithy definitions as input and produce Proto files as output.
 
