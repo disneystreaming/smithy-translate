@@ -241,6 +241,7 @@ object formatter extends BaseModule { outer =>
 
       override def assemblyRules: Seq[Assembly.Rule] =
         super.assemblyRules ++ Seq(
+          Assembly.Rule.Exclude("reflect.properties"),
           Assembly.Rule
             .Relocate("smithytranslate.**", "smithyfmt.smithytranslate.@1"),
           Assembly.Rule.Relocate("scala.**", "smithyfmt.scala.@1"),
