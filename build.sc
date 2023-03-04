@@ -404,7 +404,7 @@ object Deps {
       ivy"com.disneystreaming.alloy:alloy-core:0.1.14"
   }
   object circe {
-    val jawn = ivy"io.circe::circe-jawn:0.14.4"
+    val jawn = ivy"io.circe::circe-jawn:0.14.5"
   }
   object everit {
     val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.1"
