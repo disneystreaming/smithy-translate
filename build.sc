@@ -430,7 +430,7 @@ object Deps {
   val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
   val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
-    val oslib = ivy"com.lihaoyi::os-lib:0.9.0"
+    val oslib = ivy"com.lihaoyi::os-lib:0.9.1"
   }
 
   val munit = ivy"org.scalameta::munit:0.7.29"
