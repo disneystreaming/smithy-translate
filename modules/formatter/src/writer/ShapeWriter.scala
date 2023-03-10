@@ -95,7 +95,7 @@ object ShapeWriter {
           list
             .map(_.write)
             .map(indent(_, "\n", 4))
-            .mkString_("[\n", ",\n", s"\n${whitespace1.write}]")
+            .mkString_("[\n", "\n", s"\n${whitespace1.write}]")
         else list.map(_.write).mkString_("[", ", ", s"${whitespace1.write}]")
       s" with${whitespace.write} $values"
   }
