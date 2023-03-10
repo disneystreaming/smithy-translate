@@ -542,12 +542,12 @@ final class FormatterSpec extends munit.FunSuite {
                       |namespace test
                       |
                       |structure Struct with [
-                      |    Mixin,
-                      |    Mixin,
-                      |    Mixin,
-                      |    Mixin,
-                      |    Mixin,
-                      |    Mixin,
+                      |    Mixin
+                      |    Mixin
+                      |    Mixin
+                      |    Mixin
+                      |    Mixin
+                      |    Mixin
                       |    Mixin
                       |] {}
                       |
