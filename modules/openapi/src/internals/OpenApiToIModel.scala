@@ -708,7 +708,10 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
             )
           }
         F.pure(
-          OpenApiObject(local.context.addHints(hints), fields)
+          OpenApiObject(
+            local.context.addHints(hints, retainTopLevel = true),
+            fields
+          )
             .withDescription(local)
         )
 
