@@ -45,5 +45,6 @@ object Hint {
   case class CurrentLocation(str: String) extends Hint
   case class TargetLocation(str: String) extends Hint
   case class JsonName(name: String) extends Hint
+  case class Examples(value: List[Node]) extends Hint
 }
 // format: on

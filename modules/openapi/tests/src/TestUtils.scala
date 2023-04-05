@@ -29,6 +29,11 @@ import software.amazon.smithy.model.node._
 import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
 import smithytranslate.openapi.TestUtils.ExpectedOutput.StringOutput
 import smithytranslate.openapi.TestUtils.ExpectedOutput.ModelOutput
+import software.amazon.smithy.model.transform.ModelTransformer
+import software.amazon.smithy.model.shapes.Shape
+import software.amazon.smithy.model.traits.Trait
+import software.amazon.smithy.model.traits.BoxTrait
+import scala.jdk.FunctionConverters._
 
 object TestUtils {
 
@@ -246,7 +251,17 @@ object TestUtils {
   }
 
   object ModelWrapper {
-    def apply(model: Model): ModelWrapper =
-      new ModelWrapper(model)
+    def apply(model: Model): ModelWrapper = {
+      // Remove all box traits because they are applied inconsistently depending on if you
+      // load from Java model or from unparsed string model
+      @annotation.nowarn("msg=class BoxTrait in package traits is deprecated")
+      val noBoxModel = ModelTransformer
+        .create()
+        .filterTraits(
+          model,
+          ((_: Shape, trt: Trait) => trt.toShapeId() != BoxTrait.ID).asJava
+        )
+      new ModelWrapper(noBoxModel)
+    }
   }
 }

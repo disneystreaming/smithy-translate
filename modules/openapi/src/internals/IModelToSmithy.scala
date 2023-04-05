@@ -18,6 +18,7 @@ package smithytranslate.openapi.internals
 import alloy.DateFormatTrait
 import alloy.DiscriminatedUnionTrait
 import alloy.NullableTrait
+import alloy.DataExamplesTrait
 import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
@@ -305,6 +306,10 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.UniqueItems             => List(new UniqueItemsTrait())
     case Hint.Nullable                => List(new NullableTrait())
     case Hint.JsonName(value)         => List(new JsonNameTrait(value))
+    case Hint.Examples(examples) =>
+      val trt = DataExamplesTrait.builder
+      examples.foreach(ex => trt.addExample(ex))
+      List(trt.build)
     case Hint.Auth(schemes) =>
       val shapeIds = schemes.map {
         case _: SecurityScheme.ApiKey     => HttpApiKeyAuthTrait.ID
