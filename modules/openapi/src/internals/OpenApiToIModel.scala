@@ -563,6 +563,11 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     (updatedRange, error.flatten)
   }
 
+  private def getExamplesHint(schema: Schema[_]): Option[Hint.Examples] =
+    Option(schema.getExample())
+      .map(GetExtensions.anyToNode)
+      .map(n => Hint.Examples(List(n)))
+
   /*
    * The goal here is to match one layer of "Schema[_]" and
    * assign it to the corresponding pattern.
@@ -600,7 +605,10 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           )
           val topLevel = local.context.hints.filter(_ == Hint.TopLevel)
           val (range, rangeError) = getRangeTrait(local, prim)
-          val hints = List(length, range, pattern, sensitive, topLevel).flatten
+
+          val examples = getExamplesHint(local.schema)
+          val hints =
+            List(length, range, pattern, sensitive, topLevel, examples).flatten
           val errors = List(rangeError).flatten
           (hints, errors)
         }
@@ -625,9 +633,10 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //     <item type>
       case s: ArraySchema if s.getUniqueItems =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
+        val hints = getExamplesHint(s).toList ++ lengthConstraint
         F.pure(
           OpenApiSet(
-            local.context.addHints(lengthConstraint.toList),
+            local.context.addHints(hints),
             Local(
               local.context.append(Segment.Arbitrary(ci"Item")),
               s.getItems()
@@ -641,9 +650,10 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //     <item type>
       case s: ArraySchema =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
+        val hints = getExamplesHint(s).toList ++ lengthConstraint
         F.pure(
           OpenApiArray(
-            local.context.addHints(lengthConstraint.toList),
+            local.context.addHints(hints),
             Local(
               local.context.append(Segment.Arbitrary(ci"Item")),
               s.getItems()
@@ -656,9 +666,10 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //   additionalProperties: schema
       case CaseMap(items) =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
+        val hints = getExamplesHint(local.schema).toList ++ lengthConstraint
         F.pure(
           OpenApiMap(
-            local.context.addHints(lengthConstraint.toList),
+            local.context.addHints(hints),
             Local(
               local.context.append(Segment.Arbitrary(ci"Item")),
               items
@@ -688,6 +699,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           Option(s.getProperties()).map(_.asScala.toVector).toVector.flatten
         val required =
           Option(s.getRequired()).map(_.asScala).getOrElse(List.empty).toSet
+        val hints = getExamplesHint(s).toList
         val fields =
           properties.map { case (name, schema) =>
             (name, required(name)) -> Local(
@@ -695,7 +707,13 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
               schema
             )
           }
-        F.pure(OpenApiObject(local.context, fields).withDescription(local))
+        F.pure(
+          OpenApiObject(
+            local.context.addHints(hints, retainTopLevel = true),
+            fields
+          )
+            .withDescription(local)
+        )
 
       // O:
       //   allOf:

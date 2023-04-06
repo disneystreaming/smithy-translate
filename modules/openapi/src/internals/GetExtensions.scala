@@ -19,6 +19,8 @@ import software.amazon.smithy.model.node.Node
 import scala.jdk.CollectionConverters._
 import smithytranslate.openapi.internals.OpenApiPattern
 import scala.language.reflectiveCalls
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.{node => jackson}
 
 object GetExtensions {
 
@@ -65,6 +67,26 @@ object GetExtensions {
       }
     case c: java.util.Collection[_] =>
       Node.fromNodes(c.asScala.map(anyToNode).toList.asJava)
+    case j: JsonNode => jacksonToSmithy(j)
+  }
+
+  private def jacksonToSmithy(jn: JsonNode): Node = jn match {
+    case s: jackson.TextNode    => Node.from(s.textValue)
+    case b: jackson.BooleanNode => Node.from(b.booleanValue)
+    case n: jackson.NumericNode => Node.from(n.numberValue)
+    case _: jackson.NullNode    => Node.nullNode()
+    case a: jackson.ArrayNode =>
+      Node.fromNodes(a.elements().asScala.toList.map(jacksonToSmithy).asJava)
+    case o: jackson.ObjectNode =>
+      Node.objectNode {
+        o.fields()
+          .asScala
+          .map { entry =>
+            (Node.from(entry.getKey), jacksonToSmithy(entry.getValue))
+          }
+          .toMap
+          .asJava
+      }
   }
 
 }
