@@ -401,7 +401,7 @@ object transitive extends BaseScalaModule {
 object Deps {
   object alloy {
     val core =
-      ivy"com.disneystreaming.alloy:alloy-core:0.1.17"
+      ivy"com.disneystreaming.alloy:alloy-core:0.1.17-DIRTY3e3bf7d8"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.5"

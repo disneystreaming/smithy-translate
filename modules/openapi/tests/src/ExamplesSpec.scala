@@ -35,7 +35,11 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples([1])
+                            |@dataExamples([
+                            | {
+                            |   json: 1
+                            | }
+                            |])
                             |integer Id
                             |""".stripMargin
 
@@ -59,7 +63,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples(["something"])
+                            |@dataExamples([{json: "something"}])
                             |string Id
                             |""".stripMargin
 
@@ -108,8 +112,8 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples([
-                            |  {
+                            |@dataExamples([{
+                            |  json: {
                             |    int: 1,
                             |    str: "Jessica Smith",
                             |    dbl: 1.1,
@@ -117,7 +121,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |    bool: true,
                             |    struct: { str: "whatever" }
                             |  }
-                            |])
+                            |}])
                             |structure User {
                             |  int: Integer
                             |  str: String
@@ -159,7 +163,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples([[1, 2, 3]])
+                            |@dataExamples([{json: [1, 2, 3]}])
                             |list A {
                             |  member: Integer
                             |}
@@ -190,7 +194,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |use alloy#dataExamples
                             |
                             |@uniqueItems
-                            |@dataExamples([[1, 2, 3]])
+                            |@dataExamples([{json: [1, 2, 3]}])
                             |list A {
                             |  member: Integer
                             |}
@@ -219,8 +223,10 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples([{
-                            |  foo: "bar"
+                            |@dataExamples([{json: 
+                            |  {
+                            |    foo: "bar"
+                            |  }
                             |}])
                             |map M {
                             |  key: String
@@ -256,8 +262,10 @@ final class ExamplesSpec extends munit.FunSuite {
                             |use alloy#dataExamples
                             |
                             |@dataExamples([{
-                            |  foo: {
-                            |    test: "bar"
+                            |  json: {
+                            |    foo: {
+                            |      test: "bar"
+                            |    }
                             |  }
                             |}])
                             |map M {
