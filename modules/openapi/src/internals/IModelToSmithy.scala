@@ -308,7 +308,14 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.JsonName(value)         => List(new JsonNameTrait(value))
     case Hint.Examples(examples) =>
       val trt = DataExamplesTrait.builder
-      examples.foreach(ex => trt.addExample(ex))
+      examples.foreach(ex =>
+        trt.addExample(
+          new DataExamplesTrait.DataExample(
+            DataExamplesTrait.DataExampleType.JSON,
+            ex
+          )
+        )
+      )
       List(trt.build)
     case Hint.Auth(schemes) =>
       val shapeIds = schemes.map {
