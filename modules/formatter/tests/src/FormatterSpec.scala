@@ -657,6 +657,26 @@ final class FormatterSpec extends munit.FunSuite {
     formatTest(src, expected)
   }
 
+  test("#121 - comment in empty structure") {
+    val src = """|$version: "2"
+                 |
+                 |namespace demo
+                 |
+                 |structure MyOpOutput {
+                 |    //hello
+                 |}
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace demo
+                      |
+                      |structure MyOpOutput {
+                      |    // hello
+                      |}
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
   test("format test - support inline structure") {
     val src = s"""|$$version: "2.0"
                   |

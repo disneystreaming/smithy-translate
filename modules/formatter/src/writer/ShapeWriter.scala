@@ -285,7 +285,7 @@ object ShapeWriter {
           members
         ) =>
       val content =
-        if (members.members.isEmpty) "{}"
+        if (members.members.isEmpty && !Comment.hasComment(members.ws0)) "{}"
         else s"{\n${indent(members.write, "\n", 4)}\n}"
       s"structure ${identifier.write}${resource.write}${mixins.write}${whitespace.write} $content"
 
