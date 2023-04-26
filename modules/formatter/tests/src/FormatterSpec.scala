@@ -985,4 +985,52 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("#119 no trailing - metadata w/ multiple comments") {
+    val src = """|$version: "2"
+                 |
+                 |metadata foo = ["bar"] // comm1
+                 |metadata f_o_o = ["baz"]//comm2
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |metadata foo = ["bar"] // comm1
+                      |metadata f_o_o = ["baz"] // comm2
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#119 no trailing - metadata w/ comment") {
+    val src = """|$version: "2"
+                 |
+                 |metadata foo = ["bar"] // some test
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |metadata foo = ["bar"] // some test
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#119 no trailing - metadata w/o comment") {
+    val src = """|$version: "2"
+                 |
+                 |metadata foo = ["bar"]""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |metadata foo = ["bar"]""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#119 no trailing - metadata w/ trailing newline") {
+    val src = """|$version: "2"
+                 |
+                 |metadata foo = ["bar"]
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |metadata foo = ["bar"]
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

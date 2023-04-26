@@ -48,6 +48,7 @@ import smithytranslate.formatter.ast.shapes.ShapeStatementsCase.{
   ApplyStatementCase,
   ShapeStatementCase
 }
+import smithytranslate.formatter.parsers.equal
 import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws}
 import smithytranslate.formatter.parsers.NodeParser._
 import smithytranslate.formatter.parsers.ShapeIdParser._
@@ -88,9 +89,8 @@ object ShapeParser {
 
   // see comments on ValueAssignment
   val value_assigments: Parser[ValueAssignment] =
-    (sp0.with1 *> Parser.char('=') *> sp0 *> node_value ~ ws).map {
-      case (l, r) =>
-        ValueAssignment(l, r)
+    (sp0.with1 *> equal *> sp0 *> node_value ~ ws).map { case (l, r) =>
+      ValueAssignment(l, r)
     }
 
   val mixins: Parser[Mixin] =

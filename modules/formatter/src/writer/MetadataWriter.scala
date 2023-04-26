@@ -26,9 +26,9 @@ object MetadataWriter {
     Writer.write { case MetadataStatement(nok, nv, br) =>
       s"metadata ${nok.write} = ${nv.write}${br.write}"
     }
+
   implicit val metadataSectionWriter: Writer[MetadataSection] = Writer.write {
-    case MetadataSection(metadata) =>
-      metadata.writeN("", "", "\n")
+    case MetadataSection(metadata) => metadata.writeN
   }
 
   /*

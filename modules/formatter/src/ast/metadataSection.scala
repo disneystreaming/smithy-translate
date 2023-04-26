@@ -24,5 +24,5 @@ case class MetadataSection(metadata: List[MetadataStatement])
 case class MetadataStatement(
     nodeObjectKey: NodeObjectKey,
     nodeValue: NodeValue,
-    break: Break
+    break: Option[Break]
 )

@@ -25,6 +25,7 @@ package object parsers {
   val openSquare: Parser[Unit] = Parser.char('[')
   val colon: Parser[Unit] = Parser.char(':')
   val closeSquare: Parser[Unit] = Parser.char(']')
+  val equal: Parser[Unit] = Parser.char('=')
   val escapeChars: List[Char] =
     List('\\', '"', 'b', 'f', 'n', 'r', 't', '/')
   private val quotable0: List[Char] = (0x20.toChar to 0x21.toChar).toList
