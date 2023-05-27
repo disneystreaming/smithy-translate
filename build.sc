@@ -427,7 +427,7 @@ object Deps {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.1"
     val parse = ivy"org.typelevel::cats-parse:0.3.9"
   }
-  val ciString = ivy"org.typelevel::case-insensitive:1.3.0"
+  val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
   val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.9.1"
