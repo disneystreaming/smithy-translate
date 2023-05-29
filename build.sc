@@ -435,7 +435,7 @@ object Deps {
 
   val munit = ivy"org.scalameta::munit:0.7.29"
   object grpc {
-    val version = "1.54.1"
+    val version = "1.55.1"
     val netty = ivy"io.grpc:grpc-netty:$version"
     val services = ivy"io.grpc:grpc-services:$version"
   }
