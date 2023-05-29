@@ -56,7 +56,7 @@ final class DebugSpec extends munit.FunSuite {
   }
 
   test("load with debug leaves validation events untouched") {
-    testFilteredErrors(debug = true, expectedCount = 6)
+    testFilteredErrors(debug = true, expectedCount = 5)
   }
   test("load without debug filters validation events") {
     testFilteredErrors(debug = false, expectedCount = 2)
