@@ -102,7 +102,12 @@ final class RefSpec extends munit.FunSuite {
                            |  },
                            |  "$defs":{
                            |    "bar": {
-                           |      "type": "object"
+                           |      "type": "object",
+                           |      "properties": {
+                           |        "baz": {
+                           |          "type": "string"
+                           |        }
+                           |      }
                            |    }
                            |  }
                            |}
@@ -115,6 +120,7 @@ final class RefSpec extends munit.FunSuite {
                             |}
                             |
                             |structure Bar {
+                            |  baz: String
                             |}
                             |""".stripMargin
 
