@@ -150,6 +150,16 @@ object Extractors {
           val hints = desc.toList
           Some(hints -> PBoolean)
 
+        // M:
+        //   type: object
+        //   additionalProperties: true
+        case (obj: ObjectSchema)
+            if obj.getPropertySchemas().size() == 0 &&
+              obj.permitsAdditionalProperties() &&
+              CaseMap.unapply(obj).isEmpty =>
+          val genericHints = getGenericHints(obj)
+          Some(genericHints -> PFreeForm)
+
         case _ => None
       }
       specific.map(_.leftMap(_ ++ genericHints))
