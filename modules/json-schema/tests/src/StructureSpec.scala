@@ -45,6 +45,26 @@ final class StructureSpec extends munit.FunSuite {
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
 
+  test("structures - constant") {
+    val jsonSchString = """|{
+                           |  "$id": "test.json",
+                           |  "$schema": "http://json-schema.org/draft-07/schema#",
+                           |  "title": "Constant",
+                           |  "type": "object",
+                           |  "additionalProperties": false
+                           |}
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Constant {
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+
+  }
+
   test("structures - nested") {
     val jsonSchString = """|{
                            |  "$id": "test.json",
