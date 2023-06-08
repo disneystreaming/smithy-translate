@@ -103,7 +103,7 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
 }
 
 trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
-  def scalaVersion = T.input("2.13.10")
+  def scalaVersion = T.input("2.13.11")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
