@@ -401,7 +401,7 @@ object transitive extends BaseScalaModule {
 object Deps {
   object alloy {
     val core =
-      ivy"com.disneystreaming.alloy:alloy-core:0.1.22"
+      ivy"com.disneystreaming.alloy:alloy-core:0.2.2"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.5"
@@ -419,7 +419,7 @@ object Deps {
     )
   }
   object smithy {
-    val smithyVersion = "1.31.0"
+    val smithyVersion = "1.32.0"
     val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
     val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
@@ -435,7 +435,7 @@ object Deps {
 
   val munit = ivy"org.scalameta::munit:0.7.29"
   object grpc {
-    val version = "1.55.1"
+    val version = "1.56.0"
     val netty = ivy"io.grpc:grpc-netty:$version"
     val services = ivy"io.grpc:grpc-services:$version"
   }
@@ -446,7 +446,7 @@ object Deps {
       ivy"com.thesamet.scalapb::compilerplugin:$version"
     val protocCache = ivy"com.thesamet.scalapb::protoc-cache-coursier:0.9.6"
   }
-  val coursier = ivy"io.get-coursier::coursier:2.1.4"
+  val coursier = ivy"io.get-coursier::coursier:2.1.5"
 }
 
 case class ScalaVersion(maj: Int, min: Int, patch: Int)

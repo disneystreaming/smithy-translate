@@ -81,6 +81,9 @@ final class ExamplesSpec extends munit.FunSuite {
                            |    User:
                            |      type: object
                            |      properties:
+                           |        id:
+                           |          type: string
+                           |          format: uuid
                            |        int:
                            |          type: integer
                            |        str:
@@ -99,6 +102,7 @@ final class ExamplesSpec extends munit.FunSuite {
                            |            str:
                            |              type: string
                            |      example:
+                           |        id: 630fe836-9220-11e7-abc4-cec278b6b50a
                            |        int: 1
                            |        str: Jessica Smith
                            |        dbl: 1.1
@@ -111,9 +115,11 @@ final class ExamplesSpec extends munit.FunSuite {
     val expectedString = """|namespace foo
                             |
                             |use alloy#dataExamples
+                            |use alloy#UUID
                             |
                             |@dataExamples([{
                             |  json: {
+                            |    id: "630fe836-9220-11e7-abc4-cec278b6b50a",
                             |    int: 1,
                             |    str: "Jessica Smith",
                             |    dbl: 1.1,
@@ -123,6 +129,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |  }
                             |}])
                             |structure User {
+                            |  id: UUID
                             |  int: Integer
                             |  str: String
                             |  dbl: Double
