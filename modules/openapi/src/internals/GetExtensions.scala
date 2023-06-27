@@ -59,6 +59,8 @@ object GetExtensions {
     case l: Long    => Node.from(l)
     case f: Float   => Node.from(f)
     case n: Number  => Node.from(n)
+    case u: java.util.UUID =>
+      Node.from(u.toString)
     case m: java.util.Map[_, _] =>
       Node.objectNode {
         m.asScala.collect { case (k: String, v: Any) =>
