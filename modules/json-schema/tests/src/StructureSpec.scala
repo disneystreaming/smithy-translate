@@ -24,6 +24,10 @@ final class StructureSpec extends munit.FunSuite {
                            |  "title": "Person",
                            |  "type": "object",
                            |  "properties": {
+                           |    "id": {
+                           |      "type": "string",
+                           |      "format": "uuid"
+                           |    },
                            |    "firstName": {
                            |      "type": "string"
                            |    },
@@ -36,7 +40,10 @@ final class StructureSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
+                            |use alloy#UUID
+                            |
                             |structure Person {
+                            | id: UUID,
                             | firstName: String,
                             | lastName: String
                             |}
