@@ -65,6 +65,41 @@ final class StructureSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("structures - inline uuid example") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      properties:
+                     |        u:
+                     |          format: uuid
+                     |          type: string
+                     |          example: 630fe836-9220-11e7-abc4-cec278b6b50a
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |use alloy#dataExamples
+                      |use alloy#UUID
+                      |
+                      |structure Object {
+                      | @dataExamples([
+                      |   {
+                      |       json: "630fe836-9220-11e7-abc4-cec278b6b50a"
+                      |   }
+                      | ])
+                      | u: UUID
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("structures - description") {
     val openapiString = """|openapi: '3.0.'
                      |info:
