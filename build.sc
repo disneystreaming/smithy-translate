@@ -203,7 +203,7 @@ object cli extends BaseScalaModule {
 
 object formatter extends BaseModule { outer =>
   val deps = Agg(
-    ivy"org.typelevel::cats-parse::0.3.9"
+    ivy"org.typelevel::cats-parse::0.3.10"
   )
 
   object jvm extends BaseScalaModule {
@@ -413,7 +413,7 @@ object Deps {
     ivy"org.slf4j:slf4j-nop:2.0.7" // needed since swagger-parser relies on slf4j-api
   object swagger {
     val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.15",
+      ivy"io.swagger.parser.v3:swagger-parser:2.1.16",
       // included to override the version brought in by swagger-parser which has a vulnerability
       ivy"org.mozilla:rhino:1.7.14"
     )
@@ -425,7 +425,7 @@ object Deps {
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.3.1"
-    val parse = ivy"org.typelevel::cats-parse:0.3.9"
+    val parse = ivy"org.typelevel::cats-parse:0.3.10"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
   val decline = ivy"com.monovore::decline:2.4.1"
