@@ -79,6 +79,80 @@ final class OperationSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("operation - externalDocs") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |externalDocs:
+                     |  description: Example
+                     |  url: https://www.example.com
+                     |paths:
+                     |  /test:
+                     |    get:
+                     |      operationId: testOperationId
+                     |      externalDocs:
+                     |        description: Example 2
+                     |        url: https://www.example.com/2
+                     |      responses:
+                     |        '200':
+                     |          content:
+                     |            application/json:
+                     |              schema:
+                     |                $ref: '#/components/schemas/Object'
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      properties:
+                     |        s:
+                     |          type: string
+                     |      required:
+                     |        - s
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |use smithytranslate#contentType
+                      |
+                      |@externalDocumentation(
+                      |  "Example": "https://www.example.com"
+                      |)
+                      |service FooService {
+                      |    operations: [
+                      |        TestOperationId
+                      |    ]
+                      |}
+                      |
+                      |@http(
+                      |    method: "GET",
+                      |    uri: "/test",
+                      |    code: 200,
+                      |)
+                      |@externalDocumentation(
+                      |  "Example 2": "https://www.example.com/2"
+                      |)
+                      |operation TestOperationId {
+                      |    input: Unit,
+                      |    output: TestOperationId200,
+                      |}
+                      |
+                      |structure Object {
+                      |    @required
+                      |    s: String,
+                      |}
+                      |
+                      |structure TestOperationId200 {
+                      |    @httpPayload
+                      |    @required
+                      |    @contentType("application/json")
+                      |    body: Object,
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("operation - request and response") {
     val openapiString = """|openapi: '3.0.'
                      |info:

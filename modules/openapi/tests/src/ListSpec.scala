@@ -40,6 +40,36 @@ final class ListSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("lists - external docs") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    StringArray:
+                     |      type: array
+                     |      items:
+                     |        type: string
+                     |      externalDocs:
+                     |        description: Example
+                     |        url: https://www.example.com
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |@externalDocumentation(
+                      |  "Example": "https://www.example.com"
+                      |)
+                      |list StringArray {
+                      |    member: String
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("lists - with description") {
     val openapiString = """|openapi: '3.0.'
                      |info:

@@ -41,6 +41,37 @@ final class MapSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("maps - external docs") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    StringStringMap:
+                     |      type: object
+                     |      additionalProperties:
+                     |        type: string
+                     |      externalDocs:
+                     |        description: Example
+                     |        url: https://www.example.com
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |@externalDocumentation(
+                      |  "Example": "https://www.example.com"
+                      |)
+                      |map StringStringMap {
+                      |    key: String,
+                      |    value: String
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("maps - description") {
     val openapiString = """|openapi: '3.0.'
                      |info:
