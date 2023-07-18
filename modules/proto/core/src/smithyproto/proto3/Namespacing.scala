@@ -32,8 +32,13 @@ object Namespacing {
     val parts = ns.split("\\.").toList
     if (parts.size == 0) {
       Fqn(None, "definitions") // should not happen
-    } else {
+    } else if (parts.size == 1) {
       Fqn(Some(parts), "definitions")
+    } else {
+      // The reason for using the last directory as the filename as well is
+      // that the filename is used by several of the proto code generators
+      val last = parts.last
+      Fqn(Some(parts), last)
     }
   }
 }
