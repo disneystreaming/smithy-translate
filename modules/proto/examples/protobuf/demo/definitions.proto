@@ -4,7 +4,7 @@ package demo;
 
 import "google/protobuf/empty.proto";
 
-import "demo/common/definitions.proto";
+import "demo/common/common.proto";
 
 import "google/protobuf/wrappers.proto";
 
