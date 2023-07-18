@@ -42,7 +42,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  }
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("@protoInlinedOneOf union - used within only one data structure") {
@@ -79,7 +79,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  string other = 4;
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test(
@@ -146,7 +146,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  google.protobuf.Any value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - string") {
@@ -162,7 +162,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  string value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - structure") {
@@ -181,7 +181,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  string value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - int") {
@@ -197,7 +197,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int32 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - long") {
@@ -213,7 +213,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int64 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - double") {
@@ -230,7 +230,7 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
 
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - float") {
@@ -246,7 +246,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  float value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
 
   }
 
@@ -263,7 +263,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  int32 value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - bool") {
@@ -279,7 +279,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  bool value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - bytes") {
@@ -295,7 +295,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  bytes value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> someBlob))
+    convertCheck(source, Map("com/example/example.proto" -> someBlob))
   }
 
   test("top level - big integer") {
@@ -313,7 +313,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  smithytranslate.BigInteger value = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("top level - big decimal") {
@@ -333,7 +333,7 @@ class CompilerRendererSuite extends FunSuite {
                     |""".stripMargin
     convertWithApiCheck(
       source,
-      Map("com/example/definitions.proto" -> expected)
+      Map("com/example/example.proto" -> expected)
     )
   }
 
@@ -354,7 +354,7 @@ class CompilerRendererSuite extends FunSuite {
                     |""".stripMargin
     convertWithApiCheck(
       source,
-      Map("com/example/definitions.proto" -> expected)
+      Map("com/example/example.proto" -> expected)
     )
   }
 
@@ -374,7 +374,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  string value = 1 [deprecated = true];
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("another/namespace/definitions.proto" -> expected))
+    convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
   }
 
   test("proto structure deprecated") {
@@ -396,7 +396,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  string value = 1 [deprecated = true];
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("another/namespace/definitions.proto" -> expected))
+    convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
   }
 
   test("protoNumType") {
@@ -504,7 +504,7 @@ class CompilerRendererSuite extends FunSuite {
                       |}""".stripMargin
     convertCheck(
       source,
-      Map("com/example/definitions.proto" -> expected)
+      Map("com/example/example.proto" -> expected)
     )
   }
 
@@ -531,7 +531,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  map<string, google.protobuf.StringValue> object = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("inlined maps message") {
@@ -563,7 +563,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  map<string, com.example.MapItem> values = 1;
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("inlined maps") {
@@ -586,7 +586,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  map<string, int32> strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("inlined lists") {
@@ -608,7 +608,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  repeated string strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("inlined sparse lists") {
@@ -633,7 +633,7 @@ class CompilerRendererSuite extends FunSuite {
                     |  repeated google.protobuf.StringValue strings = 1;
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("inlined lists message") {
@@ -665,7 +665,7 @@ class CompilerRendererSuite extends FunSuite {
                    |  repeated com.example.ListItem strings = 1;
                    |}
                    |""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
 
   }
 
@@ -709,7 +709,7 @@ class CompilerRendererSuite extends FunSuite {
                       |message Unions {
                       |  repeated com.example.UnionStruct values = 1;
                       |}""".stripMargin
-    convertCheck(source, Map("com/example/definitions.proto" -> expected))
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("transitive structure with protoEnabled") {
@@ -1074,7 +1074,7 @@ class CompilerRendererSuite extends FunSuite {
                       |}""".stripMargin
     convertCheck(
       source,
-      Map("avoid/cyclic/in/namespace/definitions.proto" -> expected)
+      Map("avoid/cyclic/in/namespace/namespace.proto" -> expected)
     )
   }
 
@@ -1094,8 +1094,8 @@ class CompilerRendererSuite extends FunSuite {
     convertChecks(
       Map("ns1.smithy" -> src("ns1"), "ns2.smithy" -> src("ns2")),
       Map(
-        "com/ns1/definitions.proto" -> expected("ns1"),
-        "com/ns2/definitions.proto" -> expected("ns2")
+        "com/ns1/ns1.proto" -> expected("ns1"),
+        "com/ns2/ns2.proto" -> expected("ns2")
       )
     )
   }
@@ -1125,7 +1125,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  string value = 1;
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("another/namespace/definitions.proto" -> expected))
+    convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
   }
 
   /** Perform the same check as convertCheck but include the smithytranslate

@@ -56,7 +56,7 @@ class CompilerSuite extends FunSuite {
         List(
           "com",
           "example",
-          "definitions.proto"
+          "example.proto"
         ),
         CompilationUnit(
           Some(
@@ -76,38 +76,38 @@ class CompilerSuite extends FunSuite {
   }
 
   test("correctly choose file name - all caps") {
-    namespaceTest("com.EXAMPLE", List("com", "EXAMPLE", "definitions.proto"))
+    namespaceTest("com.EXAMPLE", List("com", "EXAMPLE", "example.proto"))
   }
 
   test("correctly choose file name - underscore") {
     namespaceTest(
       "com.some_example",
-      List("com", "some_example", "definitions.proto")
+      List("com", "some_example", "some_example.proto")
     )
   }
 
   test("correctly choose file name - leading underscore") {
-    namespaceTest("com._example", List("com", "_example", "definitions.proto"))
-    namespaceTest("com._EXAMPLE", List("com", "_EXAMPLE", "definitions.proto"))
-    namespaceTest("com._Example", List("com", "_Example", "definitions.proto"))
+    namespaceTest("com._example", List("com", "_example", "_example.proto"))
+    namespaceTest("com._EXAMPLE", List("com", "_EXAMPLE", "_example.proto"))
+    namespaceTest("com._Example", List("com", "_Example", "_example.proto"))
   }
 
   test("correctly choose file name - underscore and caps") {
     namespaceTest(
       "com.some_EXAMPLE",
-      List("com", "some_EXAMPLE", "definitions.proto")
+      List("com", "some_EXAMPLE", "some_example.proto")
     )
     namespaceTest(
       "com.SOME_EXAMPLE",
-      List("com", "SOME_EXAMPLE", "definitions.proto")
+      List("com", "SOME_EXAMPLE", "some_example.proto")
     )
     namespaceTest(
       "com.Some_Example",
-      List("com", "Some_Example", "definitions.proto")
+      List("com", "Some_Example", "some_example.proto")
     )
     namespaceTest(
       "com.Some_OTHER_Example",
-      List("com", "Some_OTHER_Example", "definitions.proto")
+      List("com", "Some_OTHER_Example", "some_other_example.proto")
     )
   }
 
