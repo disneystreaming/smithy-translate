@@ -8,6 +8,7 @@ use alloy.proto#protoEnabled
 use alloy.proto#protoReservedFields
 use alloy.proto#protoNumType
 use alloy#UUID
+use demo.common#Language
 
 @protoEnabled
 service Hello {
@@ -22,14 +23,6 @@ operation SayHello {
 
 operation Greet {
   output: HelloResponse
-}
-
-// protoindex is not necessary , this is just for demo purposes
-enum Language{
-    @protoIndex(0)
-    FRENCH
-    @protoIndex(1)
-    ENGLISH
 }
 
 @protoReservedFields([{number: 3}])

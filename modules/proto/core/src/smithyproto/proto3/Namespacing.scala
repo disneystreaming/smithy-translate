@@ -35,8 +35,10 @@ object Namespacing {
     } else if (parts.size == 1) {
       Fqn(Some(parts), "definitions")
     } else {
+      // The reason for using the last directory as the filename as well is
+      // that the filename is used by several of the proto code generators
       val last = parts.last
-      Fqn(Some(parts.init), last)
+      Fqn(Some(parts), last)
     }
   }
 }
