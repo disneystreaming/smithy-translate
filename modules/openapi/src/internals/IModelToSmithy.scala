@@ -306,6 +306,8 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.UniqueItems             => List(new UniqueItemsTrait())
     case Hint.Nullable                => List(new NullableTrait())
     case Hint.JsonName(value)         => List(new JsonNameTrait(value))
+    case Hint.ExternalDocs(desc, url) =>
+      List(ExternalDocumentationTrait.builder().addUrl(desc, url).build())
     case Hint.Examples(examples) =>
       val trt = DataExamplesTrait.builder
       examples.foreach(ex =>
