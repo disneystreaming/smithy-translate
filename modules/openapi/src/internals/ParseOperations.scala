@@ -183,7 +183,7 @@ private class ParseOperationsImpl(
       getSecurityHint(securitySchemes, opInfo, hasGlobalSecurity)
     val descHint = Option(op.getDescription()).map(Hint.Description).toList
     val exDocs = Option(opInfo.op.getExternalDocs()).map(e =>
-      Hint.ExternalDocs(e.getDescription(), e.getUrl())
+      Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
     val hints =
       GetExtensions.from(opInfo.op) ++ securityHint ++ descHint ++ exDocs
