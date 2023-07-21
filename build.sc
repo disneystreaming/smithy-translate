@@ -1,5 +1,6 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
+import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
 
@@ -9,6 +10,7 @@ import io.kipp.mill.ci.release.CiReleaseModule
 import io.kipp.mill.ci.release.SonatypeHost
 import mill._
 import mill.contrib.scalapblib.ScalaPBModule
+import mill.contrib.buildinfo
 import mill.define.Sources
 import mill.define.Task
 import mill.modules.Assembly
@@ -176,12 +178,20 @@ object openapi extends BaseScalaModule {
   }
 }
 
-object cli extends BaseScalaModule {
+object cli extends BaseScalaModule with buildinfo.BuildInfo {
   def ivyDeps = Agg(
     Deps.decline,
     Deps.coursier,
     Deps.lihaoyi.oslib,
+    Deps.lihaoyi.ujson,
     Deps.smithy.build
+  )
+
+  def buildInfoPackageName = Some("smithytranslate.cli.internal")
+
+  def buildInfoMembers = Map(
+    "alloyVersion" -> Deps.alloy.alloyVersion,
+    "cliVersion" -> publishVersion().toString
   )
 
   def moduleDeps = Seq(openapi, proto.core, `json-schema`, formatter.jvm)
@@ -400,8 +410,9 @@ object transitive extends BaseScalaModule {
 
 object Deps {
   object alloy {
+    val alloyVersion = "0.2.3"
     val core =
-      ivy"com.disneystreaming.alloy:alloy-core:0.2.3"
+      ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
   }
   object circe {
     val jawn = ivy"io.circe::circe-jawn:0.14.5"
@@ -431,6 +442,7 @@ object Deps {
   val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.9.1"
+    val ujson = ivy"com.lihaoyi::ujson:3.1.2"
   }
 
   val munit = ivy"org.scalameta::munit:0.7.29"

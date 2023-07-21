@@ -372,6 +372,9 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       if (schemes.nonEmpty) List(Hint.Security(schemes)) else Nil
     val exts = GetExtensions.from(openApi)
     val infoExts = GetExtensions.from(openApi.getInfo())
+    val externalDocs = Option(openApi.getExternalDocs()).map(e =>
+      Hint.ExternalDocs(e.getDescription(), e.getUrl())
+    )
     val service = ServiceDef(
       DefId(
         Namespace(namespace.toList),
@@ -380,7 +383,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         ) ++ Name.arbitrary("Service")
       ),
       opDefIds,
-      exts ++ infoExts ++ securityHint ++ authHint
+      exts ++ infoExts ++ securityHint ++ authHint ++ externalDocs
     )
     if (opDefIds.nonEmpty) recordDef(service) else F.unit
   }
@@ -568,6 +571,12 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       .map(GetExtensions.anyToNode)
       .map(n => Hint.Examples(List(n)))
 
+  private def getExternalDocsHint(
+      schema: Schema[_]
+  ): Option[Hint.ExternalDocs] =
+    Option(schema.getExternalDocs())
+      .map(e => Hint.ExternalDocs(e.getDescription(), e.getUrl()))
+
   /*
    * The goal here is to match one layer of "Schema[_]" and
    * assign it to the corresponding pattern.
@@ -607,8 +616,17 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           val (range, rangeError) = getRangeTrait(local, prim)
 
           val examples = getExamplesHint(local.schema)
+          val externalDocs = getExternalDocsHint(local.schema)
           val hints =
-            List(length, range, pattern, sensitive, topLevel, examples).flatten
+            List(
+              length,
+              range,
+              pattern,
+              sensitive,
+              topLevel,
+              examples,
+              externalDocs
+            ).flatten
           val errors = List(rangeError).flatten
           (hints, errors)
         }
@@ -633,7 +651,8 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //     <item type>
       case s: ArraySchema if s.getUniqueItems =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
-        val hints = getExamplesHint(s).toList ++ lengthConstraint
+        val hints = getExternalDocsHint(s).toList ++
+          getExamplesHint(s).toList ++ lengthConstraint
         F.pure(
           OpenApiSet(
             local.context.addHints(hints),
@@ -650,7 +669,8 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //     <item type>
       case s: ArraySchema =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
-        val hints = getExamplesHint(s).toList ++ lengthConstraint
+        val hints = getExternalDocsHint(s).toList ++
+          getExamplesHint(s).toList ++ lengthConstraint
         F.pure(
           OpenApiArray(
             local.context.addHints(hints),
@@ -666,7 +686,8 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //   additionalProperties: schema
       case CaseMap(items) =>
         val lengthConstraint = getCollectionLengthConstraint(local.schema)
-        val hints = getExamplesHint(local.schema).toList ++ lengthConstraint
+        val hints = getExternalDocsHint(local.schema).toList ++
+          getExamplesHint(local.schema).toList ++ lengthConstraint
         F.pure(
           OpenApiMap(
             local.context.addHints(hints),
@@ -699,7 +720,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           Option(s.getProperties()).map(_.asScala.toVector).toVector.flatten
         val required =
           Option(s.getRequired()).map(_.asScala).getOrElse(List.empty).toSet
-        val hints = getExamplesHint(s).toList
+        val hints = getExternalDocsHint(s).toList ++ getExamplesHint(s).toList
         val fields =
           properties.map { case (name, schema) =>
             (name, required(name)) -> Local(

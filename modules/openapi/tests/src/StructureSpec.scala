@@ -445,4 +445,41 @@ final class StructureSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("structures - external docs") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      externalDocs:
+                     |        description: Example 2
+                     |        url: https://www.example.com/2
+                     |      properties:
+                     |        version:
+                     |          type: string
+                     |          externalDocs:
+                     |            description: Example
+                     |            url: https://www.example.com
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                      |
+                      |@externalDocumentation(
+                      |  "Example 2": "https://www.example.com/2"
+                      | )
+                      |structure Object {
+                      | @externalDocumentation(
+                      |  "Example": "https://www.example.com"
+                      | )
+                      | version: String
+                      |}
+                      |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
 }

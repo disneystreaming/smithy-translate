@@ -182,7 +182,11 @@ private class ParseOperationsImpl(
     val (errors, securityHint) =
       getSecurityHint(securitySchemes, opInfo, hasGlobalSecurity)
     val descHint = Option(op.getDescription()).map(Hint.Description).toList
-    val hints = GetExtensions.from(opInfo.op) ++ securityHint ++ descHint
+    val exDocs = Option(opInfo.op.getExternalDocs()).map(e =>
+      Hint.ExternalDocs(e.getDescription(), e.getUrl())
+    )
+    val hints =
+      GetExtensions.from(opInfo.op) ++ securityHint ++ descHint ++ exDocs
     val suppressions = getHeaderSuppressions(allValidInputParams).toVector
     ParseOperationsResult(
       errors ++ allInputParamsErrors,
