@@ -430,7 +430,7 @@ object Deps {
     )
   }
   object smithy {
-    val smithyVersion = "1.32.0"
+    val smithyVersion = "1.34.0"
     val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
     val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
