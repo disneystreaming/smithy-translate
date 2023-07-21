@@ -28,7 +28,8 @@ final case class OpenAPIJsonSchemaOpts(
     failOnValidationErrors: Boolean,
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
-    debug: Boolean
+    debug: Boolean,
+    force: Boolean
 )
 
 object OpenAPIJsonSchemaOpts {
@@ -67,18 +68,25 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
+  private val force: Opts[Boolean] = Opts
+    .flag(
+      "force",
+      help = "Force overwrite smithy-build.json file if it's present"
+    )
+    .orFalse
+
   private def getOpts(isOpenapi: Boolean) =
     (
+      Opts(isOpenapi),
       CommonOpts.sources,
       CommonOpts.outputDirectory,
       verboseNames,
       failOnValidationErrors,
       useEnumTraitSyntax,
       outputJson,
-      debug
-    ).mapN(
-      OpenAPIJsonSchemaOpts.apply(isOpenapi, _, _, _, _, _, _, _)
-    )
+      debug,
+      force
+    ).mapN(OpenAPIJsonSchemaOpts.apply)
 
   private val openApiToSmithyCmd = Command(
     name = "openapi-to-smithy",
