@@ -310,7 +310,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       List(
         ExternalDocumentationTrait
           .builder()
-          .addUrl(desc.getOrElse("no description"), url)
+          .addUrl(desc.getOrElse("documentation"), url)
           .build()
       )
     case Hint.Examples(examples) =>
