@@ -24,8 +24,7 @@ case class ProtoOpts(
     inputFiles: NonEmptyList[os.Path],
     outputPath: os.Path,
     deps: List[String],
-    repositories: List[String],
-    force: Boolean
+    repositories: List[String]
 )
 
 object ProtoOpts {
@@ -45,15 +44,8 @@ object ProtoOpts {
       )
       .orEmpty
 
-  private val force: Opts[Boolean] = Opts
-    .flag(
-      "force",
-      help = "Force overwrite smithy-build.json file if it's present"
-    )
-    .orFalse
-
   private val opts =
-    (CommonOpts.sources, CommonOpts.outputDirectory, deps, repositories, force)
+    (CommonOpts.sources, CommonOpts.outputDirectory, deps, repositories)
       .mapN(ProtoOpts.apply)
 
   private val smithyToProtoCmd = Command(
