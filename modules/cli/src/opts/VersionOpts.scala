@@ -12,15 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package smithytranslate.cli.opts
 
-import smithytranslate.cli.opts.FormatterOpts.FormatOpts
+import com.monovore.decline._
+import smithytranslate.cli.opts.SmithyTranslateCommand.Version
 
-sealed trait SmithyTranslateCommand
-object SmithyTranslateCommand {
-  case class Format(formatOpts: FormatOpts) extends SmithyTranslateCommand
-  case class ProtoTranslate(protoOpts: ProtoOpts) extends SmithyTranslateCommand
-  case class OpenApiTranslate(openAPIJsonSchemaOpts: OpenAPIJsonSchemaOpts)
-      extends SmithyTranslateCommand
-  case object Version extends SmithyTranslateCommand
+object VersionOpts {
+  val print = Opts
+    .subcommand(
+      Command(
+        name = "version",
+        header = "Print version information of this CLI."
+      ) { Opts.unit }
+    )
+    .map(_ => Version)
 }

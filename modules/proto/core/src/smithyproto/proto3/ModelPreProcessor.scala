@@ -33,20 +33,28 @@ object ModelPreProcessor {
       def apply(allowedNamespace: Option[String]) =
         new ProjectionTransformer() {
           def getName(): String = "transitive-filtering"
-          def transform(x: TransformContext): Model =
+          def transform(x: TransformContext): Model = {
+            val annotatedShapes = x
+              .getModel()
+              .getShapesWithTrait(classOf[alloy.proto.ProtoEnabledTrait])
+              .asScala
+              .map(_.getId())
+              .filter(id => allowedNamespace.forall(_ == id.getNamespace()))
+              .toList
+            if (annotatedShapes.size < 1) {
+              System.err.println(
+                s"No shapes annotated with ${alloy.proto.ProtoEnabledTrait.ID} were found."
+              )
+            }
             TransitiveModel.compute(
               x.getModel(),
-              x.getModel()
-                .getShapesWithTrait(classOf[alloy.proto.ProtoEnabledTrait])
-                .asScala
-                .map(_.getId())
-                .filter(id => allowedNamespace.forall(_ == id.getNamespace()))
-                .toList,
+              annotatedShapes,
               captureTraits = true,
               captureMetadata = true,
               validateModel =
                 false // model may be in invalid state since it is in a transient/intermediary state of the proto conversion
             )
+          }
         }
     }
 

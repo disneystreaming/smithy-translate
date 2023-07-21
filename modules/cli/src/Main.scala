@@ -16,16 +16,19 @@
 package smithytranslate.cli
 
 import com.monovore.decline.Opts
+import smithytranslate.cli.internal.BuildInfo
 import smithytranslate.cli.opts.{
   FormatterOpts,
   OpenAPIJsonSchemaOpts,
   ProtoOpts,
-  SmithyTranslateCommand
+  SmithyTranslateCommand,
+  VersionOpts
 }
 import smithytranslate.cli.opts.SmithyTranslateCommand.{
   Format,
   OpenApiTranslate,
-  ProtoTranslate
+  ProtoTranslate,
+  Version
 }
 import smithytranslate.cli.runners.{OpenApi, Proto}
 import smithytranslate.cli.runners.formatter.Formatter
@@ -41,6 +44,7 @@ object Main
             .orElse(ProtoOpts.smithyToProto)
             .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
             .orElse(FormatterOpts.format)
+            .orElse(VersionOpts.print)
         cli map {
           case OpenApiTranslate(opts) =>
             if (opts.isOpenapi)
@@ -53,6 +57,8 @@ object Main
             Proto.runFromCli(opts)
 
           case Format(opts) => Formatter.run(opts)
+
+          case Version => println(BuildInfo.cliVersion)
         }
       }
     )

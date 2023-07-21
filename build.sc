@@ -132,8 +132,8 @@ trait BaseJavaModule extends BaseJavaNoPublishModule with BasePublishModule
 trait BaseMunitTests extends TestModule.Munit {
   def ivyDeps =
     Agg(
-      ivy"org.scalameta::munit::1.0.0-M8",
-      ivy"org.scalameta::munit-scalacheck::1.0.0-M8"
+      ivy"org.scalameta::munit::${Deps.munitVersion}",
+      ivy"org.scalameta::munit-scalacheck::${Deps.munitVersion}"
     )
 }
 
@@ -147,9 +147,8 @@ object `json-schema` extends BaseScalaModule {
     Deps.everit.jsonSchema
   )
 
-  object tests extends this.Tests with TestModule.Munit {
-    def ivyDeps = Agg(
-      Deps.munit,
+  object tests extends this.Tests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.smithy.build,
       Deps.lihaoyi.oslib
     )
@@ -170,9 +169,8 @@ object openapi extends BaseScalaModule {
     traits
   )
 
-  object tests extends this.Tests with TestModule.Munit {
-    def ivyDeps = Agg(
-      Deps.munit,
+  object tests extends this.Tests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.smithy.build
     )
   }
@@ -186,6 +184,10 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
     Deps.lihaoyi.ujson,
     Deps.smithy.build
   )
+
+  object tests extends this.Tests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(Deps.lihaoyi.oslib, Deps.lihaoyi.ujson)
+  }
 
   def buildInfoPackageName = Some("smithytranslate.cli.internal")
 
@@ -220,9 +222,8 @@ object formatter extends BaseModule { outer =>
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
-    object tests extends this.Tests with TestModule.Munit {
-      def ivyDeps = Agg(
-        Deps.munit,
+    object tests extends this.Tests with BaseMunitTests {
+      def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.smithy.build,
         Deps.lihaoyi.oslib
       )
@@ -340,9 +341,8 @@ object proto extends Module {
       Deps.alloy.core
     )
     def moduleDeps = Seq(traits, transitive)
-    object tests extends this.Tests with TestModule.Munit with ScalaPBModule {
-      def ivyDeps = Agg(
-        Deps.munit,
+    object tests extends this.Tests with BaseMunitTests with ScalaPBModule {
+      def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.smithy.build,
         Deps.scalapb.compilerPlugin,
         Deps.scalapb.protocCache
@@ -445,7 +445,7 @@ object Deps {
     val ujson = ivy"com.lihaoyi::ujson:3.1.2"
   }
 
-  val munit = ivy"org.scalameta::munit:0.7.29"
+  val munitVersion = "1.0.0-M8"
   object grpc {
     val version = "1.56.1"
     val netty = ivy"io.grpc:grpc-netty:$version"

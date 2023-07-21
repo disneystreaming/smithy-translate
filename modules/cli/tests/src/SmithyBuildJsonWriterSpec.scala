@@ -12,15 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package smithytranslate.cli.opts
 
-import smithytranslate.cli.opts.FormatterOpts.FormatOpts
+package smithytranslate.cli
 
-sealed trait SmithyTranslateCommand
-object SmithyTranslateCommand {
-  case class Format(formatOpts: FormatOpts) extends SmithyTranslateCommand
-  case class ProtoTranslate(protoOpts: ProtoOpts) extends SmithyTranslateCommand
-  case class OpenApiTranslate(openAPIJsonSchemaOpts: OpenAPIJsonSchemaOpts)
-      extends SmithyTranslateCommand
-  case object Version extends SmithyTranslateCommand
+class SmithyBuildJsonWriterSpec extends munit.FunSuite {
+  test("write a valid smithy-build.json file") {
+    val destDir = os.temp.dir()
+    SmithyBuildJsonWriter.writeDefault(destDir)
+
+    val actual = ujson.read((destDir / "smithy-build.json").toNIO)
+    assertEquals((actual("maven")("dependencies")).arr.size, expected = 2)
+  }
 }
