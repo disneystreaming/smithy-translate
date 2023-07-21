@@ -185,6 +185,10 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
     Deps.smithy.build
   )
 
+  object tests extends this.Tests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(Deps.lihaoyi.oslib, Deps.lihaoyi.ujson)
+  }
+
   def buildInfoPackageName = Some("smithytranslate.cli.internal")
 
   def buildInfoMembers = Map(
