@@ -45,9 +45,8 @@ object ProtoOpts {
       .orEmpty
 
   private val opts =
-    (CommonOpts.sources, CommonOpts.outputDirectory, deps, repositories).mapN(
-      ProtoOpts(_, _, _, _)
-    )
+    (CommonOpts.sources, CommonOpts.outputDirectory, deps, repositories)
+      .mapN(ProtoOpts.apply)
 
   private val smithyToProtoCmd = Command(
     name = "smithy-to-proto",

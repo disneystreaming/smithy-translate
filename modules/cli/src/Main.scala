@@ -42,11 +42,17 @@ object Main
             .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
             .orElse(FormatterOpts.format)
         cli map {
-          case OpenApiTranslate(opts) if opts.isOpenapi =>
-            OpenApi.runOpenApi(opts)
-          case OpenApiTranslate(opts) => OpenApi.runJsonSchema(opts)
-          case ProtoTranslate(opts)   => Proto.runFromCli(opts)
-          case Format(opts)           => Formatter.run(opts)
+          case OpenApiTranslate(opts) =>
+            if (opts.isOpenapi)
+              OpenApi.runOpenApi(opts)
+            else
+              OpenApi.runJsonSchema(opts)
+            SmithyBuildJsonWriter.writeDefault(opts.outputPath, opts.force)
+
+          case ProtoTranslate(opts) =>
+            Proto.runFromCli(opts)
+
+          case Format(opts) => Formatter.run(opts)
         }
       }
     )
