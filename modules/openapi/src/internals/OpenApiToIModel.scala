@@ -373,7 +373,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     val exts = GetExtensions.from(openApi)
     val infoExts = GetExtensions.from(openApi.getInfo())
     val externalDocs = Option(openApi.getExternalDocs()).map(e =>
-      Hint.ExternalDocs(e.getDescription(), e.getUrl())
+      Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
     val service = ServiceDef(
       DefId(
@@ -575,7 +575,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       schema: Schema[_]
   ): Option[Hint.ExternalDocs] =
     Option(schema.getExternalDocs())
-      .map(e => Hint.ExternalDocs(e.getDescription(), e.getUrl()))
+      .map(e => Hint.ExternalDocs(Option(e.getDescription()), e.getUrl()))
 
   /*
    * The goal here is to match one layer of "Schema[_]" and
