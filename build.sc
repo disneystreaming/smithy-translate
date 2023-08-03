@@ -447,7 +447,7 @@ object Deps {
 
   val munitVersion = "1.0.0-M8"
   object grpc {
-    val version = "1.56.1"
+    val version = "1.57.1"
     val netty = ivy"io.grpc:grpc-netty:$version"
     val services = ivy"io.grpc:grpc-services:$version"
   }
