@@ -410,7 +410,7 @@ object transitive extends BaseScalaModule {
 
 object Deps {
   object alloy {
-    val alloyVersion = "0.2.4"
+    val alloyVersion = "0.2.6"
     val core =
       ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
   }
