@@ -106,8 +106,6 @@ object TestUtils {
         inputs.map(i => i.filePath -> i.openapiSpec): _*
       )
 
-    println("HJE " + result)
-
     val resultW = result.map(ModelWrapper(_))
     val assembler = Model
       .assembler()

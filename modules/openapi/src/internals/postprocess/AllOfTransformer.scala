@@ -19,6 +19,7 @@ package postprocess
 import cats.syntax.all._
 import scala.annotation.tailrec
 import cats.kernel.Eq
+import org.typelevel.ci._
 
 object AllOfTransformer extends IModelPostProcessor {
 
@@ -103,11 +104,50 @@ object AllOfTransformer extends IModelPostProcessor {
   ): State = parents.toList match {
     case parent :: tail =>
       val parentHasOtherReferences = isReferencedAsTarget(parent, allShapes)
+      val parentIsTopLevel = parent.hints.contains(Hint.TopLevel)
       parent match {
-        case s: Structure if !parentHasOtherReferences =>
-          state
+        case s @ Structure(_, _, newParents, _)
+            if !parentHasOtherReferences && parentIsTopLevel =>
+          val finalState = state
             .addOrUpdateDef(s.mapHints(_ :+ Hint.IsMixin))
             .withHints(List(Hint.HasMixin(s.id)))
+          getAllParentFields(
+            newId,
+            allShapes,
+            tail.toVector ++ allShapes.filter(s => newParents.contains(s.id)),
+            finalState
+          )
+        case Structure(id, localFields, newParents, hints)
+            if parentHasOtherReferences && parentIsTopLevel =>
+          // TODO: Check for collisions with Mixin suffix
+
+          val newMixinParentId =
+            id.copy(name = id.name :+ Segment.Arbitrary(ci"Mixin"))
+          val newFields = localFields.map(f =>
+            f.copy(id = f.id.copy(modelId = newMixinParentId))
+          )
+          val newMixinParent = Structure(
+            newMixinParentId,
+            newFields,
+            newParents,
+            hints :+ Hint.IsMixin
+          )
+          val currentParent = Structure(
+            id,
+            Vector.empty,
+            Vector.empty,
+            List(Hint.HasMixin(newMixinParent.id))
+          )
+          val finalState = state
+            .addOrUpdateDef(newMixinParent)
+            .addOrUpdateDef(currentParent)
+            .withHints(List(Hint.HasMixin(newMixinParent.id)))
+          getAllParentFields(
+            newId,
+            allShapes,
+            tail.toVector ++ allShapes.filter(s => newParents.contains(s.id)),
+            finalState
+          )
         case Structure(id, local, newParents, hints) =>
           val updatedLocal =
             local.map(f => f.copy(id = f.id.copy(modelId = newId)))
@@ -126,7 +166,10 @@ object AllOfTransformer extends IModelPostProcessor {
           getAllParentFields(newId, allShapes, tail.toVector, newState)
         case _ => getAllParentFields(newId, allShapes, tail.toVector, state)
       }
-    case Nil => state
+    case Nil =>
+      if (state.isDocument)
+        state.copy(newOrUpdateDefs = Set.empty)
+      else state
   }
 
   private def transform(in: IModel): Vector[Definition] = {

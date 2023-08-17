@@ -78,7 +78,11 @@ object SimplifyNameTransformer extends IModelPostProcessor {
             tpe = f.tpe.simplify
           )
         }
-        s.copy(id = s.id.simplify, localFields = newFs)
+        val newHints = s.hints.map {
+          case h @ Hint.HasMixin(id) => h.copy(id = id.simplify)
+          case h                     => h
+        }
+        s.copy(id = s.id.simplify, localFields = newFs, hints = newHints)
       case s: SetDef =>
         s.copy(
           id = s.id.simplify,

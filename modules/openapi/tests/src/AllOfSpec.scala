@@ -47,7 +47,7 @@ final class AllOfSpec extends munit.FunSuite {
                       |
                       |@mixin
                       |structure Other {
-                      |    l: Integer,
+                      |    l: Integer
                       |}
                       |""".stripMargin
 
@@ -80,15 +80,14 @@ final class AllOfSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |structure Object {
-                      | o: Integer,
-                      | t: Integer
-                      |}
+                      |structure Object with [One, Two] {}
                       |
+                      |@mixin
                       |structure One {
                       |    o: Integer,
                       |}
                       |
+                      |@mixin
                       |structure Two {
                       |    t: Integer,
                       |}
@@ -125,15 +124,14 @@ final class AllOfSpec extends munit.FunSuite {
     val expectedString = """|namespace foo
                       |
                       |@documentation("Test")
-                      |structure Object {
-                      | o: Integer,
-                      | t: Integer
-                      |}
+                      |structure Object with [One, Two] {}
                       |
+                      |@mixin
                       |structure One {
                       |    o: Integer,
                       |}
                       |
+                      |@mixin
                       |structure Two {
                       |    t: Integer,
                       |}
@@ -174,6 +172,103 @@ final class AllOfSpec extends munit.FunSuite {
                       |
                       |document Two
                       |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("allOf - one ref one embedded with another reference") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Also:
+                           |      type: object
+                           |      properties:
+                           |        other:
+                           |          $ref: "#/components/schemas/Other"
+                           |    Other:
+                           |      type: object
+                           |      properties:
+                           |        l:
+                           |          type: integer
+                           |    Object:
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/Other"
+                           |        - type: object
+                           |          properties:
+                           |            s:
+                           |              type: string
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Object with [OtherMixin] {
+                            | s: String
+                            |}
+                            |
+                            |@mixin
+                            |structure OtherMixin {
+                            |    l: Integer
+                            |}
+                            |
+                            |structure Other with [OtherMixin] {}
+                            |
+                            |structure Also {
+                            |  other: Other
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("allOf - multiple layers".only) {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Three:
+                           |      type: object
+                           |      properties:
+                           |        three:
+                           |          type: string
+                           |    Two:
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/Three"
+                           |        - type: object
+                           |          properties:
+                           |            two:
+                           |              type: string
+                           |    One:
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/Two"
+                           |        - type: object
+                           |          properties:
+                           |            one:
+                           |              type: string
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure One with [Two, Three] {
+                            |  one: String
+                            |}
+                            |
+                            |@mixin
+                            |structure Three {
+                            |  three: String
+                            |}
+                            |
+                            |@mixin
+                            |structure Two {
+                            |  two: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
