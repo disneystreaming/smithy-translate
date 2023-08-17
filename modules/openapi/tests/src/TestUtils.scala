@@ -93,6 +93,7 @@ object TestUtils {
       remaining: ConversionTestInput*
   ): ConversionResult = {
     val inputs = input0 +: remaining
+
     val result =
       OpenApiCompiler.parseAndCompile(
         OpenApiCompiler.Options(
@@ -104,10 +105,14 @@ object TestUtils {
         ),
         inputs.map(i => i.filePath -> i.openapiSpec): _*
       )
+
+    println("HJE " + result)
+
     val resultW = result.map(ModelWrapper(_))
     val assembler = Model
       .assembler()
       .discoverModels()
+
     inputs.foreach { i =>
       i.smithySpec match {
         case StringOutput(str) =>
@@ -141,6 +146,7 @@ object TestUtils {
       input0,
       remaining: _*
     )
+
     res match {
       case OpenApiCompiler.Failure(err, errors) =>
         errors.foreach(println)

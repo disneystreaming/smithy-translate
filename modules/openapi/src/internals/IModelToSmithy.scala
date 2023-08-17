@@ -67,9 +67,13 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
             .addHints(hints ++ jsonNameHint)
             .build()
         }
+        val mixinIds = structHints.collect { case Hint.HasMixin(defId) =>
+          StructureShape.builder.id(defId.toSmithy).build()
+        }.asJavaCollection
         val builder = StructureShape
           .builder()
           .id(id.toSmithy)
+          .mixins(mixinIds)
           .addHints(structHints)
         members.foreach(builder.addMember(_))
         builder.build()
@@ -306,6 +310,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.UniqueItems             => List(new UniqueItemsTrait())
     case Hint.Nullable                => List(new NullableTrait())
     case Hint.JsonName(value)         => List(new JsonNameTrait(value))
+    case Hint.IsMixin                 => List(MixinTrait.builder.build)
     case Hint.ExternalDocs(desc, url) =>
       List(
         ExternalDocumentationTrait

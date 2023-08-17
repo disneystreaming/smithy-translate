@@ -41,11 +41,11 @@ final class AllOfSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |structure Object {
-                      | l: Integer,
+                      |structure Object with [Other] {
                       | s: String
                       |}
                       |
+                      |@mixin
                       |structure Other {
                       |    l: Integer,
                       |}
