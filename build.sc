@@ -2,7 +2,7 @@ import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
-import $ivy.`com.lewisjkl::header-mill-plugin::0.0.2`
+import $ivy.`com.lewisjkl::header-mill-plugin::0.0.3`
 
 import coursier.maven.MavenRepository
 import header._
@@ -13,16 +13,17 @@ import mill.contrib.scalapblib.ScalaPBModule
 import mill.contrib.buildinfo
 import mill.define.Sources
 import mill.define.Task
-import mill.modules.Assembly
-import mill.modules.Jvm
+import mill.scalalib.Assembly
+import mill.util.Jvm
 import mill.scalajslib.api.ModuleKind
 import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
-import mill.scalalib.api.Util._
 import mill.scalalib.CrossVersion.Binary
 import mill.scalalib.publish._
 import mill.scalalib.scalafmt.ScalafmtModule
+import mill.contrib.buildinfo.BuildInfo
 import os._
+import mill.scalalib.api.ZincWorkerUtil
 
 import scala.Ordering.Implicits._
 
@@ -147,7 +148,7 @@ object `json-schema` extends BaseScalaModule {
     Deps.everit.jsonSchema
   )
 
-  object tests extends this.Tests with BaseMunitTests {
+  object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.smithy.build,
       Deps.lihaoyi.oslib
@@ -169,7 +170,7 @@ object openapi extends BaseScalaModule {
     traits
   )
 
-  object tests extends this.Tests with BaseMunitTests {
+  object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.smithy.build
     )
@@ -185,15 +186,15 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
     Deps.smithy.build
   )
 
-  object tests extends this.Tests with BaseMunitTests {
+  object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(Deps.lihaoyi.oslib, Deps.lihaoyi.ujson)
   }
 
-  def buildInfoPackageName = Some("smithytranslate.cli.internal")
+  def buildInfoPackageName = "smithytranslate.cli.internal"
 
-  def buildInfoMembers = Map(
-    "alloyVersion" -> Deps.alloy.alloyVersion,
-    "cliVersion" -> publishVersion().toString
+  def buildInfoMembers = Seq(
+    BuildInfo.Value("alloyVersion", Deps.alloy.alloyVersion),
+    BuildInfo.Value("cliVersion", publishVersion().toString)
   )
 
   def moduleDeps = Seq(openapi, proto.core, `json-schema`, formatter.jvm)
@@ -205,7 +206,7 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
     val cmd = List("smithy-to-proto")
     val args = cmd ++ inputArgs ++ List(output.toString)
 
-    mill.modules.Jvm.runSubprocess(
+    mill.util.Jvm.runSubprocess(
       finalMainClass(),
       runClasspath().map(_.path),
       mainArgs = args
@@ -222,7 +223,7 @@ object formatter extends BaseModule { outer =>
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
-    object tests extends this.Tests with BaseMunitTests {
+    object tests extends this.ScalaTests with BaseMunitTests {
       def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.smithy.build,
         Deps.lihaoyi.oslib
@@ -280,10 +281,10 @@ object formatter extends BaseModule { outer =>
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
-    def jsSources = T.sources { millSourcePath / "src-js" }
+    def jsSources = T { PathRef(millSourcePath / "src-js") }
 
-    override def sources: Sources = T.sources {
-      super.sources() ++ jsSources()
+    override def sources = T {
+      super.sources() :+ jsSources()
     }
   }
 }
@@ -310,7 +311,10 @@ object traits extends BaseJavaModule {
     )
   }
 
-  object tests extends this.Tests with ScalaVersionModule with BaseMunitTests
+  object tests
+      extends JavaModuleTests
+      with ScalaVersionModule
+      with BaseMunitTests
 }
 
 object `readme-validator` extends BaseScalaNoPublishModule {
@@ -325,7 +329,7 @@ object `readme-validator` extends BaseScalaNoPublishModule {
 
   def validate() = T.command {
     val args = Seq(readmeFile().head.path.toString)
-    mill.modules.Jvm.runSubprocess(
+    mill.util.Jvm.runSubprocess(
       finalMainClass(),
       runClasspath().map(_.path),
       mainArgs = args
@@ -341,7 +345,10 @@ object proto extends Module {
       Deps.alloy.core
     )
     def moduleDeps = Seq(traits, transitive)
-    object tests extends this.Tests with BaseMunitTests with ScalaPBModule {
+    object tests
+        extends this.ScalaTests
+        with BaseMunitTests
+        with ScalaPBModule {
       def ivyDeps = super.ivyDeps() ++ Agg(
         Deps.smithy.build,
         Deps.scalapb.compilerPlugin,
@@ -405,7 +412,7 @@ object transitive extends BaseScalaModule {
     Deps.smithy.model,
     Deps.smithy.build
   )
-  object tests extends Tests with BaseMunitTests
+  object tests extends ScalaTests with BaseMunitTests
 }
 
 object Deps {
@@ -464,11 +471,11 @@ object Deps {
 case class ScalaVersion(maj: Int, min: Int, patch: Int)
 object ScalaVersion {
   def apply(scalaVersion: String): ScalaVersion = scalaVersion match {
-    case ReleaseVersion(major, minor, patch) =>
+    case ZincWorkerUtil.ReleaseVersion(major, minor, patch) =>
       ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case MinorSnapshotVersion(major, minor, patch) =>
+    case ZincWorkerUtil.MinorSnapshotVersion(major, minor, patch) =>
       ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case DottyVersion("0", minor, patch) =>
+    case ZincWorkerUtil.DottyVersion("0", minor, patch) =>
       ScalaVersion(3, minor.toInt, patch.toInt)
   }
 
