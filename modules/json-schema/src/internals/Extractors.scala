@@ -160,6 +160,9 @@ object Extractors {
           val genericHints = getGenericHints(obj)
           Some(genericHints -> PFreeForm)
 
+        // Empty schema in JsonSchema means it can be anything (Document)
+        case _: EmptySchema => Some(genericHints -> PFreeForm)
+
         case _ => None
       }
       specific.map(_.leftMap(_ ++ genericHints))

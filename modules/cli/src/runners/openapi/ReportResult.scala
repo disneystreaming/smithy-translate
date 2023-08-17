@@ -97,7 +97,9 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
         val smithyFiles =
           if (outputJson) getSmithyJsonFiles(model) else getSmithyFiles(model)
         smithyFiles.foreach { in =>
-          System.err.println(s"Writing ${in._1.segments.mkString("/")}")
+          System.err.println(
+            s"Writing ${in._1}"
+          )
           os.write.over(in._1, in._2, createFolders = true)
         }
     }
