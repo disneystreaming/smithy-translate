@@ -1053,4 +1053,24 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("#172 comments duplication") {
+    val src = """|$version: "2"
+                 |
+                 |metadata validators = [{
+                 |    // This is a comment
+                 |    name: "MySelector"
+                 |    id: "SomeSelectorName"
+                 |}]
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |metadata validators = [{
+                      |    // This is a comment
+                      |    name: "MySelector"
+                      |    id: "SomeSelectorName"
+                      |}]
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

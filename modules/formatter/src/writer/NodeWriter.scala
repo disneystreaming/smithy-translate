@@ -85,7 +85,7 @@ object NodeWriter {
       addBrackets(indent(s"${ws.write}${nokvp.write}", "\n", 4))
     case NodeObject(ws, Some((nokvp, rest))) =>
       addBrackets(
-        ws.write + indent(
+        indent(
           s"${ws.write}${nokvp.write}${rest.map { case (ws, kvp) =>
               s"\n${ws.write}${kvp.write}"
             }.mkString}",
