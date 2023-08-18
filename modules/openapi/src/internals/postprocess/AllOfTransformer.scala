@@ -135,7 +135,7 @@ object AllOfTransformer extends IModelPostProcessor {
     val newFields =
       parent.localFields.map(f => f.copy(id = f.id.copy(modelId = newDef.id)))
     val remove = parent
-    val nd = newDef.copy(localFields = newFields)
+    val nd = newDef.copy(localFields = newDef.localFields ++ newFields)
     NonTopLevelParentNoRefsResult(nd, remove)
   }
 
@@ -143,15 +143,20 @@ object AllOfTransformer extends IModelPostProcessor {
       all: Vector[Definition]
   ): Vector[Definition] = {
     val allShapes: ListBuffer[Definition] = ListBuffer.from(all)
+    def getLatest(d: Definition): Definition =
+      allShapes.find(_.id === d.id).getOrElse(d)
     def replace(d: Definition) = {
       remove(d)
       add(d)
     }
-    def remove(d: Definition) =
-      allShapes.remove(allShapes.indexWhere(_.id === d.id))
+    def remove(d: Definition) = {
+      val index = allShapes.indexWhere(_.id === d.id)
+      if (index >= 0) { allShapes.remove(index) }
+    }
     def add(d: Definition) =
       allShapes += d
 
+    // TODO: Likely problematic if parent of document AND non document case
     def revertMixinHints(newDef: Structure) = {
       allShapes.filter(shp => newDef.parents.contains(shp.id)).foreach {
         case par: Structure =>
@@ -162,55 +167,59 @@ object AllOfTransformer extends IModelPostProcessor {
       }
     }
 
-    all.foreach {
-      case struct: Structure =>
-        val parents = struct.parents.flatMap(p => allShapes.find(_.id === p))
-        var isDocument = false
-        var newDef: Structure = struct
-        parents.foreach {
-          case Newtype(_, DocumentPrimitive, _) =>
-            isDocument = true
-          case parent: Structure =>
-            // FOR EACH structure parent, detect if they are used in any contexts outside of this structure
-            val parentHasOtherReferences =
-              isReferencedAsTarget(parent, all)
-            val parentIsTopLevel = parent.hints.contains(Hint.TopLevel)
+    all.foreach { d =>
+      // get latest in case modifications have been made to this definition since the
+      // iterations started
+      getLatest(d) match {
+        case struct: Structure =>
+          val parents = struct.parents.flatMap(p => allShapes.find(_.id === p))
+          var isDocument = false
+          var newDef: Structure = struct
+          parents.foreach {
+            case Newtype(_, DocumentPrimitive, _) =>
+              isDocument = true
+            case parent: Structure =>
+              // FOR EACH structure parent, detect if they are used in any contexts outside of this structure
+              val parentHasOtherReferences =
+                isReferencedAsTarget(parent, all)
+              val parentIsTopLevel = parent.hints.contains(Hint.TopLevel)
 
-            if (parentHasOtherReferences) {
-              val result = parentHasOtherReferencesCase(parent, newDef)
-              newDef = result.newDef
-              add(result.newMixin)
-              replace(result.newParent)
-            } else {
-              if (parentIsTopLevel) {
-                val result = topLevelParentNoReferences(parent, newDef)
+              if (parentHasOtherReferences) {
+                val result = parentHasOtherReferencesCase(parent, newDef)
                 newDef = result.newDef
+                add(result.newMixin)
                 replace(result.newParent)
               } else {
-                val result = nonTopLevelParentNoReferences(parent, newDef)
-                newDef = result.newDef
-                remove(result.removeParent)
+                if (parentIsTopLevel) {
+                  val result = topLevelParentNoReferences(parent, newDef)
+                  newDef = result.newDef
+                  replace(result.newParent)
+                } else {
+                  val result = nonTopLevelParentNoReferences(parent, newDef)
+                  newDef = result.newDef
+                  remove(result.removeParent)
+                }
               }
-            }
-          case other => other
-        }
-        if (isDocument) {
-          // if a document then no need to consider any of the parents a mixin (the mixin would not ever be used)
-          // so we retroactively remove any `IsMixin` hints we added above
-          revertMixinHints(newDef)
-        }
-        val n: Definition =
-          if (isDocument)
-            Newtype(
-              newDef.id,
-              DocumentPrimitive,
-              newDef.hints
-            )
-          else newDef
-        replace(
-          n
-        )
-      case other => Vector(other)
+            case other => other
+          }
+          if (isDocument) {
+            // if a document then no need to consider any of the parents a mixin (the mixin would not ever be used)
+            // so we retroactively remove any `IsMixin` hints we added above
+            revertMixinHints(newDef)
+          }
+          val n: Definition =
+            if (isDocument)
+              Newtype(
+                newDef.id,
+                DocumentPrimitive,
+                newDef.hints
+              )
+            else newDef
+          replace(
+            n
+          )
+        case other => Vector(other)
+      }
     }
     allShapes.toVector
   }

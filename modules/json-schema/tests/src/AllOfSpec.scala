@@ -122,12 +122,16 @@ final class AllOfSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
-                            |structure Example {
+                            |structure Example with [Two] {
                             |    firstName: String,
                             |    lastName: String,
-                            |    sport: String,
-                            |    vehicle: String,
-                            |    price: Integer
+                            |    sport: String
+                            |}
+                            |
+                            |@mixin
+                            |structure Two {
+                            |  vehicle: String,
+                            |  price: Integer
                             |}
                             |
                             |structure Test {
