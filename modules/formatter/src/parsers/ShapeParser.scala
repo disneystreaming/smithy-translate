@@ -109,8 +109,12 @@ object ShapeParser {
         SimpleShapeStatement(simpleTypeName, b, mixin)
     }
 
+  /** This behaves a little bit differently from the spec because the spec does
+    * not allow for empty enum, but we'll support that because with mixins this
+    * becomes a valid possibility.
+    */
   val enum_shape_members: Parser[EnumShapeMembers] =
-    (openCurly *> ws.with1 ~ (trait_statements.with1 ~ identifier ~ value_assigments.backtrack.? ~ ws).rep <* closeCurly)
+    (openCurly *> ws ~ (trait_statements.with1 ~ identifier ~ value_assigments.backtrack.? ~ ws).rep0 <* closeCurly)
       .map { case (ws, members) =>
         EnumShapeMembers(
           ws,
