@@ -290,7 +290,7 @@ object shapes {
 
     case class EnumShapeMembers(
         whitespace: Whitespace,
-        members: NonEmptyList[
+        members: List[
           (TraitStatements, Identifier, Option[ValueAssignment], Whitespace)
         ]
     )

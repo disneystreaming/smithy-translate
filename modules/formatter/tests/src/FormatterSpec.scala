@@ -1053,4 +1053,30 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("#171 enums with mixin") {
+    val src = """|$version: "2"
+                 |namespace demo
+                 |
+                 |@mixin enum X {
+                 |  A
+                 |}
+                 |
+                 |enum Y with [X] {}
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace demo
+                      |
+                      |@mixin
+                      |enum X {
+                      |    A
+                      |}
+                      |
+                      |enum Y with [X] {
+                      |
+                      |}
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }
