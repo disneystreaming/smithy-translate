@@ -20,6 +20,7 @@ import ast.{
   ApplyStatement,
   ApplyStatementBlock,
   ApplyStatementSingular,
+  Comment,
   SmithyTrait,
   SmithyTraitBodyValue,
   TraitBody,
@@ -29,6 +30,7 @@ import ast.{
 }
 import ast.SmithyTraitBodyValue.{NodeValueCase, SmithyTraitStructureCase}
 import util.string_ops.indent
+import util.string_ops.simpleIndent
 import NodeWriter.nodeValueWriter
 import ShapeIdWriter.shapeIdWriter
 import WhiteSpaceWriter.wsWriter
@@ -58,8 +60,21 @@ object SmithyTraitWriter {
         nodeValue.write
     }
   implicit val traitStructureWriter: Writer[TraitStructure] = Writer.write {
-    case TraitStructure(traitStructureKVP, wsCommaDelimited) =>
-      s"${traitStructureKVP.write}${wsCommaDelimited.writeN(", ", ", ", "")}"
+    case TraitStructure(traitStructureKVP, additionalTraitsKVP) =>
+      val allLines = traitStructureKVP.write +: additionalTraitsKVP.map(_.write)
+
+      val oneKVPTooLong = allLines.exists(_.length > traitKeyValueLimitLength)
+      def hasComments =
+        Comment.whitespacesHaveComments(additionalTraitsKVP.map(_._1))
+      def allKVPTooLong =
+        allLines.mkString(", ").length > traitKeyValueLimitLength
+
+      val shouldSplit = oneKVPTooLong || hasComments || allKVPTooLong
+
+      if (shouldSplit) {
+        val skipfirst = true
+        simpleIndent(4, skipfirst, allLines.mkString("\n", ",\n", "")) + "\n"
+      } else { allLines.mkString(", ") }
   }
   implicit val traitStructureKVPWriter: Writer[TraitStructureKeyValuePair] =
     Writer.write {
