@@ -20,7 +20,7 @@ import cats.syntax.all._
 import scala.annotation.tailrec
 import cats.kernel.Eq
 import org.typelevel.ci._
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 object AllOfTransformer extends IModelPostProcessor {
 
@@ -142,27 +142,15 @@ object AllOfTransformer extends IModelPostProcessor {
   private def moveParentFieldsAndCreateMixins(
       all: Vector[Definition]
   ): Vector[Definition] = {
-    val allShapes: ListBuffer[Definition] = ListBuffer.from(all)
-    def getLatest(d: Definition): Definition =
-      allShapes.find(_.id === d.id).getOrElse(d)
-    def replace(d: Definition) = {
-      remove(d)
-      add(d)
-    }
-    def remove(d: Definition) = {
-      val index = allShapes.indexWhere(_.id === d.id)
-      if (index >= 0) { allShapes.remove(index) }
-    }
-    def add(d: Definition) =
-      allShapes += d
+    val allShapes: mutable.Map[DefId, Definition] =
+      mutable.Map.from(all.map(a => a.id -> a))
 
     // TODO: Likely problematic if parent of document AND non document case
     def revertMixinHints(newDef: Structure) = {
-      allShapes.filter(shp => newDef.parents.contains(shp.id)).foreach {
+      allShapes.values.filter(shp => newDef.parents.contains(shp.id)).foreach {
         case par: Structure =>
-          replace(
-            par.copy(hints = par.hints.filterNot(_ == Hint.IsMixin))
-          )
+          allShapes += (par.id ->
+            par.copy(hints = par.hints.filterNot(_ == Hint.IsMixin)))
         case _ => ()
       }
     }
@@ -170,9 +158,9 @@ object AllOfTransformer extends IModelPostProcessor {
     all.foreach { d =>
       // get latest in case modifications have been made to this definition since the
       // iterations started
-      getLatest(d) match {
+      allShapes.getOrElse(d.id, d) match {
         case struct: Structure =>
-          val parents = struct.parents.flatMap(p => allShapes.find(_.id === p))
+          val parents = struct.parents.flatMap(p => allShapes.get(p))
           var isDocument = false
           var newDef: Structure = struct
           parents.foreach {
@@ -187,17 +175,17 @@ object AllOfTransformer extends IModelPostProcessor {
               if (parentHasOtherReferences) {
                 val result = parentHasOtherReferencesCase(parent, newDef)
                 newDef = result.newDef
-                add(result.newMixin)
-                replace(result.newParent)
+                allShapes += (result.newMixin.id -> result.newMixin)
+                allShapes += (result.newParent.id -> result.newParent)
               } else {
                 if (parentIsTopLevel) {
                   val result = topLevelParentNoReferences(parent, newDef)
                   newDef = result.newDef
-                  replace(result.newParent)
+                  allShapes += (result.newParent.id -> result.newParent)
                 } else {
                   val result = nonTopLevelParentNoReferences(parent, newDef)
                   newDef = result.newDef
-                  remove(result.removeParent)
+                  allShapes.remove(result.removeParent.id)
                 }
               }
             case other => other
@@ -215,13 +203,11 @@ object AllOfTransformer extends IModelPostProcessor {
                 newDef.hints
               )
             else newDef
-          replace(
-            n
-          )
+          allShapes += (n.id -> n)
         case other => Vector(other)
       }
     }
-    allShapes.toVector
+    allShapes.values.toVector
   }
 
   private def transform(in: IModel): Vector[Definition] = {
