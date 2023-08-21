@@ -57,8 +57,7 @@ object TaggedUnionTransformer extends IModelPostProcessor {
       val singleLocal = allFields.size == 1
       val allLocalRequired =
         allFields.forall(_.hints.contains(Hint.Required))
-      val noParents = true // parents.isEmpty
-      if (singleLocal && allLocalRequired && noParents)
+      if (singleLocal && allLocalRequired)
         info.addFields(allFields)
       else info.setNotTagged
     }
