@@ -347,4 +347,55 @@ final class AllOfSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("allOf - document AND normal parent refs") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    One:
+                           |      description: one
+                           |      type: object
+                           |      properties:
+                           |        o:
+                           |          type: integer
+                           |    Two:
+                           |      description: two
+                           |      type: object
+                           |      properties:
+                           |    Three:
+                           |      description: three
+                           |      type: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/One"
+                           |    Object:
+                           |      description: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/One"
+                           |        - $ref: "#/components/schemas/Two"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |/// object
+                            |document Object
+                            |
+                            |/// one
+                            |@mixin
+                            |structure One {
+                            |    o: Integer,
+                            |}
+                            |
+                            |/// three
+                            |structure Three with [One] {}
+                            |
+                            |/// two
+                            |document Two
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
 }

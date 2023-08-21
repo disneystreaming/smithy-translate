@@ -142,18 +142,8 @@ object AllOfTransformer extends IModelPostProcessor {
   private def moveParentFieldsAndCreateMixins(
       all: Vector[Definition]
   ): Vector[Definition] = {
-    val allShapes: mutable.Map[DefId, Definition] =
-      mutable.Map.from(all.map(a => a.id -> a))
-
-    // TODO: Likely problematic if parent of document AND non document case
-    def revertMixinHints(newDef: Structure) = {
-      allShapes.values.filter(shp => newDef.parents.contains(shp.id)).foreach {
-        case par: Structure =>
-          allShapes += (par.id ->
-            par.copy(hints = par.hints.filterNot(_ == Hint.IsMixin)))
-        case _ => ()
-      }
-    }
+    val allShapes: mutable.LinkedHashMap[DefId, Definition] =
+      mutable.LinkedHashMap.from(all.map(a => a.id -> a))
 
     all.foreach { d =>
       // get latest in case modifications have been made to this definition since the
@@ -190,24 +180,38 @@ object AllOfTransformer extends IModelPostProcessor {
               }
             case other => other
           }
-          if (isDocument) {
-            // if a document then no need to consider any of the parents a mixin (the mixin would not ever be used)
-            // so we retroactively remove any `IsMixin` hints we added above
-            revertMixinHints(newDef)
-          }
           val n: Definition =
             if (isDocument)
               Newtype(
                 newDef.id,
                 DocumentPrimitive,
-                newDef.hints
+                newDef.hints.filterNot(_.isInstanceOf[Hint.HasMixin])
               )
             else newDef
           allShapes += (n.id -> n)
         case other => Vector(other)
       }
     }
-    allShapes.values.toVector
+    removeUnusedMixins(allShapes).values.toVector
+  }
+
+  private def removeUnusedMixins(
+      allShapes: mutable.Map[DefId, Definition]
+  ): mutable.Map[DefId, Definition] = {
+    val usedAsMixins: Set[DefId] = allShapes.values.flatMap { v =>
+      v.hints.collect { case Hint.HasMixin(id) => id }
+    }.toSet
+
+    val isAMixin: Set[DefId] = allShapes.values.flatMap { v =>
+      v.hints.collect { case Hint.IsMixin => v.id }
+    }.toSet
+
+    val unused = isAMixin.diff(usedAsMixins)
+
+    allShapes.map { case (id, shp) =>
+      if (unused(id)) id -> shp.mapHints(_.filterNot(_ == Hint.IsMixin))
+      else id -> shp
+    }
   }
 
   private def transform(in: IModel): Vector[Definition] = {
