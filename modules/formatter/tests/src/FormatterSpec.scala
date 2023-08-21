@@ -1099,4 +1099,94 @@ final class FormatterSpec extends munit.FunSuite {
                       |""".stripMargin
     formatTest(src, expected)
   }
+
+  test("#132 long map entry") {
+    val src = """|$version: "2"
+                 |
+                 |namespace thingy
+                 |
+                 |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit", "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
+                 |string MyString
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace thingy
+                      |
+                      |@externalDocumentation(
+                      |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit",
+                      |    "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
+                      |)
+                      |string MyString
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#132 many short map entry") {
+    val src = """|$version: "2"
+                 |
+                 |namespace thingy
+                 |
+                 |@externalDocumentation("v1": "lorem", "v2": "/ipsum", "v3": "/dolor", "v4": "/sit/amet", "v5": "/consectetur/adipiscing/elit")
+                 |string MyString
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace thingy
+                      |
+                      |@externalDocumentation(
+                      |    "v1": "lorem",
+                      |    "v2": "/ipsum",
+                      |    "v3": "/dolor",
+                      |    "v4": "/sit/amet",
+                      |    "v5": "/consectetur/adipiscing/elit"
+                      |)
+                      |string MyString
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#132 comments in kvp trait structure") {
+    val src = """|$version: "2"
+                 |
+                 |namespace thingy
+                 |
+                 |@externalDocumentation(
+                 |  "v1": "lorem", //adsa
+                 |  "v2": "/ipsum"
+                 |)
+                 |string MyString
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace thingy
+                      |
+                      |@externalDocumentation(
+                      |    "v1": "lorem",
+                      |    // adsa
+                      |    "v2": "/ipsum"
+                      |)
+                      |string MyString
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
+
+  test("#132 long single kvp") {
+    val src = """|$version: "2"
+                 |
+                 |namespace thingy
+                 |
+                 |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
+                 |string MyString
+                 |""".stripMargin
+    val expected = """|$version: "2"
+                      |
+                      |namespace thingy
+                      |
+                      |@externalDocumentation(
+                      |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
+                      |)
+                      |string MyString
+                      |""".stripMargin
+    formatTest(src, expected)
+  }
 }

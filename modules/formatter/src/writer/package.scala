@@ -24,6 +24,8 @@ import smithytranslate.formatter.writers.WhiteSpaceWriter.wsWriter
 import smithytranslate.formatter.writers.Writer.WriterOps
 
 package object writers {
+  val traitKeyValueLimitLength = 80
+
   def showKeyValue(
       nodeObjectKey: NodeValue.NodeObjectKey,
       ws0: Whitespace,
