@@ -422,7 +422,7 @@ object Deps {
       ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
   }
   object circe {
-    val jawn = ivy"io.circe::circe-jawn:0.14.5"
+    val jawn = ivy"io.circe::circe-jawn:0.14.6"
   }
   object everit {
     val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.2"
