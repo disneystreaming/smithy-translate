@@ -47,5 +47,7 @@ object Hint {
   case class JsonName(name: String) extends Hint
   case class Examples(value: List[Node]) extends Hint
   case class ExternalDocs(description: Option[String], url: String) extends Hint
+  case object IsMixin extends Hint
+  case class HasMixin(id: DefId) extends Hint
 }
 // format: on

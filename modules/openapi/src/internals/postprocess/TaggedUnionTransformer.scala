@@ -30,21 +30,36 @@ object TaggedUnionTransformer extends IModelPostProcessor {
     def empty: TaggedUnionInfo = TaggedUnionInfo(Vector.empty, isTagged = true)
   }
 
+  private def getFieldsFromAllParentsTransitively(
+      target: Definition,
+      allDefinitions: Vector[Definition]
+  ): Vector[Field] = {
+    target match {
+      case s: Structure =>
+        val allParents = allDefinitions.filter(d => s.parents.contains(d.id))
+        allParents.flatMap { parent =>
+          getFieldsFromAllParentsTransitively(
+            parent,
+            allDefinitions
+          )
+        } ++ s.localFields
+      case _ => Vector.empty
+    }
+  }
+
   private def getInfoForTargets(
-      targets: Vector[Definition]
+      targets: Vector[Definition],
+      allDefinitions: Vector[Definition]
   ): TaggedUnionInfo = {
     targets.foldLeft(TaggedUnionInfo.empty) { (info, t) =>
-      t match {
-        case Structure(_, localFields, parents, _) =>
-          val singleLocal = localFields.size == 1
-          val allLocalRequired =
-            localFields.forall(_.hints.contains(Hint.Required))
-          val noParents = parents.isEmpty
-          if (singleLocal && allLocalRequired && noParents)
-            info.addFields(localFields)
-          else info.setNotTagged
-        case _ => info.setNotTagged
-      }
+      val allFields =
+        getFieldsFromAllParentsTransitively(t, allDefinitions)
+      val singleLocal = allFields.size == 1
+      val allLocalRequired =
+        allFields.forall(_.hints.contains(Hint.Required))
+      if (singleLocal && allLocalRequired)
+        info.addFields(allFields)
+      else info.setNotTagged
     }
   }
 
@@ -54,7 +69,7 @@ object TaggedUnionTransformer extends IModelPostProcessor {
   ): TaggedUnionInfo = {
     val altTargetDefinitions =
       allShapes.filter(definition => alts.exists(_.tpe == definition.id))
-    getInfoForTargets(altTargetDefinitions)
+    getInfoForTargets(altTargetDefinitions, allShapes)
   }
 
   private def transform(in: IModel): Vector[Definition] = {

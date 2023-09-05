@@ -307,14 +307,12 @@ final class UnionSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |structure Number {
-                      |    @required
-                      |    num: Integer,
-                      |}
+                      |structure Number with [NumberParentOne] {}
                       |
+                      |@mixin
                       |structure NumberParentOne {
                       |    @required
-                      |    num: Integer,
+                      |    num: Integer
                       |}
                       |
                       |structure Text {
@@ -367,21 +365,18 @@ final class UnionSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                       |
-                      |structure Number {
-                      |    @required
-                      |    num: Integer,
-                      |}
+                      |
+                      |structure Number with [NumberParentOne] {}
                       |
                       |structure Text {
                       |    @required
                       |    txt: String,
                       |}
                       |
-                      |structure NumberParentOne {
-                      |    @required
-                      |    num: Integer,
-                      |}
+                      |@mixin
+                      |structure NumberParentOne with [NumberParentOneParent] {}
                       |
+                      |@mixin
                       |structure NumberParentOneParent {
                       |    @required
                       |    num: Integer,

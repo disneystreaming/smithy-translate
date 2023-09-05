@@ -222,7 +222,12 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
               schema
             )
           }
-        F.pure(OpenApiObject(local.context.addHints(hints), fields))
+        F.pure(
+          OpenApiObject(
+            local.context.addHints(hints, retainTopLevel = true),
+            fields
+          )
+        )
 
       case Extractors.CaseArray(hints, itemSchema) =>
         F.pure(

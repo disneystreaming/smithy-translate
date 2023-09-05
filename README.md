@@ -19,6 +19,7 @@ _Note: this library is published to work on Java 8 and above. However, you will 
     - [Primitives](#primitives)
     - [Aggregate Shapes](#aggregate-shapes)
       - [Structure](#structure)
+      - [Structures with Mixins](#structures-with-mixins)
       - [Untagged Union](#untagged-union)
       - [Tagged Union](#tagged-union)
       - [Discriminated Union](#discriminated-union)
@@ -234,6 +235,139 @@ structure Testing {
  X_something: String
 }
 ```
+
+##### Structures with Mixins
+
+Smithy Translate will convert allOfs from OpenAPI into structures with mixins in smithy where possible. AllOfs in OpenAPI have references to other types which compose the current type. We refer to these as "parents" or "parent types" below. There are three possibilities when converting allOfs to smithy shapes:
+
+1. The parent structures are only ever used as mixins
+
+OpenAPI:
+```yaml
+openapi: '3.0.'
+info:
+  title: doc
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    One:
+      type: object
+      properties:
+        one:
+          type: string
+    Two:
+      type: object
+      properties:
+        two:
+          type: string
+    Three:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/One"
+        - $ref: "#/components/schemas/Two"
+```
+
+Smithy:
+```smithy
+@mixin
+structure One {
+ one: String
+}
+
+@mixin
+structure Two {
+  two: String
+}
+
+structure Three with [One, Two] {}
+```
+
+Here we can see that both parents, `One` and `Two` are converted into mixins and used as such on `Three`.
+
+2. The parents structures are used as mixins and referenced as member targets
+
+OpenAPI:
+```yaml
+openapi: '3.0.'
+info:
+  title: doc
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    One:
+      type: object
+      properties:
+        one:
+          type: string
+    Two:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/One"
+    Three:
+      type: object
+      properties:
+        one:
+          $ref: "#/components/schemas/One"
+```
+
+Smithy:
+```smithy
+@mixin
+structure OneMixin {
+  one: String
+}
+
+structure One with [OneMixin] {}
+
+structure Two with [OneMixin] {}
+
+structure Three {
+  one: One
+}
+```
+
+Here `One` is used as a target of the `Three$one` member and is used as a mixin in the `Two` structure. Since smithy does not allow mixins to be used as targets, we have to create a separate mixin shape, `OneMixin` which is used as a mixin for `One` which is ultimately what we use for the target in `Three`.
+
+3. One of the parents is a document rather than a structure
+
+OpenAPI:
+```yaml
+openapi: '3.0.'
+info:
+  title: doc
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    One:
+      type: object
+      properties: {}
+    Two:
+      type: object
+      properties:
+        two:
+          type: string
+    Three:
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/One"
+        - $ref: "#/components/schemas/Two"
+```
+
+Smithy:
+```smithy
+document One
+
+structure Two {
+  two: String
+}
+
+document Three
+```
+
+In this case, no mixins are created since none are ultimately used. Since `One` is translated to a document, `Three` must also be a document since it has `One` as a parent shape. As such, `Two` is never used as a mixin.
 
 ##### Untagged Union
 
