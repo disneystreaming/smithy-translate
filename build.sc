@@ -422,7 +422,7 @@ object Deps {
       ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
   }
   object circe {
-    val jawn = ivy"io.circe::circe-jawn:0.14.5"
+    val jawn = ivy"io.circe::circe-jawn:0.14.6"
   }
   object everit {
     val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.2"
@@ -465,7 +465,7 @@ object Deps {
       ivy"com.thesamet.scalapb::compilerplugin:$version"
     val protocCache = ivy"com.thesamet.scalapb::protoc-cache-coursier:0.9.6"
   }
-  val coursier = ivy"io.get-coursier::coursier:2.1.5"
+  val coursier = ivy"io.get-coursier::coursier:2.1.6"
 }
 
 case class ScalaVersion(maj: Int, min: Int, patch: Int)
