@@ -165,6 +165,7 @@ Smithy.
 | number            | double             | Double                     |                               |
 | number            | double             | Double                     |                               |
 | number            |                    | Double                     |                               |
+| integer           | int16              | Short                      |                               |
 | integer           |                    | Integer                    |                               |
 | integer           | int32              | Integer                    |                               |
 | integer           | int64              | Long                       |                               |
