@@ -152,6 +152,11 @@ object CasePrimitive {
 
     // I:
     //   type: integer
+    //   format: int16 | noformat
+    case (_: IntegerSchema) & (Format("int16")) => Some(PShort)
+
+    // I:
+    //   type: integer
     //   format: int32 | noformat
     case (_: IntegerSchema) & (Format("int32") | NoFormat()) => Some(PInt)
 

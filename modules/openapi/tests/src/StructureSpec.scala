@@ -32,6 +32,9 @@ final class StructureSpec extends munit.FunSuite {
                      |        i:
                      |          type: integer
                      |          format: int32
+                     |        sht:
+                     |          type: integer
+                     |          format: int16
                      |        b:
                      |          type: boolean
                      |        l:
@@ -53,6 +56,7 @@ final class StructureSpec extends munit.FunSuite {
                       | @required
                       | s: String,
                       | i: Integer,
+                      | sht: Short,
                       | b: Boolean,
                       | @range(min: 100)
                       | l: Long,
