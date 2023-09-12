@@ -409,4 +409,134 @@ final class MultiFileSpec extends munit.FunSuite {
     assertEquals(errors, expectedErrors)
     assertEquals(output, expectedModel)
   }
+
+  /* .
+   * \|-- foo.yaml
+   * \|-- bar.yaml
+   */
+  test("multiple files - property ref") {
+    val fooYml = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      properties:
+                     |        l:
+                     |          $ref: bar.yaml#/components/schemas/Test/properties/s
+                     |""".stripMargin
+    val barYml = """|openapi: '3.0.'
+                   |info:
+                   |  title: test
+                   |  version: '1.0'
+                   |paths: {}
+                   |components:
+                   |  schemas:
+                   |    Test:
+                   |      type: object
+                   |      properties:
+                   |        s:
+                   |          type: string
+                   |""".stripMargin
+
+    val expectedFoo = """|namespace foo
+                         |
+                         |structure Object {
+                         |    l: String
+                         |}
+                         |""".stripMargin
+
+    val expectedBar = """|namespace bar
+                         |
+                         |structure Test {
+                         |    s: String
+                         |}
+                         |""".stripMargin
+
+    val inOne = TestUtils.ConversionTestInput(
+      NonEmptyList.of("foo.yaml"),
+      fooYml,
+      expectedFoo
+    )
+    val inTwo = TestUtils.ConversionTestInput(
+      NonEmptyList.of("bar.yaml"),
+      barYml,
+      expectedBar
+    )
+    TestUtils.runConversionTest(inOne, inTwo)
+  }
+
+  /* .
+   * \|-- foo.yaml
+   * \|-- bar.yaml
+   */
+  test("multiple files - property ref object type") {
+    val fooYml = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Object:
+                     |      type: object
+                     |      properties:
+                     |        l:
+                     |          $ref: bar.yaml#/components/schemas/Test/properties/s
+                     |""".stripMargin
+    val barYml = """|openapi: '3.0.'
+                   |info:
+                   |  title: test
+                   |  version: '1.0'
+                   |paths: {}
+                   |components:
+                   |  schemas:
+                   |    Test:
+                   |      type: object
+                   |      properties:
+                   |        s:
+                   |          $ref: '#/components/schemas/Bar'
+                   |    Bar:
+                   |      type: object
+                   |      properties:
+                   |        b:
+                   |          type: string
+                   |""".stripMargin
+
+    val expectedFoo = """|namespace foo
+                         |
+                         |use bar#Bar
+                         |
+                         |structure Object {
+                         |    l: Bar
+                         |}
+                         |""".stripMargin
+
+    val expectedBar = """|namespace bar
+                         |
+                         |structure Bar {
+                         |  b: String
+                         |}
+                         |
+                         |structure Test {
+                         |    s: Bar
+                         |}
+                         |""".stripMargin
+
+    val inOne = TestUtils.ConversionTestInput(
+      NonEmptyList.of("foo.yaml"),
+      fooYml,
+      expectedFoo
+    )
+    val inTwo = TestUtils.ConversionTestInput(
+      NonEmptyList.of("bar.yaml"),
+      barYml,
+      expectedBar
+    )
+    TestUtils.runConversionTest(inOne, inTwo)
+  }
+
 }

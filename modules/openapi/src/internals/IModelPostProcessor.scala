@@ -21,6 +21,7 @@ trait IModelPostProcessor extends (IModel => IModel)
 
 object IModelPostProcessor {
   private[this] val defaultTransformers: List[IModelPostProcessor] = List(
+    ExternalMemberRefTransformer,
     NewtypeTransformer,
     FixMissingTargetsTransformer,
     AllOfTransformer,
