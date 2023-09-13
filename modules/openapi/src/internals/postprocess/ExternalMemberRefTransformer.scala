@@ -22,11 +22,15 @@ import cats.data.Chain
 import scala.annotation.tailrec
 
 /** This transformer is for the specific case where an external reference
-  * targets the member of a structure from another file. In this case, we need
-  * to update the target type to be whatever the target type of the referenced
-  * member is in the target structure. For example, if there is structure A$a
-  * that references B$b in another file, we would update A$a to instead target
-  * the same type that B$b targets, rather than targeting B$b directly.
+  * targets the primitive member of a structure from another file. In this case,
+  * we need to update the target type to be whatever the target type of the
+  * referenced member is in the target structure. For example, if there is
+  * structure A$a that references B$b in another file, we would update A$a to
+  * instead target the same type that B$b targets, rather than targeting B$b
+  * directly. Note that this transformation only takes place if B$b targets a
+  * primitive. If it targets a structure, or another type, then there would be
+  * no issue. The reason for this is that Structures get rendered as separate
+  * types already that can be referenced from another file.
   */
 object ExternalMemberRefTransformer extends IModelPostProcessor {
   private abstract class MatchesOne(val segment: Segment) {
