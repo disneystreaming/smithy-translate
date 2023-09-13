@@ -56,7 +56,6 @@ object ExternalMemberRefTransformer extends IModelPostProcessor {
 
   private object Properties
       extends MatchesOne(Segment.Arbitrary(ci"properties"))
-      with MatchesOneNamed
 
   def apply(model: IModel): IModel = {
     val allDefs = model.definitions.map(d => d.id.toString -> d).toMap
