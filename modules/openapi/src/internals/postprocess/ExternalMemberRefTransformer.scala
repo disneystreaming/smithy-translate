@@ -29,6 +29,33 @@ import scala.annotation.tailrec
   * the same type that B$b targets, rather than targeting B$b directly.
   */
 object ExternalMemberRefTransformer extends IModelPostProcessor {
+  private abstract class MatchesOne(val segment: Segment) {
+    def unapply(segments: List[Segment]): Option[List[Segment]] =
+      segments match {
+        case `segment` :: rest => Some(rest)
+        case _                 => None
+      }
+  }
+
+  private trait MatchesOneNamed { self: MatchesOne =>
+    object named {
+      def unapply(segments: List[Segment]): Option[(Segment, List[Segment])] =
+        segments match {
+          case `segment` :: name :: rest => Some((name, rest))
+          case _                         => None
+        }
+    }
+  }
+
+  private object Components
+      extends MatchesOne(Segment.Arbitrary(ci"components"))
+
+  private object Schemas
+      extends MatchesOne(Segment.Arbitrary(ci"schemas"))
+      with MatchesOneNamed
+
+  private object Properties
+      extends MatchesOne(Segment.Arbitrary(ci"properties"))
 
   def apply(model: IModel): IModel = {
     val allDefs = model.definitions.map(d => d.id.toString -> d).toMap
@@ -37,9 +64,7 @@ object ExternalMemberRefTransformer extends IModelPostProcessor {
       case s @ Structure(_, localFields, _, _) =>
         val newFields = localFields.map { f =>
           f.tpe.name.segments.toChain.toList match {
-            case Segment.Arbitrary(ci"components") :: Segment.Arbitrary(
-                  ci"schemas"
-                ) :: _ =>
+            case Components(Schemas(_)) =>
               f.copy(tpe = updatedDefId(f.tpe))
             case _ => f
           }
@@ -50,20 +75,12 @@ object ExternalMemberRefTransformer extends IModelPostProcessor {
 
     def removeProperties(dId: DefId): Option[DefId] = {
       dId.name.segments.toChain.toList match {
-        case Segment.Arbitrary(ci"components") ::
-            Segment.Arbitrary(ci"schemas") ::
-            name ::
-            Segment.Arbitrary(ci"properties") ::
-            rest =>
+        case Components(Schemas.named((name, Properties(rest)))) =>
           Some(
             dId.copy(name =
               Name(
                 NonEmptyChain
-                  .of(
-                    Segment.Arbitrary(ci"components"),
-                    Segment.Arbitrary(ci"schemas"),
-                    name
-                  )
+                  .of(Components.segment, Schemas.segment, name)
                   .appendChain(Chain.fromSeq(rest))
               )
             )
