@@ -452,7 +452,7 @@ object Deps {
     val ujson = ivy"com.lihaoyi::ujson:3.1.2"
   }
 
-  val munitVersion = "1.0.0-M8"
+  val munitVersion = "1.0.0-M10"
   object grpc {
     val version = "1.58.0"
     val netty = ivy"io.grpc:grpc-netty:$version"
