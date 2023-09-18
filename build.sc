@@ -449,7 +449,7 @@ object Deps {
   val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
     val oslib = ivy"com.lihaoyi::os-lib:0.9.1"
-    val ujson = ivy"com.lihaoyi::ujson:3.1.2"
+    val ujson = ivy"com.lihaoyi::ujson:3.1.3"
   }
 
   val munitVersion = "1.0.0-M8"
