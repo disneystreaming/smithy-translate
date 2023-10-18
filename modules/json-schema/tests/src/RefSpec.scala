@@ -254,4 +254,38 @@ final class RefSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
+
+  test("schema with no id") {
+    val jsonSchString = """|{
+                           |  "$schema": "http://json-schema.org/draft-07/schema#",
+                           |  "title": "Person",
+                           |  "type": "object",
+                           |  "properties": {
+                           |    "firstName": {
+                           |      "$ref": "#/$defs/name"
+                           |    },
+                           |    "lastName": {
+                           |      "$ref": "#/$defs/name"
+                           |    }
+                           |  },
+                           |  "$defs":{
+                           |    "name": {
+                           |      "type": "string"
+                           |    }
+                           |  }
+                           |}
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Person {
+                            | firstName: Name,
+                            | lastName: Name
+                            |}
+                            |
+                            |string Name
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
 }

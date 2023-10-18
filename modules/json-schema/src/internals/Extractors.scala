@@ -250,7 +250,7 @@ object Extractors {
   /*
    * The most complicated thing
    */
-  abstract class JsonSchemaCaseRefBuilder(id: String, ns: Path)
+  abstract class JsonSchemaCaseRefBuilder(id: Option[String], ns: Path)
       extends smithytranslate.openapi.internals.CaseRefBuilder(ns) {
     def unapply(sch: Schema): Option[Either[ModelError, DefId]] = sch match {
       case ref: ReferenceSchema =>
@@ -260,11 +260,14 @@ object Extractors {
         // The number of `/` chars is not always consistent between the id and the refValue.
         val fileRegex = "^file:\\/*"
         val refValueNoPrefix = refValue.replaceFirst(fileRegex, "")
-        val idNoPrefix = id.replaceFirst(fileRegex, "")
         val sanitisedRefValue =
-          if (refValueNoPrefix.startsWith(idNoPrefix))
-            refValueNoPrefix.drop(idNoPrefix.length())
-          else refValue
+          id.map(_.replaceFirst(fileRegex, ""))
+            .collectFirst {
+              case idNoPrefix if (refValueNoPrefix.startsWith(idNoPrefix)) =>
+                refValueNoPrefix.drop(idNoPrefix.length())
+            }
+            .getOrElse(refValue)
+
         Option(sanitisedRefValue).map(this.apply)
       case _ => None
     }

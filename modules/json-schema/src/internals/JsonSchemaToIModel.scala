@@ -69,7 +69,10 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
   implicit val F: Monad[F] = Parallel[F].monad
 
   private val CaseRef =
-    new Extractors.JsonSchemaCaseRefBuilder(jsonSchema.getId(), namespace) {}
+    new Extractors.JsonSchemaCaseRefBuilder(
+      Option(jsonSchema.getId()),
+      namespace
+    ) {}
 
   private val allSchemas: Vector[Local] = {
     val schemaNameSegment =
