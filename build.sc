@@ -425,7 +425,7 @@ object Deps {
     val jawn = ivy"io.circe::circe-jawn:0.14.6"
   }
   object everit {
-    val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.2"
+    val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.3"
   }
   val slf4j =
     ivy"org.slf4j:slf4j-nop:2.0.9" // needed since swagger-parser relies on slf4j-api
