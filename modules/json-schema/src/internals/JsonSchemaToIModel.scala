@@ -80,9 +80,9 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
     val schemaName = Name(schemaNameSegment)
 
     // Computing schemas under the $defs field, if it exists.
-    def $defSchemas = {
+    def $defSchemas(name: String): Vector[Local] = {
       val defsObject = rawJson.asObject
-        .flatMap(_.apply("$defs"))
+        .flatMap(_.apply(name))
         .flatMap(_.asObject)
 
       val allDefs = defsObject.toVector
@@ -92,14 +92,14 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       allDefs
         .flatMap { case (key, value) =>
           val topLevelJson = Json.fromJsonObject {
-            value.add("$defs", Json.fromJsonObject(defsObject.get))
+            value.add(name, Json.fromJsonObject(defsObject.get))
           }
 
           val defSchema = LoadSchema(new JSONObject(topLevelJson.noSpaces))
 
           val defSchemaName =
             Name(
-              Segment.Arbitrary(CIString("$defs")),
+              Segment.Arbitrary(CIString(name)),
               Segment.Derived(CIString(key))
             )
           Vector(
@@ -113,7 +113,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
     val topLevelLocal =
       Local(schemaName, jsonSchema, rawJson).addHints(List(Hint.TopLevel))
 
-    topLevelLocal +: $defSchemas
+    topLevelLocal +: ($defSchemas("$defs") ++ $defSchemas("definitions"))
   }
 
   /** Refolds the schema, aggregating found definitions in Tell.
