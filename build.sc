@@ -425,13 +425,13 @@ object Deps {
     val jawn = ivy"io.circe::circe-jawn:0.14.6"
   }
   object everit {
-    val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.2"
+    val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.3"
   }
   val slf4j =
     ivy"org.slf4j:slf4j-nop:2.0.9" // needed since swagger-parser relies on slf4j-api
   object swagger {
     val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.16",
+      ivy"io.swagger.parser.v3:swagger-parser:2.1.18",
       // included to override the version brought in by swagger-parser which has a vulnerability
       ivy"org.mozilla:rhino:1.7.14"
     )
@@ -459,7 +459,7 @@ object Deps {
     val services = ivy"io.grpc:grpc-services:$version"
   }
   object scalapb {
-    val version = "0.11.13"
+    val version = "0.11.14"
     val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
     val compilerPlugin =
       ivy"com.thesamet.scalapb::compilerplugin:$version"
