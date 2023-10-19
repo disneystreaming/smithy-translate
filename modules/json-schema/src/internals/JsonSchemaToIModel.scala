@@ -80,7 +80,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
     val schemaName = Name(schemaNameSegment)
 
     // Computing schemas under the $defs field, if it exists.
-    def $defSchemas: String => Vector[Local] = { name =>
+    def $defSchemas(name: String): Vector[Local] = {
       val defsObject = rawJson.asObject
         .flatMap(_.apply(name))
         .flatMap(_.asObject)
