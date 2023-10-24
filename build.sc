@@ -442,7 +442,7 @@ object Deps {
     val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   }
   object cats {
-    val mtl = ivy"org.typelevel::cats-mtl:1.3.1"
+    val mtl = ivy"org.typelevel::cats-mtl:1.4.0"
     val parse = ivy"org.typelevel::cats-parse:0.3.10"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
