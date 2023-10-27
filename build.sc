@@ -106,7 +106,7 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
 }
 
 trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
-  def scalaVersion = T.input("2.13.11")
+  def scalaVersion = T.input("2.13.12")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
@@ -366,6 +366,8 @@ object proto extends Module {
         val out = T.dest
         PathRef(out)
       }
+
+      override def scalaPBOptions = "scala3_sources"
 
       def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
 
