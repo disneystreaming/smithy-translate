@@ -367,6 +367,8 @@ object proto extends Module {
         PathRef(out)
       }
 
+      override def scalaPBOptions = "scala3_sources"
+
       def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
 
       def resources = T.sources {
@@ -459,7 +461,7 @@ object Deps {
     val services = ivy"io.grpc:grpc-services:$version"
   }
   object scalapb {
-    val version = "0.11.13"
+    val version = "0.11.14"
     val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
     val compilerPlugin =
       ivy"com.thesamet.scalapb::compilerplugin:$version"
