@@ -450,7 +450,7 @@ object Deps {
   val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
   val decline = ivy"com.monovore::decline:2.4.1"
   object lihaoyi {
-    val oslib = ivy"com.lihaoyi::os-lib:0.9.1"
+    val oslib = ivy"com.lihaoyi::os-lib:0.9.2"
     val ujson = ivy"com.lihaoyi::ujson:3.1.3"
   }
 
