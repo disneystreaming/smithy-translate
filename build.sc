@@ -216,7 +216,7 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
 
 object formatter extends BaseModule { outer =>
   val deps = Agg(
-    ivy"org.typelevel::cats-parse::0.3.10"
+    ivy"org.typelevel::cats-parse::1.0.0"
   )
 
   object jvm extends BaseScalaModule {
@@ -445,7 +445,7 @@ object Deps {
   }
   object cats {
     val mtl = ivy"org.typelevel::cats-mtl:1.4.0"
-    val parse = ivy"org.typelevel::cats-parse:0.3.10"
+    val parse = ivy"org.typelevel::cats-parse:1.0.0"
   }
   val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
   val decline = ivy"com.monovore::decline:2.4.1"
