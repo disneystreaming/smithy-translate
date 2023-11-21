@@ -433,7 +433,7 @@ object Deps {
     ivy"org.slf4j:slf4j-nop:2.0.9" // needed since swagger-parser relies on slf4j-api
   object swagger {
     val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.18",
+      ivy"io.swagger.parser.v3:swagger-parser:2.1.19",
       // included to override the version brought in by swagger-parser which has a vulnerability
       ivy"org.mozilla:rhino:1.7.14"
     )
