@@ -467,7 +467,7 @@ object Deps {
       ivy"com.thesamet.scalapb::compilerplugin:$version"
     val protocCache = ivy"com.thesamet.scalapb::protoc-cache-coursier:0.9.6"
   }
-  val coursier = ivy"io.get-coursier::coursier:2.1.7"
+  val coursier = ivy"io.get-coursier::coursier:2.1.8"
 }
 
 case class ScalaVersion(maj: Int, min: Int, patch: Int)
