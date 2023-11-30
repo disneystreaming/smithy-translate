@@ -77,6 +77,7 @@ object GetExtensions {
     case c: java.util.Collection[_] =>
       Node.fromNodes(c.asScala.map(anyToNode).toList.asJava)
     case j: JsonNode => jacksonToSmithy(j)
+    case _ => Node.nullNode() // if nothing is found, to prevent match errors
   }
 
   private def jacksonToSmithy(jn: JsonNode): Node = jn match {
