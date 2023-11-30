@@ -21,6 +21,8 @@ import smithytranslate.openapi.internals.OpenApiPattern
 import scala.language.reflectiveCalls
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.{node => jackson}
+import java.time.format.DateTimeFormatter
+import java.time.ZoneId
 
 object GetExtensions {
 
@@ -49,16 +51,21 @@ object GetExtensions {
       }
       .toList
 
+  private val formatter =
+    DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.of("UTC"))
+
   protected[smithytranslate] def anyToNode(input: Any): Node = input match {
-    case null       => Node.nullNode()
-    case b: Boolean => Node.from(b)
-    case s: String  => Node.from(s)
-    case i: Int     => Node.from(i)
-    case d: Double  => Node.from(d)
-    case s: Short   => Node.from(s)
-    case l: Long    => Node.from(l)
-    case f: Float   => Node.from(f)
-    case n: Number  => Node.from(n)
+    case null                        => Node.nullNode()
+    case b: Boolean                  => Node.from(b)
+    case s: String                   => Node.from(s)
+    case i: Int                      => Node.from(i)
+    case d: Double                   => Node.from(d)
+    case s: Short                    => Node.from(s)
+    case l: Long                     => Node.from(l)
+    case f: Float                    => Node.from(f)
+    case n: Number                   => Node.from(n)
+    case d: java.time.OffsetDateTime => Node.from(d.toString())
+    case d: java.util.Date => Node.from(formatter.format(d.toInstant()))
     case u: java.util.UUID =>
       Node.from(u.toString)
     case m: java.util.Map[_, _] =>
@@ -70,6 +77,7 @@ object GetExtensions {
     case c: java.util.Collection[_] =>
       Node.fromNodes(c.asScala.map(anyToNode).toList.asJava)
     case j: JsonNode => jacksonToSmithy(j)
+    case _ => Node.nullNode() // if nothing is found, to prevent match errors
   }
 
   private def jacksonToSmithy(jn: JsonNode): Node = jn match {
