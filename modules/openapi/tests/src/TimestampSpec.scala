@@ -92,4 +92,66 @@ final class TimestampSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
+
+  test("date-time with example") {
+    val openapiString = """|openapi: '3.0.'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    MyTimestamp:
+                     |      type: string
+                     |      format: date-time
+                     |      example: '2017-07-21T17:32:28Z'
+                     |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use alloy#dataExamples
+                            |
+                            |@dataExamples([
+                            |    {
+                            |        json: "2017-07-21T17:32:28Z"
+                            |    }
+                            |])
+                            |
+                            |@timestampFormat("date-time")
+                            |timestamp MyTimestamp
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("simple date with example") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyDate:
+                           |      type: string
+                           |      format: date
+                           |      example: '2017-07-21'
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use alloy#dateFormat
+                            |use alloy#dataExamples
+                            |
+                            |@dataExamples([
+                            |    {
+                            |        json: "2017-07-21"
+                            |    }
+                            |])
+                            |@dateFormat
+                            |string MyDate
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
 }
