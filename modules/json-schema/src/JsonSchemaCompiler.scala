@@ -70,7 +70,7 @@ object JsonSchemaCompiler {
       inputs: Input*
   ): Result[SmithyModel] = {
     val (errors0, smithy0) = inputs.toList
-      .foldMap(JsonSchemaToIModel.compile.tupled)
+      .foldMap { case (ns, s, raw) => JsonSchemaToIModel.compile(ns, s, raw) }
       .map(IModelPostProcessor(opts.useVerboseNames))
       .map(new IModelToSmithy(opts.useEnumTraitSyntax))
     val errors = errors0.toList

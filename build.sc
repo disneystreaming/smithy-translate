@@ -27,6 +27,8 @@ import mill.scalalib.api.ZincWorkerUtil
 
 import scala.Ordering.Implicits._
 
+val scalaVersions = List("2.13.12", "2.12.18")
+
 trait BaseModule extends Module with HeaderModule {
   def millSourcePath: Path = {
     val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
@@ -105,8 +107,8 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   }
 }
 
-trait ScalaVersionModule extends ScalaModule with ScalafmtModule {
-  def scalaVersion = T.input("2.13.12")
+trait ScalaVersionModule extends CrossScalaModule with ScalafmtModule {
+//  override def scalaVersion = T.input("2.13.12")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
@@ -138,14 +140,14 @@ trait BaseMunitTests extends TestModule.Munit {
     )
 }
 
-object `json-schema` extends BaseScalaModule {
-  def moduleDeps = Seq(
-    openapi
-  )
+object `json-schema` extends Cross[`json-schema-module`](scalaVersions)
+trait `json-schema-module` extends BaseScalaModule {
+  def moduleDeps = Seq(openapi())
 
   def ivyDeps = Agg(
     Deps.circe.jawn,
-    Deps.everit.jsonSchema
+    Deps.everit.jsonSchema,
+    Deps.collectionsCompat
   )
 
   object tests extends this.ScalaTests with BaseMunitTests {
@@ -156,14 +158,16 @@ object `json-schema` extends BaseScalaModule {
   }
 }
 
-object openapi extends BaseScalaModule {
+object openapi extends Cross[OpenApiModule](scalaVersions)
+trait OpenApiModule extends BaseScalaModule {
   def ivyDeps = Deps.swagger.parser ++ Agg(
     Deps.smithy.model,
     Deps.smithy.build,
     Deps.cats.mtl,
     Deps.ciString,
     Deps.slf4j,
-    Deps.alloy.core
+    Deps.alloy.core,
+    Deps.collectionsCompat
   )
 
   def moduleDeps = Seq(
@@ -172,12 +176,14 @@ object openapi extends BaseScalaModule {
 
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
-      Deps.smithy.build
+      Deps.smithy.build,
+      Deps.scalaJavaCompat
     )
   }
 }
 
-object cli extends BaseScalaModule with buildinfo.BuildInfo {
+object cli extends Cross[CliModule](scalaVersions)
+trait CliModule extends BaseScalaModule with buildinfo.BuildInfo {
   def ivyDeps = Agg(
     Deps.decline,
     Deps.coursier,
@@ -197,7 +203,8 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
     BuildInfo.Value("cliVersion", publishVersion().toString)
   )
 
-  def moduleDeps = Seq(openapi, proto.core, `json-schema`, formatter.jvm)
+  def moduleDeps =
+    Seq(openapi(), proto.core(), `json-schema`(), formatter.jvm())
 
   def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
     val inputArgs = inputs.flatMap { p =>
@@ -216,10 +223,13 @@ object cli extends BaseScalaModule with buildinfo.BuildInfo {
 
 object formatter extends BaseModule { outer =>
   val deps = Agg(
-    ivy"org.typelevel::cats-parse::1.0.0"
+    ivy"org.typelevel::cats-parse::1.0.0",
+    Deps.collectionsCompat
   )
 
-  object jvm extends BaseScalaModule {
+  object jvm extends Cross[JvmModule](scalaVersions)
+
+  trait JvmModule extends BaseScalaModule {
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
@@ -230,8 +240,9 @@ object formatter extends BaseModule { outer =>
       )
     }
 
-    object `parser-test` extends BaseScalaNoPublishModule {
-      def moduleDeps = Seq(formatter.jvm)
+    object `parser-test` extends Cross[ParserTestModule](scalaVersions)
+    trait ParserTestModule extends BaseScalaNoPublishModule {
+      def moduleDeps = Seq(formatter.jvm())
       override def millSourcePath = outer.millSourcePath / "parser-test"
 
       def ivyDeps = Agg(
@@ -240,14 +251,15 @@ object formatter extends BaseModule { outer =>
       )
     }
 
-    object shaded extends BaseJavaModule {
+    object shaded extends ShadedModule
+    trait ShadedModule extends BaseJavaModule {
       override def millSourcePath = outer.millSourcePath / "shaded"
 
       override def localClasspath: T[Seq[PathRef]] =
-        formatter.jvm.localClasspath()
+        formatter.jvm().localClasspath()
 
       override def resolvedRunIvyDeps: T[Agg[PathRef]] =
-        formatter.jvm.resolvedRunIvyDeps()
+        formatter.jvm().resolvedRunIvyDeps()
 
       override def publishXmlDeps = T.task { Agg.empty[Dependency] }
 
@@ -263,12 +275,12 @@ object formatter extends BaseModule { outer =>
 
     object `java-api` extends BaseJavaModule {
       override def unmanagedClasspath = T {
-        super.unmanagedClasspath() ++ Agg(formatter.jvm.shaded.jar())
+        super.unmanagedClasspath() ++ Agg(formatter.jvm().shaded.jar())
       }
       override def publishXmlDeps = T.task {
         Agg(
           mill.scalalib.publish.Dependency(
-            formatter.jvm.shaded.publishSelfDependency(),
+            formatter.jvm().shaded.publishSelfDependency(),
             Scope.Compile
           )
         )
@@ -277,7 +289,8 @@ object formatter extends BaseModule { outer =>
     }
   }
 
-  object js extends BaseScalaJSModule {
+  object js extends Cross[JsModule](scalaVersions)
+  trait JsModule extends BaseScalaJSModule {
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
@@ -311,14 +324,17 @@ object traits extends BaseJavaModule {
     )
   }
 
-  object tests
+  object tests extends Cross[TestsModule](scalaVersions)
+  trait TestsModule
       extends JavaModuleTests
       with ScalaVersionModule
       with BaseMunitTests
 }
 
-object `readme-validator` extends BaseScalaNoPublishModule {
-  def moduleDeps = Seq(openapi, proto.core, `json-schema`)
+object `readme-validator`
+    extends Cross[`readme-validator-module`](scalaVersions)
+trait `readme-validator-module` extends BaseScalaNoPublishModule {
+  def moduleDeps = Seq(openapi(), proto.core(), `json-schema`())
 
   def ivyDeps = Agg(
     Deps.cats.parse,
@@ -338,13 +354,14 @@ object `readme-validator` extends BaseScalaNoPublishModule {
 }
 
 object proto extends Module {
-
-  object core extends BaseScalaModule {
+  object core extends Cross[CoreModule](scalaVersions)
+  trait CoreModule extends BaseScalaModule {
     def ivyDeps = Agg(
       Deps.smithy.model,
-      Deps.alloy.core
+      Deps.alloy.core,
+      Deps.collectionsCompat
     )
-    def moduleDeps = Seq(traits, transitive)
+    def moduleDeps = Seq(traits, transitive())
     object tests
         extends this.ScalaTests
         with BaseMunitTests
@@ -377,7 +394,9 @@ object proto extends Module {
     }
   }
 
-  object examples extends BaseScalaModule with ScalaPBModule {
+  object examples extends Cross[ExamplesModule](scalaVersions)
+
+  trait ExamplesModule extends BaseScalaModule with ScalaPBModule {
     def scalaPBVersion = Deps.scalapb.version
 
     def smithyFiles = T.sources {
@@ -396,7 +415,7 @@ object proto extends Module {
       os.remove.all(cliRunOutput)
       os.makeDir.all(cliRunOutput)
       val input = smithyFiles().toList.map(_.path)
-      val f = cli.runProtoAux()
+      val f = cli().runProtoAux()
       f(input, cliRunOutput)
       cliRunOutput
     }
@@ -409,12 +428,18 @@ object proto extends Module {
   }
 }
 
-object transitive extends BaseScalaModule {
+object transitive extends Cross[TransitiveModule](scalaVersions)
+trait TransitiveModule extends BaseScalaModule {
   def ivyDeps = Agg(
     Deps.smithy.model,
-    Deps.smithy.build
+    Deps.smithy.build,
+    Deps.collectionsCompat
   )
-  object tests extends ScalaTests with BaseMunitTests
+  object tests extends ScalaTests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.scalaJavaCompat
+    )
+  }
 }
 
 object Deps {
@@ -453,6 +478,11 @@ object Deps {
     val oslib = ivy"com.lihaoyi::os-lib:0.9.2"
     val ujson = ivy"com.lihaoyi::ujson:3.1.3"
   }
+
+  val collectionsCompat =
+    ivy"org.scala-lang.modules::scala-collection-compat:2.11.0"
+
+  val scalaJavaCompat = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
 
   val munitVersion = "1.0.0-M10"
   object grpc {
@@ -557,7 +587,7 @@ private val allScalacOptions = Seq(
   ScalacOption("-Wunused:implicits", isSupported = version => v213 <= version && version < v300),                          // ^ Replaces the above
   ScalacOption("-Wunused:explicits", isSupported = version => v213 <= version && version < v300),                          // Warn if an explicit parameter is unused.
   ScalacOption("-Ywarn-unused:imports", isSupported = version => v212 <= version && version < v213),                       // Warn if an import selector is not referenced.
-  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
+//  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
   ScalacOption("-Ywarn-unused:locals", isSupported = version => v212 <= version && version < v213),                        // Warn if a local definition is unused.
   ScalacOption("-Wunused:locals", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
   ScalacOption("-Ywarn-unused:params", isSupported = version => v212 <= version && version < v213),                        // Warn if a value parameter is unused.

@@ -44,7 +44,7 @@ object DiscriminatedTransformer extends IModelPostProcessor {
     u.altNames.exists(alt => definition.id == alt.tpe)
 
   def apply(in: IModel): IModel = {
-    val unionInfo = in.definitions.flatMap(getUnionInfo.lift)
+    val unionInfo = in.definitions.flatMap(x => getUnionInfo.lift(x).toList)
     val newDefs = in.definitions
       .map { definition =>
         unionInfo

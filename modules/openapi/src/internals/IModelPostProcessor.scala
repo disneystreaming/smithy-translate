@@ -36,8 +36,11 @@ object IModelPostProcessor {
   private[this] def transform(
       in: IModel,
       allTransformers: List[IModelPostProcessor]
-  ): IModel =
-    allTransformers.foldLeft(in)((vd, transformer) => transformer(vd))
+  ): IModel = {
+    allTransformers.foldLeft(in) { (model, transformer) =>
+      transformer(model)
+    }
+  }
 
   def apply(useVerboseNames: Boolean)(in: IModel): IModel = {
     val nameTransform =

@@ -69,7 +69,6 @@ class Compiler() {
 
   def compile(model: Model): List[OutputFile] = {
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
-
     model.toShapeSet.toList
       .filterNot(ShapeFiltering.exclude)
       .groupBy(_.getId().getNamespace())

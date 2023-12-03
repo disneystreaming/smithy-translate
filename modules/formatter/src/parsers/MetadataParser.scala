@@ -20,7 +20,6 @@ import smithytranslate.formatter.parsers.NodeParser.{
   node_object_key,
   node_value
 }
-import smithytranslate.formatter.parsers.equal
 import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0}
 import cats.parse.{Parser, Parser0}
 import smithytranslate.formatter.ast.MetadataStatement

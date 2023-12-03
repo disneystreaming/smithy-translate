@@ -72,7 +72,7 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
               ".smithy"
             ) // convert e.g. my.namespace.test.smithy to my/namespace/test.smithy
         val path = outputPath / os.SubPath(subPath)
-        path -> in._2
+        (path, os.Source.WritableSource(in._2))
       }
 
   def apply(result: OpenApiCompiler.Result[Model], debug: Boolean): Unit = {

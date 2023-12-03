@@ -27,6 +27,7 @@ import smithytranslate.openapi.internals.Hint
 import smithytranslate.openapi.internals.GetExtensions
 import scala.jdk.CollectionConverters._
 import cats.syntax.all._
+import scala.collection.compat._
 
 object Extractors {
 
@@ -54,7 +55,7 @@ object Extractors {
     }
 
     private def getValues(e: EnumSchema): Vector[String] = {
-      e.getPossibleValues.asScala.collect { case s: String =>
+      e.getPossibleValuesAsList.asScala.collect { case s: String =>
         s
       }.toVector
     }
@@ -278,7 +279,7 @@ object Extractors {
     def getExtensions(): java.util.Map[String, Any] =
       Option(schema.getUnprocessedProperties())
         .map { _.asScala.view.filterKeys(_.startsWith("x-")).toMap }
-        .getOrElse(Map.empty)
+        .getOrElse(Map.empty[String, Any])
         .asJava
   }
 

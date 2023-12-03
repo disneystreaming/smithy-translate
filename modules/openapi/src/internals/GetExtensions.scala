@@ -17,7 +17,6 @@ package smithytranslate.openapi.internals
 
 import software.amazon.smithy.model.node.Node
 import scala.jdk.CollectionConverters._
-import smithytranslate.openapi.internals.OpenApiPattern
 import scala.language.reflectiveCalls
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.{node => jackson}
@@ -29,7 +28,7 @@ object GetExtensions {
   def transformPattern[A](
       local: Local
   ): OpenApiPattern[A] => OpenApiPattern[A] = {
-    val maybeHints = from(local.schema)
+    val maybeHints = from(local.schema.asInstanceOf[HasExtensions])
     (pattern: OpenApiPattern[A]) =>
       pattern.mapContext(_.addHints(maybeHints, retainTopLevel = true))
   }

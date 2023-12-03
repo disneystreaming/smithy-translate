@@ -16,6 +16,7 @@
 package smithytranslate.openapi.internals
 
 import io.swagger.v3.oas.models.headers.Header
+import smithytranslate.openapi.internals.GetExtensions.HasExtensions
 
 object HeadersToParams extends (Iterable[(String, Header)] => Vector[Param]) {
 
@@ -25,7 +26,7 @@ object HeadersToParams extends (Iterable[(String, Header)] => Vector[Param]) {
     Option(headerMap).toVector.flatten.map { case (name, header) =>
       val requiredHint =
         if (header.getRequired()) List(Hint.Required) else List.empty
-      val exts = GetExtensions.from(header)
+      val exts = GetExtensions.from(header.asInstanceOf[HasExtensions])
       val hints = List(Hint.Header(name)) ++ requiredHint ++ exts
       val refOrSchema = Option(header.get$ref()) match {
         case Some(value) => Left(value)

@@ -17,7 +17,6 @@ package formatter
 package parsers
 
 import smithytranslate.formatter.ast.Idl
-import smithytranslate.formatter.parsers.IdlParser
 import cats.syntax.all._
 
 trait SmithyParser {

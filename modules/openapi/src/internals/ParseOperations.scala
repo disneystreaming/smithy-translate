@@ -21,8 +21,12 @@ import cats.syntax.all._
 import io.swagger.v3.oas.models
 import io.swagger.v3.oas.models.OpenAPI
 import org.typelevel.ci._
+import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+
 import scala.jdk.CollectionConverters._
 import smithytranslate.openapi.internals.Hint.Header
+
+import scala.collection.compat._
 
 object ParseOperations
     extends (
@@ -77,7 +81,8 @@ private class ParseOperationsImpl(
           Option(item.getParameters()).toVector
             .flatMap(_.asScala.toVector)
             .map(getParam)
-        val (paramErrors, commonParams) = allCommonParams.partitionMap(identity)
+        val (paramErrors, commonParams) =
+          allCommonParams.partitionMap(identity(_))
         (
           paramErrors,
           Vector(
@@ -95,8 +100,8 @@ private class ParseOperationsImpl(
         )
       }
 
-    val allOperations = opsAndErrors.collect { _._2 }.flatten
-    val allParamErrrs = opsAndErrors.collect { _._1 }.flatten
+    val allOperations = opsAndErrors.collect { case (_, x) => x }.flatten
+    val allParamErrrs = opsAndErrors.collect { case (x, _) => x }.flatten
 
     val hasGlobalSecurity =
       Option(openApi.getSecurity().asScala).exists(_.nonEmpty)
@@ -186,7 +191,9 @@ private class ParseOperationsImpl(
       Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
     val hints =
-      GetExtensions.from(opInfo.op) ++ securityHint ++ descHint ++ exDocs
+      GetExtensions.from(
+        opInfo.op.asInstanceOf[HasExtensions]
+      ) ++ securityHint ++ descHint ++ exDocs
     val suppressions = getHeaderSuppressions(allValidInputParams).toVector
     ParseOperationsResult(
       errors ++ allInputParamsErrors,
@@ -245,7 +252,7 @@ private class ParseOperationsImpl(
     Option(
       op.getRequestBody()
     ).flatMap { rb =>
-      val exts = GetExtensions.from(rb)
+      val exts = GetExtensions.from(rb.asInstanceOf[HasExtensions])
       val bodies = ContentToSchemaOpt(rb.getContent())
       val (bodyHints, maybeSchema) =
         bodies.toList match {
@@ -288,7 +295,7 @@ private class ParseOperationsImpl(
 
     maybeResolvedParam.flatMap { resolvedParam =>
       val name = resolvedParam.getName()
-      val exts = GetExtensions.from(resolvedParam)
+      val exts = GetExtensions.from(resolvedParam.asInstanceOf[HasExtensions])
       val httpBinding = resolvedParam.getIn() match {
         case "query"  => Some(Hint.QueryParam(name))
         case "path"   => Some(Hint.PathParam(name))

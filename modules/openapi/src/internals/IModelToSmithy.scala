@@ -27,18 +27,17 @@ import smithytranslate.ContentTypeDiscriminatedTrait
 import smithytranslate.ContentTypeTrait
 import smithytranslate.ErrorMessageTrait
 import smithytranslate.NullFormatTrait
-import smithytranslate.openapi.internals.ApiKeyLocation
 import smithytranslate.openapi.internals.Hint.Header
 import smithytranslate.openapi.internals.Hint.QueryParam
-import smithytranslate.openapi.internals.SecurityScheme
 import smithytranslate.openapi.internals.TimestampFormat.DateTime
 import smithytranslate.openapi.internals.TimestampFormat.SimpleDate
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.pattern.UriPattern
-import software.amazon.smithy.model.shapes.{EnumShape, _}
 import software.amazon.smithy.model.traits._
 import software.amazon.smithy.model.traits.HttpTrait
+import software.amazon.smithy.model.shapes._
+import software.amazon.smithy.model.shapes.{Shape => JShape}
 
 import scala.jdk.CollectionConverters._
 
@@ -46,7 +45,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
 
   def apply(iModel: IModel): Model = {
-    val shapes = iModel.definitions.map[Shape] {
+    val shapes = iModel.definitions.map {
       case Structure(id, fields, _, structHints) =>
         val members = fields.map { case Field(id, tpe, hints) =>
           val memName = id.memberName.value.toString
@@ -60,6 +59,12 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
             if (nameWillNeedChange && !isHeaderOrQuery)
               List(Hint.JsonName(memName))
             else List.empty
+
+//          ShapeBuilderOps[MemberShape.Builder, MemberShape](MemberShape
+//            .builder()
+//            .id(id.toSmithy)
+//            .target(tpe.toSmithy)).addHints(hints ++ jsonNameHint).build()
+
           MemberShape
             .builder()
             .id(id.toSmithy)
@@ -170,7 +175,6 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       case other =>
         throw new IllegalArgumentException(s"Unexpected input: $other")
     }
-
     val builder = Model.builder()
     if (iModel.suppressions.nonEmpty) {
       builder.putMetadataProperty("suppressions", iModel.suppressions.toNode)
@@ -179,7 +183,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     builder.build()
   }
 
-  private def buildEnum(e: Enumeration): Shape = {
+  private def buildEnum(e: Enumeration): JShape = {
     val Enumeration(id, values, hints) = e
     if (useEnumTraitSyntax) {
       val enumTraitBuilder = EnumTrait.builder(): @annotation.nowarn(
@@ -298,7 +302,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     }
   }
 
-  private def hintsToTraits(hints: List[Hint]) = hints.flatMap[Trait] {
+  private def hintsToTraits(hints: List[Hint]) = hints.flatMap {
     case Hint.Description(value)      => List(new DocumentationTrait(value))
     case Hint.Body                    => List(new HttpPayloadTrait())
     case Hint.Header(name)            => List(new HttpHeaderTrait(name))
@@ -395,7 +399,7 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case _ => List.empty
   }
 
-  implicit class ShapeBuilderOps[A <: AbstractShapeBuilder[A, S], S <: Shape](
+  implicit class ShapeBuilderOps[A <: AbstractShapeBuilder[A, S], S <: JShape](
       builder: AbstractShapeBuilder[A, S]
   ) {
     def addHints(hints: List[Hint]): A = {

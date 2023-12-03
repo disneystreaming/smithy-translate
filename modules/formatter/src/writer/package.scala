@@ -22,6 +22,7 @@ import smithytranslate.formatter.writers.NodeWriter.{
 }
 import smithytranslate.formatter.writers.WhiteSpaceWriter.wsWriter
 import smithytranslate.formatter.writers.Writer.WriterOps
+import scala.collection.compat._
 
 package object writers {
   val traitKeyValueLimitLength = 80

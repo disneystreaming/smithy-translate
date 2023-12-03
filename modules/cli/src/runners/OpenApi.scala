@@ -24,7 +24,7 @@ object OpenApi {
   def runOpenApi(opts: OpenAPIJsonSchemaOpts): Unit = {
     val transformers = TransformerLookup.getAll()
 
-    val report = ReportResult(opts.outputPath, opts.outputJson).apply
+    val report = ReportResult(opts.outputPath, opts.outputJson).apply _
 
     report(
       ParseAndCompile.openapi(
@@ -42,7 +42,7 @@ object OpenApi {
   def runJsonSchema(opts: OpenAPIJsonSchemaOpts): Unit = {
     val transformers = TransformerLookup.getAll()
 
-    val report = ReportResult(opts.outputPath, opts.outputJson).apply
+    val report = ReportResult(opts.outputPath, opts.outputJson).apply _
     report(
       ParseAndCompile.jsonSchema(
         opts.inputFiles,
