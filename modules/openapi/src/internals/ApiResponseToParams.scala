@@ -39,7 +39,7 @@ object ApiResponseToParams
         case (contentType, bodySchema: Schema[_]) :: Nil =>
           // TODO: figure out how to deal with reflective calls in scala 2.12
           val bodyExts =
-            GetExtensions.from(bodySchema.asInstanceOf[HasExtensions])
+            GetExtensions.from(HasExtensions.unsafeFrom(bodySchema))
           Some(
             Param(
               "body",
@@ -54,7 +54,7 @@ object ApiResponseToParams
         case list =>
           val bodySchema = ContentTypeDiscriminatedSchema(list.toMap)
           val bodyExts =
-            GetExtensions.from(bodySchema.asInstanceOf[HasExtensions])
+            GetExtensions.from(HasExtensions.unsafeFrom(bodySchema))
           Some(
             Param(
               "body",
@@ -71,7 +71,7 @@ object ApiResponseToParams
     maybeRef match {
       case Some(ref) => Left(ref)
       case None =>
-        val exts = GetExtensions.from(response.asInstanceOf[HasExtensions])
+        val exts = GetExtensions.from(HasExtensions.unsafeFrom(response))
         val httpMessageInfo = HttpMessageInfo(opName, allParams, exts)
         Right(httpMessageInfo)
     }

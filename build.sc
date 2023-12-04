@@ -107,8 +107,16 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   }
 }
 
+trait Scala213VersionModule extends ScalaModule with ScalafmtModule {
+  override def scalaVersion = T.input("2.13.12")
+
+  def scalacOptions = T {
+    super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
+  }
+}
+
 trait ScalaVersionModule extends CrossScalaModule with ScalafmtModule {
-//  override def scalaVersion = T.input("2.13.12")
+  override def scalaVersion = T.input("2.13.12")
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
@@ -122,7 +130,20 @@ trait BaseScalaNoPublishModule extends BaseModule with ScalaVersionModule {
   )
 }
 
+trait BaseScala213NoPublishModule
+    extends BaseModule
+    with Scala213VersionModule {
+
+  override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
+    ivy"org.typelevel:::kind-projector:0.13.2"
+  )
+}
+
 trait BaseScalaModule extends BaseScalaNoPublishModule with BasePublishModule
+trait BaseScala213Module
+    extends BaseScala213NoPublishModule
+    with BasePublishModule
+
 trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
   def scalaJSVersion = "1.11.0"
   def moduleKind = ModuleKind.CommonJSModule
@@ -182,8 +203,7 @@ trait OpenApiModule extends BaseScalaModule {
   }
 }
 
-object cli extends Cross[CliModule](scalaVersions)
-trait CliModule extends BaseScalaModule with buildinfo.BuildInfo {
+object cli extends BaseScala213Module with buildinfo.BuildInfo {
   def ivyDeps = Agg(
     Deps.decline,
     Deps.coursier,
@@ -204,7 +224,12 @@ trait CliModule extends BaseScalaModule with buildinfo.BuildInfo {
   )
 
   def moduleDeps =
-    Seq(openapi(), proto.core(), `json-schema`(), formatter.jvm())
+    Seq(
+      openapi("2.13.12"),
+      proto.core("2.13.12"),
+      `json-schema`("2.13.12"),
+      formatter.jvm("2.13.12")
+    )
 
   def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
     val inputArgs = inputs.flatMap { p =>
@@ -331,10 +356,11 @@ object traits extends BaseJavaModule {
       with BaseMunitTests
 }
 
-object `readme-validator`
-    extends Cross[`readme-validator-module`](scalaVersions)
-trait `readme-validator-module` extends BaseScalaNoPublishModule {
-  def moduleDeps = Seq(openapi(), proto.core(), `json-schema`())
+//object `readme-validator`
+//    extends Cross[`readme-validator-module`](scalaVersions)
+object `readme-validator` extends BaseScala213NoPublishModule {
+  def moduleDeps =
+    Seq(openapi("2.13.12"), proto.core("2.13.12"), `json-schema`("2.13.12"))
 
   def ivyDeps = Agg(
     Deps.cats.parse,
@@ -394,9 +420,7 @@ object proto extends Module {
     }
   }
 
-  object examples extends Cross[ExamplesModule](scalaVersions)
-
-  trait ExamplesModule extends BaseScalaModule with ScalaPBModule {
+  object examples extends BaseScala213Module with ScalaPBModule {
     def scalaPBVersion = Deps.scalapb.version
 
     def smithyFiles = T.sources {
@@ -415,7 +439,7 @@ object proto extends Module {
       os.remove.all(cliRunOutput)
       os.makeDir.all(cliRunOutput)
       val input = smithyFiles().toList.map(_.path)
-      val f = cli().runProtoAux()
+      val f = cli.runProtoAux()
       f(input, cliRunOutput)
       cliRunOutput
     }

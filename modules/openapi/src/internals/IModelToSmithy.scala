@@ -60,11 +60,6 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
               List(Hint.JsonName(memName))
             else List.empty
 
-//          ShapeBuilderOps[MemberShape.Builder, MemberShape](MemberShape
-//            .builder()
-//            .id(id.toSmithy)
-//            .target(tpe.toSmithy)).addHints(hints ++ jsonNameHint).build()
-
           MemberShape
             .builder()
             .id(id.toSmithy)

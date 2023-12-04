@@ -372,9 +372,9 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     val schemes = securitySchemes.values.toVector
     val securityHint =
       if (schemes.nonEmpty) List(Hint.Security(schemes)) else Nil
-    val exts = GetExtensions.from(openApi.asInstanceOf[HasExtensions])
+    val exts = GetExtensions.from(HasExtensions.unsafeFrom(openApi))
     val infoExts =
-      GetExtensions.from(openApi.getInfo().asInstanceOf[HasExtensions])
+      GetExtensions.from(HasExtensions.unsafeFrom(openApi.getInfo()))
     val externalDocs = Option(openApi.getExternalDocs()).map(e =>
       Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )

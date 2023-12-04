@@ -142,13 +142,12 @@ object AllOfTransformer extends IModelPostProcessor {
   private def moveParentFieldsAndCreateMixins(
       all: Vector[Definition]
   ): Vector[Definition] = {
-    val allShapes: mutable.LinkedHashMap[DefId, Definition] =
-      all
-        .map(a => a.id -> a)
-        .foldLeft(new mutable.LinkedHashMap[DefId, Definition]()) {
-          case (acc, (id, shape)) =>
-            acc += (id -> shape)
-        }
+    val allShapes = new mutable.LinkedHashMap[DefId, Definition]()
+    all
+      .map(a => a.id -> a)
+      .foreach { case (id, shape) =>
+        allShapes += (id -> shape)
+      }
 
     all.foreach { d =>
       // get latest in case modifications have been made to this definition since the
@@ -219,15 +218,15 @@ object AllOfTransformer extends IModelPostProcessor {
 
     val unused = isAMixin.diff(usedAsMixins)
 
+    val idToDef = new mutable.ArrayBuffer[Definition]()
     allShapes
-      .foldLeft(new mutable.LinkedHashMap[DefId, Definition]()) {
-        case (acc, (id, shp)) =>
-          acc += (if (unused(id))
-                    (id, shp.mapHints(_.filterNot(_ == Hint.IsMixin)))
-                  else (id, shp))
+      .foreach { case (id, shp) =>
+        idToDef += (if (unused(id))
+                      shp.mapHints(_.filterNot(_ == Hint.IsMixin))
+                    else shp)
       }
-      .values
-      .toVector
+
+    idToDef.toVector
   }
 
   private def transform(in: IModel): Vector[Definition] = {

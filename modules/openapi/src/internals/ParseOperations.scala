@@ -192,7 +192,7 @@ private class ParseOperationsImpl(
     )
     val hints =
       GetExtensions.from(
-        opInfo.op.asInstanceOf[HasExtensions]
+        HasExtensions.unsafeFrom(opInfo.op)
       ) ++ securityHint ++ descHint ++ exDocs
     val suppressions = getHeaderSuppressions(allValidInputParams).toVector
     ParseOperationsResult(
@@ -252,7 +252,7 @@ private class ParseOperationsImpl(
     Option(
       op.getRequestBody()
     ).flatMap { rb =>
-      val exts = GetExtensions.from(rb.asInstanceOf[HasExtensions])
+      val exts = GetExtensions.from(HasExtensions.unsafeFrom(rb))
       val bodies = ContentToSchemaOpt(rb.getContent())
       val (bodyHints, maybeSchema) =
         bodies.toList match {
@@ -295,7 +295,7 @@ private class ParseOperationsImpl(
 
     maybeResolvedParam.flatMap { resolvedParam =>
       val name = resolvedParam.getName()
-      val exts = GetExtensions.from(resolvedParam.asInstanceOf[HasExtensions])
+      val exts = GetExtensions.from(HasExtensions.unsafeFrom(resolvedParam))
       val httpBinding = resolvedParam.getIn() match {
         case "query"  => Some(Hint.QueryParam(name))
         case "path"   => Some(Hint.PathParam(name))
