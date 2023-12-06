@@ -52,7 +52,8 @@ object TestUtils {
       JsonSchemaCompiler.parseAndCompile(
         OpenApiCompiler.Options(
           useVerboseNames = false,
-          failOnValidationErrors = false,
+          failOnInputValidationErrors = false,
+          failOnOutputValidationErrors = false,
           List.empty,
           input0.smithyVersion == SmithyVersion.One,
           debug = true

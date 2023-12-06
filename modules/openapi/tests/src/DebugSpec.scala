@@ -32,7 +32,8 @@ final class DebugSpec extends munit.FunSuite {
     OpenApiCompiler.parseAndCompile(
       OpenApiCompiler.Options(
         useVerboseNames = false,
-        failOnValidationErrors = false,
+        failOnOpenapiValidationErrors = false,
+        failOnSmithyValidationErrors = true,
         List.empty,
         useEnumTraitSyntax = false,
         debug
@@ -45,8 +46,8 @@ final class DebugSpec extends munit.FunSuite {
       loc: Location
   ) = {
     load("issue-23.json", debug) match {
-      case Failure(ex: ValidatedResultException, _) =>
-        assertEquals(ex.getValidationEvents().size(), expectedCount)
+      case Failure(ModelError.SmithyValidationFailed(events), _) =>
+        assertEquals(events.size, expectedCount)
       case Failure(cause, _) =>
         fail(
           s"expected a ValidatedResultException but got a ${cause.getClass().getSimpleName()}"
@@ -55,10 +56,10 @@ final class DebugSpec extends munit.FunSuite {
     }
   }
 
-  test("load with debug leaves validation events untouched") {
+  test("load with debug leaves validation events untouched".only) {
     testFilteredErrors(debug = true, expectedCount = 5)
   }
-  test("load without debug filters validation events") {
+  test("load without debug filters validation events".only) {
     testFilteredErrors(debug = false, expectedCount = 2)
   }
 }

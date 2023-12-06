@@ -25,7 +25,8 @@ final case class OpenAPIJsonSchemaOpts(
     inputFiles: NonEmptyList[os.Path],
     outputPath: os.Path,
     useVerboseNames: Boolean,
-    failOnValidationErrors: Boolean,
+    failOnInputValidationErrors: Boolean,
+    failOnOutputValidationErrors: Boolean,
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
     debug: Boolean,
@@ -40,10 +41,18 @@ object OpenAPIJsonSchemaOpts {
       "If set, names of shapes not be simplified and will be as verbose as possible"
     )
     .orFalse
-  private val failOnValidationErrors = Opts
+
+  private val failOnInputValidationErrors = Opts
     .flag(
-      "failOnValidationErrors",
-      "If set, abort the conversion if any specs contains a validation error"
+      "failOnInputValidationErrors",
+      "If set, abort the conversion if any input specs contains a validation error"
+    )
+    .orFalse
+
+  private val failOnOutputValidationErrors = Opts
+    .flag(
+      "failOnOutputValidationErrors",
+      "If set, abort the conversion if any produced smithy spec contains a validation error"
     )
     .orFalse
 
@@ -81,7 +90,8 @@ object OpenAPIJsonSchemaOpts {
       CommonOpts.sources,
       CommonOpts.outputDirectory,
       verboseNames,
-      failOnValidationErrors,
+      failOnInputValidationErrors,
+      failOnOutputValidationErrors,
       useEnumTraitSyntax,
       outputJson,
       debug,
