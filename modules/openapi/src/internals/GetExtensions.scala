@@ -17,7 +17,6 @@ package smithytranslate.openapi.internals
 
 import software.amazon.smithy.model.node.Node
 import scala.jdk.CollectionConverters._
-import smithytranslate.openapi.internals.OpenApiPattern
 import scala.language.reflectiveCalls
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.{node => jackson}
@@ -29,7 +28,7 @@ object GetExtensions {
   def transformPattern[A](
       local: Local
   ): OpenApiPattern[A] => OpenApiPattern[A] = {
-    val maybeHints = from(local.schema)
+    val maybeHints = from(HasExtensions.unsafeFrom(local.schema))
     (pattern: OpenApiPattern[A]) =>
       pattern.mapContext(_.addHints(maybeHints, retainTopLevel = true))
   }
@@ -37,6 +36,9 @@ object GetExtensions {
   // Using reflective calls because openapi does not seem to have a common interface
   // that exposes the presence of extensions.
   type HasExtensions = { def getExtensions(): java.util.Map[String, Any] }
+  object HasExtensions {
+    def unsafeFrom(s: Any): HasExtensions = s.asInstanceOf[HasExtensions]
+  }
 
   def from(s: HasExtensions): List[Hint] =
     Option(s)

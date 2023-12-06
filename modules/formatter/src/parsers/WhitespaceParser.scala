@@ -42,7 +42,7 @@ object WhitespaceParser {
   val commentType: Parser[CommentType] =
     documentation_comment.backtrack | line_comment
   val comment: Parser[Comment] =
-    (commentType ~ not_newline <* nl).map(Comment.apply.tupled)
+    (commentType ~ not_newline <* nl).map { case (a, b) => Comment.apply(a, b) }
   private val commentOrNewline: Parser[Option[Comment]] =
     comment.eitherOr(nl).map(_.toOption)
 

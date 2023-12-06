@@ -33,6 +33,8 @@ import software.amazon.smithy.model.Model
 
 import scala.util.Try
 
+import scala.collection.compat._
+
 object Formatter {
 
   def run(formatOpts: FormatOpts): Unit = {

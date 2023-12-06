@@ -148,7 +148,7 @@ object OpenApiCompiler {
   ): Result[SmithyModel] = {
     val (errors0, smithy0) = inputs.toList
       .map(_.leftMap(NonEmptyChain.fromNonEmptyList))
-      .foldMap(OpenApiToIModel.compile.tupled)
+      .foldMap { case (c, e) => OpenApiToIModel.compile(c, e) }
       .map(IModelPostProcessor(opts.useVerboseNames))
       .map(new IModelToSmithy(opts.useEnumTraitSyntax))
     val errors = errors0.toList

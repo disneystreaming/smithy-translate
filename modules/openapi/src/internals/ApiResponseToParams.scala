@@ -15,7 +15,10 @@
 
 package smithytranslate.openapi.internals
 
+import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.responses.ApiResponse
+import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+
 import scala.jdk.CollectionConverters._
 
 object ApiResponseToParams
@@ -32,9 +35,11 @@ object ApiResponseToParams
         response.getContent()
       ).toList
       bodies.toList match {
-        case Nil => None
-        case (contentType, bodySchema) :: Nil =>
-          val bodyExts = GetExtensions.from(bodySchema)
+        case Nil                                         => None
+        case (contentType, bodySchema: Schema[_]) :: Nil =>
+          // TODO: figure out how to deal with reflective calls in scala 2.12
+          val bodyExts =
+            GetExtensions.from(HasExtensions.unsafeFrom(bodySchema))
           Some(
             Param(
               "body",
@@ -48,7 +53,8 @@ object ApiResponseToParams
           )
         case list =>
           val bodySchema = ContentTypeDiscriminatedSchema(list.toMap)
-          val bodyExts = GetExtensions.from(bodySchema)
+          val bodyExts =
+            GetExtensions.from(HasExtensions.unsafeFrom(bodySchema))
           Some(
             Param(
               "body",
@@ -65,7 +71,7 @@ object ApiResponseToParams
     maybeRef match {
       case Some(ref) => Left(ref)
       case None =>
-        val exts = GetExtensions.from(response)
+        val exts = GetExtensions.from(HasExtensions.unsafeFrom(response))
         val httpMessageInfo = HttpMessageInfo(opName, allParams, exts)
         Right(httpMessageInfo)
     }

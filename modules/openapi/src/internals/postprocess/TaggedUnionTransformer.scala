@@ -16,6 +16,8 @@
 package smithytranslate.openapi.internals
 package postprocess
 
+import scala.collection.compat._
+
 object TaggedUnionTransformer extends IModelPostProcessor {
 
   private case class TaggedUnionInfo(
@@ -57,9 +59,9 @@ object TaggedUnionTransformer extends IModelPostProcessor {
       val singleLocal = allFields.size == 1
       val allLocalRequired =
         allFields.forall(_.hints.contains(Hint.Required))
-      if (singleLocal && allLocalRequired)
+      if (singleLocal && allLocalRequired) {
         info.addFields(allFields)
-      else info.setNotTagged
+      } else info.setNotTagged
     }
   }
 
@@ -74,7 +76,7 @@ object TaggedUnionTransformer extends IModelPostProcessor {
 
   private def transform(in: IModel): Vector[Definition] = {
     val toUpdate =
-      in.definitions.flatMap {
+      in.definitions.collect {
         case u @ Union(id, altNames, UnionKind.Untagged, _) =>
           val info = getTaggedUnionInfo(altNames, in.definitions)
           val taggedFields = info.taggedFields
@@ -92,7 +94,7 @@ object TaggedUnionTransformer extends IModelPostProcessor {
                 )
               )
             )
-            Set(newUnion)
+            newUnion
           } else {
             val newUnion = u.copy(
               alts = u.alts.map(alt =>
@@ -101,9 +103,8 @@ object TaggedUnionTransformer extends IModelPostProcessor {
                 )
               )
             )
-            Set(newUnion)
+            newUnion
           }
-        case _ => Set.empty
       }
     val toAddMap = toUpdate.map(d => d.id -> d).toMap
     in.definitions

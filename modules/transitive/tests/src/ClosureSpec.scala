@@ -42,7 +42,7 @@ class ClosureSpec extends munit.FunSuite {
     assertEquals(
       result
         .getMetadataProperty("some_key")
-        .flatMap(_.asStringNode().map(_.getValue)),
+        .flatMap[String](_.asStringNode().map[String](_.getValue)),
       java.util.Optional.of("some value")
     )
     assertEquals(result.prettyPrint, model1.prettyPrint)

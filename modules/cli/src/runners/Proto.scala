@@ -125,7 +125,8 @@ private object Deps {
         .assemble()
         .unwrap()
 
-      modelBuilder.addShapes(upstreamModel): Unit
+      modelBuilder.addShapes(upstreamModel)
+      ()
     }
   }
 }

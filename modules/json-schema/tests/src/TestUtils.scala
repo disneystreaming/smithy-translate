@@ -59,7 +59,6 @@ object TestUtils {
         ),
         inputs.map(i => i.filePath -> i.jsonSpec): _*
       )
-
     val resultW = result.map(ModelWrapper(_))
 
     val assembler = Model

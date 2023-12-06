@@ -16,7 +16,6 @@
 package smithyproto.proto3
 
 import java.util.stream.Collectors
-
 import smithytranslate.closure.TransitiveModel
 import smithytranslate.UUID
 import software.amazon.smithy.build.{ProjectionTransformer, TransformContext}
@@ -24,7 +23,9 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.loader.Prelude
 import software.amazon.smithy.model.shapes._
 
-import scala.jdk.CollectionConverters.*
+import java.util
+import scala.jdk.CollectionConverters._
+import scala.collection.compat._
 
 object ModelPreProcessor {
 
@@ -72,9 +73,9 @@ object ModelPreProcessor {
       private val preludeModel = Model.assembler().assemble().unwrap()
       private val addIfUsed = Map(
         // format: off
-        classOf[BigIntegerShape] -> (smithytranslate.BigInteger.shape, smithytranslate.BigInteger.target),
-        classOf[BigDecimalShape] -> (smithytranslate.BigDecimal.shape, smithytranslate.BigDecimal.target),
-        classOf[TimestampShape] -> (smithytranslate.Timestamp.shape, smithytranslate.Timestamp.target)
+        (classOf[BigIntegerShape], (smithytranslate.BigInteger.shape, smithytranslate.BigInteger.target)),
+        (classOf[BigDecimalShape], (smithytranslate.BigDecimal.shape, smithytranslate.BigDecimal.target)),
+        (classOf[TimestampShape], (smithytranslate.Timestamp.shape, smithytranslate.Timestamp.target))
         // format: on
       )
 
@@ -240,7 +241,7 @@ object ModelPreProcessor {
                     .getAllMembers()
                     .values()
                     .stream()
-                    .map(updateMember)
+                    .map[MemberShape](updateMember)
                     .collect(Collectors.toList())
                 )
                 .build()
@@ -254,7 +255,7 @@ object ModelPreProcessor {
                     .getAllMembers()
                     .values()
                     .stream()
-                    .map(updateMember)
+                    .map[MemberShape](updateMember)
                     .collect(Collectors.toList())
                 )
                 .build()
@@ -280,14 +281,14 @@ object ModelPreProcessor {
             .filter { _.getTarget() == uuidShapeId }
             .count()
           if (uuidUsage > 0) {
-            val updatedShapes = x
+            val updatedShapes: util.List[Shape] = x
               .getModel()
               .toSet()
               .stream()
               // remove reference to alloy#UUID
               .filter(_.getId() != uuidShapeId)
-              .map { _shape =>
-                _shape.accept(updateMemberShapes)
+              .map[Shape] { _shape =>
+                _shape.accept[Shape](updateMemberShapes)
               }
               .collect(Collectors.toList())
             Model

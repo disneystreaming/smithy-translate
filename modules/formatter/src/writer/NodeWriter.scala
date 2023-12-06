@@ -136,7 +136,7 @@ object NodeWriter {
   }
   implicit val quotedTextWriter: Writer[QuotedText] = Writer.write {
     case QuotedText(text) =>
-      s"\"${text.map(_.write).mkString}\""
+      s"""\"${text.map(_.write).mkString}\""""
   }
   implicit val textBlockContentWriter: Writer[TextBlockContent] = Writer.write {
     case TextBlockContent(quotes, text) =>
@@ -144,7 +144,7 @@ object NodeWriter {
   }
   implicit val textBlockWriter: Writer[TextBlock] = Writer.write {
     case TextBlock(text) =>
-      s"\"\"\"\n${text.writeN}\"\"\""
+      s"""\"\"\"\n${text.writeN}\"\"\""""
   }
   implicit val fracWriter: Writer[Frac] = Writer.write { case Frac(frac) =>
     s".${frac.write}"

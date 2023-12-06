@@ -15,12 +15,12 @@
 
 package smithytranslate.closure
 
-import smithytranslate.closure.TransitiveModel
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.{Shape, ShapeId}
 
 import scala.jdk.CollectionConverters._
 import scala.collection.SortedSet
+import scala.collection.immutable.TreeSet
 
 object ModelOps {
   implicit class ModelOps(model: Model) {
@@ -40,8 +40,7 @@ object ModelOps {
 
       implicit val shapeOrdering: Ordering[Shape] =
         Ordering[Location].on[Shape](loc)
-
-      SortedSet.from(model.shapes().iterator().asScala)
+      model.shapes().iterator().asScala.foldLeft(new TreeSet[Shape])(_ + _)
     }
 
     def debug: Model = {

@@ -19,6 +19,7 @@ package postprocess
 import cats.data.NonEmptyChain
 import cats.syntax.all._
 import org.typelevel.ci._
+import scala.collection.compat._
 
 object SimplifyNameTransformer extends IModelPostProcessor {
 

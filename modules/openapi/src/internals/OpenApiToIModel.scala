@@ -20,6 +20,7 @@ import cats.Parallel
 import cats.mtl.Tell
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media._
+
 import scala.jdk.CollectionConverters._
 import cats.data._
 import Primitive._
@@ -27,6 +28,7 @@ import cats.syntax.all._
 import ModelError._
 import cats.Monad
 import org.typelevel.ci._
+import smithytranslate.openapi.internals.GetExtensions.HasExtensions
 
 object OpenApiToIModel {
 
@@ -362,7 +364,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
   private def recordService(opDefIds: Vector[DefId]): F[Unit] = {
     val security =
       Option(openApi.getSecurity())
-        .map(_.asScala)
+        .map(_.asScala.toSet)
         .getOrElse(Set.empty)
         .flatMap(_.keySet().asScala)
     val auth = security.flatMap(securitySchemes.get).toVector
@@ -370,8 +372,9 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     val schemes = securitySchemes.values.toVector
     val securityHint =
       if (schemes.nonEmpty) List(Hint.Security(schemes)) else Nil
-    val exts = GetExtensions.from(openApi)
-    val infoExts = GetExtensions.from(openApi.getInfo())
+    val exts = GetExtensions.from(HasExtensions.unsafeFrom(openApi))
+    val infoExts =
+      GetExtensions.from(HasExtensions.unsafeFrom(openApi.getInfo()))
     val externalDocs = Option(openApi.getExternalDocs()).map(e =>
       Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
@@ -619,13 +622,13 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           val externalDocs = getExternalDocsHint(local.schema)
           val hints =
             List(
-              length,
-              range,
-              pattern,
-              sensitive,
+              length.toList,
+              range.toList,
+              pattern.toList,
+              sensitive.toList,
               topLevel,
-              examples,
-              externalDocs
+              examples.toList,
+              externalDocs.toList
             ).flatten
           val errors = List(rangeError).flatten
           (hints, errors)

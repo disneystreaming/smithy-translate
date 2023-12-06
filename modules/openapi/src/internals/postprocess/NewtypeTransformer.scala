@@ -36,7 +36,7 @@ object NewtypeTransformer extends IModelPostProcessor {
   def apply(model: IModel): IModel = {
     val newtypes = model.definitions.collect {
       case Newtype(id, target, hints) =>
-        id -> (target, hints)
+        (id, (target, hints))
     }.toMap
 
     @tailrec

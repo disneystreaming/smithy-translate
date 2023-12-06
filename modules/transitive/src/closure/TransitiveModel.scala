@@ -18,11 +18,10 @@ package smithytranslate.closure
 import scala.collection.mutable
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes._
-import scala.jdk.CollectionConverters.SetHasAsScala
 import software.amazon.smithy.model.neighbor.Walker
 import software.amazon.smithy.model.neighbor.NeighborProvider
-import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+import scala.jdk.CollectionConverters._
 import software.amazon.smithy.model.traits.TraitDefinition
 import software.amazon.smithy.utils.ToSmithyBuilder
 

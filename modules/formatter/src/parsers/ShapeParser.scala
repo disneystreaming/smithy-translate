@@ -48,7 +48,6 @@ import smithytranslate.formatter.ast.shapes.ShapeStatementsCase.{
   ApplyStatementCase,
   ShapeStatementCase
 }
-import smithytranslate.formatter.parsers.equal
 import smithytranslate.formatter.parsers.WhitespaceParser.{br, sp, sp0, ws}
 import smithytranslate.formatter.parsers.NodeParser._
 import smithytranslate.formatter.parsers.ShapeIdParser._

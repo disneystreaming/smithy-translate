@@ -23,7 +23,6 @@ import software.amazon.smithy.build.transforms.FilterSuppressions
 import software.amazon.smithy.build.TransformContext
 import cats.syntax.all._
 import munit.Location
-import smithytranslate.openapi.OpenApiCompiler
 import cats.data.NonEmptyList
 import software.amazon.smithy.model.node._
 import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
@@ -33,7 +32,7 @@ import software.amazon.smithy.model.transform.ModelTransformer
 import software.amazon.smithy.model.shapes.Shape
 import software.amazon.smithy.model.traits.Trait
 import software.amazon.smithy.model.traits.BoxTrait
-import scala.jdk.FunctionConverters._
+import scala.compat.java8.FunctionConverters._
 
 object TestUtils {
 

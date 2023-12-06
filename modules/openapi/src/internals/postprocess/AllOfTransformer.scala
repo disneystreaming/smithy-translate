@@ -142,8 +142,12 @@ object AllOfTransformer extends IModelPostProcessor {
   private def moveParentFieldsAndCreateMixins(
       all: Vector[Definition]
   ): Vector[Definition] = {
-    val allShapes: mutable.LinkedHashMap[DefId, Definition] =
-      mutable.LinkedHashMap.from(all.map(a => a.id -> a))
+    val allShapes = new mutable.LinkedHashMap[DefId, Definition]()
+    all
+      .map(a => a.id -> a)
+      .foreach { case (id, shape) =>
+        allShapes += (id -> shape)
+      }
 
     all.foreach { d =>
       // get latest in case modifications have been made to this definition since the
@@ -192,26 +196,37 @@ object AllOfTransformer extends IModelPostProcessor {
         case other => Vector(other)
       }
     }
-    removeUnusedMixins(allShapes).values.toVector
+
+    removeUnusedMixins(allShapes)
   }
 
   private def removeUnusedMixins(
       allShapes: mutable.Map[DefId, Definition]
-  ): mutable.Map[DefId, Definition] = {
-    val usedAsMixins: Set[DefId] = allShapes.values.flatMap { v =>
+  ): Vector[Definition] = {
+    val values = allShapes.values.foldLeft(Vector.empty[Structure]) {
+      case (acc, s: Structure) =>
+        acc :+ s
+      case (acc, _) => acc
+    }
+    val usedAsMixins: Set[DefId] = values.flatMap { v =>
       v.hints.collect { case Hint.HasMixin(id) => id }
     }.toSet
 
-    val isAMixin: Set[DefId] = allShapes.values.flatMap { v =>
+    val isAMixin: Set[DefId] = values.flatMap { v =>
       v.hints.collect { case Hint.IsMixin => v.id }
     }.toSet
 
     val unused = isAMixin.diff(usedAsMixins)
 
-    allShapes.map { case (id, shp) =>
-      if (unused(id)) id -> shp.mapHints(_.filterNot(_ == Hint.IsMixin))
-      else id -> shp
-    }
+    val idToDef = new mutable.ArrayBuffer[Definition]()
+    allShapes
+      .foreach { case (id, shp) =>
+        idToDef += (if (unused(id))
+                      shp.mapHints(_.filterNot(_ == Hint.IsMixin))
+                    else shp)
+      }
+
+    idToDef.toVector
   }
 
   private def transform(in: IModel): Vector[Definition] = {

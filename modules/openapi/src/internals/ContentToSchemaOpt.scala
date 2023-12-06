@@ -18,6 +18,7 @@ package smithytranslate.openapi.internals
 import io.swagger.v3.oas.models.media.Schema
 import scala.jdk.CollectionConverters._
 import io.swagger.v3.oas.models.media.Content
+import scala.collection.compat._
 
 object ContentToSchemaOpt extends (Content => Map[String, Schema[_]]) {
 
