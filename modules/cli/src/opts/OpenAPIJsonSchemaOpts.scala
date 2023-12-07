@@ -25,8 +25,8 @@ final case class OpenAPIJsonSchemaOpts(
     inputFiles: NonEmptyList[os.Path],
     outputPath: os.Path,
     useVerboseNames: Boolean,
-    failOnInputValidationErrors: Boolean,
-    failOnOutputValidationErrors: Boolean,
+    validateInput: Boolean,
+    validateOutput: Boolean,
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
     debug: Boolean,
@@ -42,14 +42,14 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
-  private val failOnInputValidationErrors = Opts
+  private val validateInput = Opts
     .flag(
       "validate-input",
       "If set, abort the conversion if any input specs contains a validation error"
     )
     .orFalse
 
-  private val failOnOutputValidationErrors = Opts
+  private val validateOutput = Opts
     .flag(
       "validate-output",
       "If set, abort the conversion if any produced smithy spec contains a validation error"
@@ -90,8 +90,8 @@ object OpenAPIJsonSchemaOpts {
       CommonOpts.sources,
       CommonOpts.outputDirectory,
       verboseNames,
-      failOnInputValidationErrors,
-      failOnOutputValidationErrors,
+      validateInput,
+      validateOutput,
       useEnumTraitSyntax,
       outputJson,
       debug,

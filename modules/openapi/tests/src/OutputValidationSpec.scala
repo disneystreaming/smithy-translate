@@ -21,7 +21,7 @@ import smithytranslate.openapi.OpenApiCompiler.Success
 import software.amazon.smithy.model.validation.ValidatedResultException
 import munit.Location
 
-final class DebugSpec extends munit.FunSuite {
+final class OutputValidationSpec extends munit.FunSuite {
 
   private def load(fileName: String, debug: Boolean) = {
     val content = scala.io.Source

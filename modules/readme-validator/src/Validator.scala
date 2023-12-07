@@ -89,8 +89,8 @@ object Validator {
     val options =
       OpenApiCompiler.Options(
         useVerboseNames = false,
-        failOnInputValidationErrors = true,
-        failOnOutputValidationErrors = true,
+        validateInput = true,
+        validateOutput = true,
         List.empty,
         useEnumTraitSyntax = false,
         debug = false
@@ -137,8 +137,8 @@ object Validator {
     val options =
       OpenApiCompiler.Options(
         useVerboseNames = false,
-        failOnInputValidationErrors = true,
-        failOnOutputValidationErrors = true,
+        validateInput = true,
+        validateOutput = true,
         List.empty,
         useEnumTraitSyntax = false,
         debug = false

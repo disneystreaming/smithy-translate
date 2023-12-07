@@ -83,8 +83,8 @@ object OpenApiCompiler {
 
   final case class Options(
       useVerboseNames: Boolean,
-      failOnInputValidationErrors: Boolean,
-      failOnOutputValidationErrors: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
       transformers: List[ProjectionTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
@@ -129,7 +129,7 @@ object OpenApiCompiler {
             val result = parser.readContents(in, null, null)
 
             if (
-              opts.failOnInputValidationErrors && !result
+              opts.validateInput && !result
                 .getMessages()
                 .isEmpty()
             ) {
@@ -195,7 +195,7 @@ object OpenApiCompiler {
       case (Some(model), None) =>
         Success(translationErrors, model)
       case (Some(model), Some(nonEmptyErrors)) =>
-        if (opts.failOnOutputValidationErrors) {
+        if (opts.validateOutput) {
           Failure(nonEmptyErrors.head, nonEmptyErrors.tail)
         } else {
           Success(allErrors, model)
