@@ -15,6 +15,7 @@
 
 package smithytranslate.openapi
 
+import scala.jdk.OptionConverters._
 import io.swagger.v3.oas.models.OpenAPI
 import software.amazon.smithy.model.{Model => SmithyModel}
 import cats.syntax.all._
@@ -33,6 +34,7 @@ import smithytranslate.openapi.OpenApiCompiler.SmithyVersion.Two
 import software.amazon.smithy.model.validation.ValidatedResultException
 import software.amazon.smithy.model.validation.Severity
 import java.util.stream.Collectors
+import software.amazon.smithy.model.validation.ValidatedResult
 
 /** Converts openapi to a smithy model.
   */
@@ -81,7 +83,8 @@ object OpenApiCompiler {
 
   final case class Options(
       useVerboseNames: Boolean,
-      failOnValidationErrors: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
       transformers: List[ProjectionTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
@@ -126,7 +129,9 @@ object OpenApiCompiler {
             val result = parser.readContents(in, null, null)
 
             if (
-              opts.failOnValidationErrors && !result.getMessages().isEmpty()
+              opts.validateInput && !result
+                .getMessages()
+                .isEmpty()
             ) {
               Left(result.getMessages().asScala.toList)
             } else {
@@ -151,21 +156,55 @@ object OpenApiCompiler {
       .foldMap { case (c, e) => OpenApiToIModel.compile(c, e) }
       .map(IModelPostProcessor(opts.useVerboseNames))
       .map(new IModelToSmithy(opts.useEnumTraitSyntax))
-    val errors = errors0.toList
+    val translationErrors = errors0.toList
 
-    scala.util
-      .Try(validate(smithy0))
-      .toEither
-      .leftMap(opts.debugModelValidationError)
-      .map(transform(opts))
-      .fold(
-        err => Failure(err, errors),
-        model => Success(errors.toList, model)
-      )
+    val assembled: ValidatedResult[SmithyModel] = validate(smithy0)
+    val validationEvents = if (opts.debug) {
+      assembled.getValidationEvents()
+    } else {
+      val errorEvents = assembled.getValidationEvents(Severity.ERROR)
+      val dangerEvents = assembled.getValidationEvents(Severity.DANGER)
+      val criticalErrors = new java.util.ArrayList(errorEvents)
+      criticalErrors.addAll(dangerEvents)
+      criticalErrors
+    }
+    val problematicSeverities = Set(Severity.DANGER, Severity.ERROR)
+    val hasProblematicEvents = validationEvents
+      .iterator()
+      .asScala
+      .map(_.getSeverity())
+      .exists(problematicSeverities)
+
+    val allErrors =
+      if (hasProblematicEvents) {
+        val smithyValidationFailed =
+          ModelError.SmithyValidationFailed(validationEvents.asScala.toList)
+        smithyValidationFailed :: translationErrors
+      } else {
+        translationErrors
+      }
+
+    val transformedModel =
+      assembled.getResult().toScala.map(transform(opts))
+
+    (transformedModel, NonEmptyList.fromList(allErrors)) match {
+      case (None, Some(nonEmptyErrors)) =>
+        Failure(nonEmptyErrors.head, nonEmptyErrors.tail)
+      case (None, None) =>
+        Failure(ModelError.SmithyValidationFailed(Nil), translationErrors)
+      case (Some(model), None) =>
+        Success(translationErrors, model)
+      case (Some(model), Some(nonEmptyErrors)) =>
+        if (opts.validateOutput) {
+          Failure(nonEmptyErrors.head, nonEmptyErrors.tail)
+        } else {
+          Success(allErrors, model)
+        }
+    }
   }
 
-  private def validate(model: SmithyModel): SmithyModel =
-    SmithyModel.assembler().discoverModels().addModel(model).assemble().unwrap()
+  private def validate(model: SmithyModel): ValidatedResult[SmithyModel] =
+    SmithyModel.assembler().discoverModels().addModel(model).assemble()
 
   private def transform(opts: Options)(model: SmithyModel): SmithyModel =
     opts.transformers.foldLeft(model)((m, t) =>

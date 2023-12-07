@@ -64,7 +64,7 @@ _Note: this library is published to work on Java 8 and above. However, you will 
 ### CLI Usage
 
 The `smithytranslate` CLI will recursively go through all child directories of the
-input directory provided and format any Smithy files it finds. The output 
+input directory provided and format any Smithy files it finds. The output
 
 ```
 > smithytranslate format --help
@@ -81,7 +81,7 @@ Options and flags:
 ```
 
 ### Capabilities and Design
- - The formatter is based off the ABNF defined at [Smithy-Idl-ABNF](https://smithy.io/2.0/spec/idl.html#smithy-idl-abnf) 
+ - The formatter is based off the ABNF defined at [Smithy-Idl-ABNF](https://smithy.io/2.0/spec/idl.html#smithy-idl-abnf)
  - The formatter assumes the file is a valid Smithy file and must be able to pass the Model Assembler validation , otherwise it will return an error
  - use --no-clobber to create a new file to avoid overwriting the original file
  - actual formatting rules are still WIP and will be updated as the formatter is developed
@@ -123,13 +123,15 @@ Options and flags:
         Display this help text.
     --input <path>, -i <path>
         input source files
-    --verboseNames
+    --verbose-names
         If set, names of shapes not be simplified and will be as verbose as possible
-    --failOnValidationErrors
-        If set, abort the conversion if any specs contains a validation error
-    --useEnumTraitSyntax
+    --validate-input
+        If set, abort the conversion if any input specs contains a validation error
+    --validate-output
+        If set, abort the conversion if any produced smithy spec contains a validation error
+    --enum-trait-syntax
         output enum types with the smithy v1 enum trait (deprecated) syntax
-    --outputJson
+    --json-output
         changes output format to be json representations of the smithy models
 ```
 
@@ -1081,13 +1083,15 @@ Options and flags:
         Display this help text.
     --input <path>, -i <path>
         input source files
-    --verboseNames
+    --verbose-names
         If set, names of shapes not be simplified and will be as verbose as possible
-    --failOnValidationErrors
-        If set, abort the conversion if any specs contains a validation error
-    --useEnumTraitSyntax
+    --validate-input
+        If set, abort the conversion if any input specs contains a validation error
+    --validate-output
+        If set, abort the conversion if any produced smithy spec contains a validation error
+    --enum-trait-syntax
         output enum types with the smithy v1 enum trait (deprecated) syntax
-    --outputJson
+    --json-output
         changes output format to be json representations of the smithy models
 ```
 
@@ -1128,7 +1132,7 @@ structure Person {
 
 #### Null Values
 
-JSON Schemas allows for declaring types such as `["string", "null"]`. This type declaration 
+JSON Schemas allows for declaring types such as `["string", "null"]`. This type declaration
 on a required field means that the value cannot be omitted from the `JSON` payload entirely,
 but may be set to `null`. For example:
 
@@ -1497,7 +1501,7 @@ message TestInput {
 
 ### Options
 
-Individual protobuf definitions file (`.proto`) can contain _options_. We support this feature using Smithy's metadata attribute. 
+Individual protobuf definitions file (`.proto`) can contain _options_. We support this feature using Smithy's metadata attribute.
 
 There are a few importing things to notice
 

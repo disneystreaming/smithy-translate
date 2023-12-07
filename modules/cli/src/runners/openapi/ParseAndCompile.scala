@@ -26,7 +26,8 @@ object ParseAndCompile {
   def openapi(
       inputPaths: NonEmptyList[os.Path],
       useVerboseNames: Boolean,
-      failOnValidationErrors: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
@@ -35,7 +36,8 @@ object ParseAndCompile {
     val inputs = readAll(inputPaths, includedExtensions)
     val opts = OpenApiCompiler.Options(
       useVerboseNames,
-      failOnValidationErrors,
+      validateInput,
+      validateOutput,
       transformers,
       useEnumTraitSyntax,
       debug
@@ -46,7 +48,8 @@ object ParseAndCompile {
   def jsonSchema(
       inputPaths: NonEmptyList[os.Path],
       useVerboseNames: Boolean,
-      failOnValidationErrors: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
@@ -55,7 +58,8 @@ object ParseAndCompile {
     val inputs = readAll(inputPaths, includedExtensions)
     val opts = OpenApiCompiler.Options(
       useVerboseNames,
-      failOnValidationErrors,
+      validateInput,
+      validateOutput,
       transformers,
       useEnumTraitSyntax,
       debug

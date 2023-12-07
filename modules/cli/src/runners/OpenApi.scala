@@ -30,7 +30,8 @@ object OpenApi {
       ParseAndCompile.openapi(
         opts.inputFiles,
         useVerboseNames = opts.useVerboseNames,
-        failOnValidationErrors = opts.failOnValidationErrors,
+        validateInput = opts.validateInput,
+        validateOutput = opts.validateOutput,
         transformers,
         opts.useEnumTraitSyntax,
         opts.debug
@@ -47,7 +48,8 @@ object OpenApi {
       ParseAndCompile.jsonSchema(
         opts.inputFiles,
         useVerboseNames = opts.useVerboseNames,
-        failOnValidationErrors = opts.failOnValidationErrors,
+        validateInput = opts.validateInput,
+        validateOutput = opts.validateOutput,
         transformers,
         opts.useEnumTraitSyntax,
         opts.debug

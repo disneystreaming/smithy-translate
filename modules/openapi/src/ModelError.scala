@@ -18,6 +18,7 @@ package smithytranslate.openapi
 import scala.util.control.NoStackTrace
 import cats.data.NonEmptyChain
 import cats.syntax.all._
+import software.amazon.smithy.model.validation.ValidationEvent
 
 sealed trait ModelError extends Throwable
 
@@ -34,16 +35,11 @@ object ModelError {
   }
 
   case class SmithyValidationFailed(
-      smithyValidationError: Throwable,
-      otherErrors: List[ModelError]
+      smithyValidationEvents: List[ValidationEvent]
   ) extends ModelError {
     override def getMessage(): String = {
-      val otherMessages = otherErrors.map(_.getMessage).mkString("\n")
-      "Failed to validate the Smithy model. Previous error message follows:\n" +
-        otherMessages
+      s"Failed to validate the Smithy model:\n${smithyValidationEvents.mkString("\n")}"
     }
-    override def getCause(): Throwable = smithyValidationError
-
   }
 
   case class BadRef(ref: String) extends ModelError

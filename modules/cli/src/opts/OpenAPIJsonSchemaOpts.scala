@@ -25,7 +25,8 @@ final case class OpenAPIJsonSchemaOpts(
     inputFiles: NonEmptyList[os.Path],
     outputPath: os.Path,
     useVerboseNames: Boolean,
-    failOnValidationErrors: Boolean,
+    validateInput: Boolean,
+    validateOutput: Boolean,
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
     debug: Boolean,
@@ -36,27 +37,35 @@ object OpenAPIJsonSchemaOpts {
 
   private val verboseNames = Opts
     .flag(
-      "verboseNames",
+      "verbose-names",
       "If set, names of shapes not be simplified and will be as verbose as possible"
     )
     .orFalse
-  private val failOnValidationErrors = Opts
+
+  private val validateInput = Opts
     .flag(
-      "failOnValidationErrors",
-      "If set, abort the conversion if any specs contains a validation error"
+      "validate-input",
+      "If set, abort the conversion if any input specs contains a validation error"
+    )
+    .orFalse
+
+  private val validateOutput = Opts
+    .flag(
+      "validate-output",
+      "If set, abort the conversion if any produced smithy spec contains a validation error"
     )
     .orFalse
 
   private val useEnumTraitSyntax = Opts
     .flag(
-      "enumTraitSyntax",
+      "enum-trait-syntax",
       "output enum types with the smithy v1 enum trait (deprecated) syntax"
     )
     .orFalse
 
   private val outputJson = Opts
     .flag(
-      "outputJson",
+      "json-output",
       "changes output format to be json representations of the smithy models"
     )
     .orFalse
@@ -81,7 +90,8 @@ object OpenAPIJsonSchemaOpts {
       CommonOpts.sources,
       CommonOpts.outputDirectory,
       verboseNames,
-      failOnValidationErrors,
+      validateInput,
+      validateOutput,
       useEnumTraitSyntax,
       outputJson,
       debug,
