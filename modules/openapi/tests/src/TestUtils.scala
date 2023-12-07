@@ -97,8 +97,8 @@ object TestUtils {
       OpenApiCompiler.parseAndCompile(
         OpenApiCompiler.Options(
           useVerboseNames = false,
-          failOnOpenapiValidationErrors = false,
-          failOnSmithyValidationErrors = true,
+          failOnInputValidationErrors = false,
+          failOnOutputValidationErrors = true,
           List.empty,
           input0.smithyVersion == SmithyVersion.One,
           debug = true

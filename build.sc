@@ -382,6 +382,8 @@ object `readme-validator` extends BaseScala213NoPublishModule {
 object proto extends Module {
   object core extends Cross[CoreModule](scalaVersions)
   trait CoreModule extends BaseScalaModule {
+    def artifactName = "proto"
+
     def ivyDeps = Agg(
       Deps.smithy.model,
       Deps.alloy.core,

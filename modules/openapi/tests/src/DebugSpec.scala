@@ -32,8 +32,8 @@ final class DebugSpec extends munit.FunSuite {
     OpenApiCompiler.parseAndCompile(
       OpenApiCompiler.Options(
         useVerboseNames = false,
-        failOnOpenapiValidationErrors = false,
-        failOnSmithyValidationErrors = true,
+        failOnInputValidationErrors = false,
+        failOnOutputValidationErrors = true,
         List.empty,
         useEnumTraitSyntax = false,
         debug
