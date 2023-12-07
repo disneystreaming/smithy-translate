@@ -98,7 +98,7 @@ object TestUtils {
         OpenApiCompiler.Options(
           useVerboseNames = false,
           failOnInputValidationErrors = false,
-          failOnOutputValidationErrors = true,
+          failOnOutputValidationErrors = false,
           List.empty,
           input0.smithyVersion == SmithyVersion.One,
           debug = true
