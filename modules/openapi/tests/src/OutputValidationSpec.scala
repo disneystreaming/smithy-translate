@@ -20,46 +20,57 @@ import smithytranslate.openapi.OpenApiCompiler.Failure
 import smithytranslate.openapi.OpenApiCompiler.Success
 import software.amazon.smithy.model.validation.ValidatedResultException
 import munit.Location
+import software.amazon.smithy.model.traits.HttpTrait
 
 final class OutputValidationSpec extends munit.FunSuite {
 
-  private def load(fileName: String, debug: Boolean) = {
-    val content = scala.io.Source
-      .fromResource(fileName)
-      .getLines()
-      .mkString("\n")
-    val inputs = Seq((NonEmptyList.of(fileName), content))
-    OpenApiCompiler.parseAndCompile(
+  test("Output should be validated when specified") {
+    val input = """|openapi: '3.0.'
+                   |info:
+                   |  title: test
+                   |  version: '1.0'
+                   |paths:
+                   |  /{test}:
+                   |    get:
+                   |      operationId: test
+                   |      responses:
+                   |        '200':
+                   |          content:
+                   |            application/json:
+                   |              schema:
+                   |                type: object
+                   |""".stripMargin
+
+    val inputs = Seq((NonEmptyList.of("input.yaml"), input))
+    def convert(validateOutput: Boolean) = OpenApiCompiler.parseAndCompile(
       OpenApiCompiler.Options(
         useVerboseNames = false,
         validateInput = false,
-        validateOutput = true,
+        validateOutput = validateOutput,
         List.empty,
         useEnumTraitSyntax = false,
-        debug
+        debug = false
       ),
       inputs: _*
     )
-  }
 
-  private def testFilteredErrors(debug: Boolean, expectedCount: Int)(implicit
-      loc: Location
-  ) = {
-    load("issue-23.json", debug) match {
+    val resultExpectingSuccess = convert(validateOutput = false)
+    assert(resultExpectingSuccess.isInstanceOf[Success[_]])
+
+    val resultExpectingFailure = convert(validateOutput = true)
+    resultExpectingFailure match {
       case Failure(ModelError.SmithyValidationFailed(events), _) =>
-        assertEquals(events.size, expectedCount)
+        // Expecting a failure indicating that the "test" operation is invalid due to not having
+        // an input member matching the `{test}` path segment.
+        assertEquals(events.size, 1)
+        assert(events.exists(_.getId() == "HttpLabelTrait"))
       case Failure(cause, _) =>
         fail(
-          s"expected a ValidatedResultException but got a ${cause.getClass().getSimpleName()}"
+          s"expected a SmithyValidationFailed but got a ${cause.getClass().getSimpleName()}"
         )
-      case Success(_, _) => fail("expected a failure")
+      case Success(_, _) =>
+        fail("expected a failure")
     }
   }
 
-  test("load with debug leaves validation events untouched".only) {
-    testFilteredErrors(debug = true, expectedCount = 5)
-  }
-  test("load without debug filters validation events".only) {
-    testFilteredErrors(debug = false, expectedCount = 2)
-  }
 }
