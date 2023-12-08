@@ -150,8 +150,8 @@ object formatter extends BaseModule { outer =>
       )
     }
 
-    object `parser-test` extends Cross[ParserTestModule](scalaVersions)
-    trait ParserTestModule extends CrossScalaModule with BaseScalaModule {
+    object `parser-test` extends BaseScalaModule {
+      def scalaVersion = jvmOuter.scalaVersion
       def moduleDeps = Seq(jvmOuter)
       override def millSourcePath = outer.millSourcePath / "parser-test"
 
@@ -161,8 +161,8 @@ object formatter extends BaseModule { outer =>
       )
     }
 
-    object shaded extends ShadedModule
-    trait ShadedModule extends BaseJavaModule with BasePublishModule {
+    object shaded extends BaseJavaModule with BasePublishModule {
+
       override def millSourcePath = outer.millSourcePath / "shaded"
 
       def publishArtifactName = "smithytranslate-formatter-shaded"

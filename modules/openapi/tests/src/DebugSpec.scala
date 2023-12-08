@@ -18,7 +18,6 @@ package smithytranslate.openapi
 import cats.data.NonEmptyList
 import smithytranslate.openapi.OpenApiCompiler.Failure
 import smithytranslate.openapi.OpenApiCompiler.Success
-import software.amazon.smithy.model.validation.ValidatedResultException
 import munit.Location
 
 final class DebugSpec extends munit.FunSuite {
