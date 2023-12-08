@@ -391,6 +391,8 @@ final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         case DateTime   => List(new TimestampFormatTrait("date-time"))
         case SimpleDate => List(new DateFormatTrait())
       }
+    case Hint.Tags(values) =>
+      List(TagsTrait.builder.values(values.asJava).build())
     case _ => List.empty
   }
 

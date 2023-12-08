@@ -244,7 +244,7 @@ object TestUtils {
       (filterSuppressions)(model)
     }
 
-    override def toString() =
+    override def toString() = {
       SmithyIdlModelSerializer
         .builder()
         .build()
@@ -252,6 +252,7 @@ object TestUtils {
         .asScala
         .map(in => s"${in._1.toString.toUpperCase}:\n\n${in._2}")
         .mkString("\n")
+    }
   }
 
   object ModelWrapper {

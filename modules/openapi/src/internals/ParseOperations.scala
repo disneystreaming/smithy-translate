@@ -190,10 +190,13 @@ private class ParseOperationsImpl(
     val exDocs = Option(opInfo.op.getExternalDocs()).map(e =>
       Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
+    val tags = Option(op.getTags()).map(_.asScala.toList).map(Hint.Tags).toList
+
     val hints =
       GetExtensions.from(
         HasExtensions.unsafeFrom(opInfo.op)
-      ) ++ securityHint ++ descHint ++ exDocs
+      ) ++ securityHint ++ descHint ++ exDocs ++ tags
+
     val suppressions = getHeaderSuppressions(allValidInputParams).toVector
     ParseOperationsResult(
       errors ++ allInputParamsErrors,
