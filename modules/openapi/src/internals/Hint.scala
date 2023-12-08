@@ -49,5 +49,6 @@ object Hint {
   case class ExternalDocs(description: Option[String], url: String) extends Hint
   case object IsMixin extends Hint
   case class HasMixin(id: DefId) extends Hint
+  case class Tags(values: List[String]) extends Hint
 }
 // format: on
