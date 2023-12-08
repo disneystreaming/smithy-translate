@@ -52,7 +52,7 @@ jobs:
           mill -k --disable-ticker __.test
           mill -k --disable-ticker cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
           mill -k --disable-ticker cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
-          mill -k --disable-ticker proto.examples.compileScalaPB # trigger smithy-to-proto run
+          mill -k --disable-ticker proto-examples.compileScalaPB # trigger smithy-to-proto run
 
       - name: Validate README.md
         run: mill -k --disable-ticker readme-validator.validate

@@ -1,194 +1,65 @@
-import $ivy.`com.lihaoyi::mill-contrib-bloop:`
-import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
-import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
-import $ivy.`com.lewisjkl::header-mill-plugin::0.0.3`
+import $file.buildSetup
+import $file.buildDeps
 
-import coursier.maven.MavenRepository
-import header._
-import io.kipp.mill.ci.release.CiReleaseModule
-import io.kipp.mill.ci.release.SonatypeHost
 import mill._
+import buildSetup._
+import coursier.maven.MavenRepository
 import mill.contrib.scalapblib.ScalaPBModule
 import mill.contrib.buildinfo
 import mill.define.Sources
 import mill.define.Task
 import mill.scalalib.Assembly
 import mill.util.Jvm
-import mill.scalajslib.api.ModuleKind
 import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
-import mill.scalalib.CrossVersion.Binary
 import mill.scalalib.publish._
-import mill.scalalib.scalafmt.ScalafmtModule
 import mill.contrib.buildinfo.BuildInfo
-import os._
-import mill.scalalib.api.ZincWorkerUtil
 
 import scala.Ordering.Implicits._
 
-val scalaVersions = List("2.13.12", "2.12.18")
+val scala212 = "2.12.18"
+val scala213 = "2.13.12"
+val scalaVersions = List(scala213, scala212)
 
-trait BaseModule extends Module with HeaderModule {
-  def millSourcePath: Path = {
-    val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
-    os.pwd / "modules" / originalRelativePath
-  }
-
-  def includeFileExtensions: List[String] = List("scala", "java")
-  def license: HeaderLicense = HeaderLicense.Custom("""|Copyright 2022 Disney Streaming
-                                                       |
-                                                       |Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
-                                                       |you may not use this file except in compliance with the License.
-                                                       |You may obtain a copy of the License at
-                                                       |
-                                                       |   https://disneystreaming.github.io/TOST-1.0.txt
-                                                       |
-                                                       |Unless required by applicable law or agreed to in writing, software
-                                                       |distributed under the License is distributed on an "AS IS" BASIS,
-                                                       |WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-                                                       |See the License for the specific language governing permissions and
-                                                       |limitations under the License.
-                                                       |""".stripMargin)
-}
-
-trait BasePublishModule extends BaseModule with CiReleaseModule {
-  def artifactName =
-    s"smithytranslate-${millModuleSegments.parts.mkString("-")}"
-
-  override def sonatypeHost = Some(SonatypeHost.s01)
-
-  def pomSettings = PomSettings(
-    description = "A smithy-translation toolkit",
-    organization = "com.disneystreaming.smithy",
-    url = "https://github.com/disneystreaming/smithy-translate",
-    licenses = Seq(
-      License(
-        id = "TOST-1.0",
-        name = "TOMORROW OPEN SOURCE TECHNOLOGY LICENSE 1.0",
-        url = "https://disneystreaming.github.io/TOST-1.0.txt",
-        isOsiApproved = false,
-        isFsfLibre = false,
-        distribution = "repo"
-      )
-    ),
-    versionControl = VersionControl(
-      Some("https://github.com/disneystreaming/smithy-translate")
-    ),
-    developers = Seq(
-      Developer(
-        "baccata",
-        "Olivier Mélois",
-        "https://github.com/baccata"
-      ),
-      Developer(
-        "lewisjkl",
-        "Jeff Lewis",
-        "http://github.com/lewisjkl"
-      ),
-      Developer(
-        "daddykotex",
-        "David Francoeur",
-        "http://github.com/daddykotex"
-      ),
-      Developer(
-        "yisraelU",
-        "Yisrael Union",
-        "http://github.com/yisraelU"
-      )
-    )
-  )
-
-  override def javacOptions = T {
-    super.javacOptions() ++ Seq(
-      "--release",
-      "8"
-    )
-  }
-}
-
-trait Scala213VersionModule extends ScalaModule with ScalafmtModule {
-  override def scalaVersion = T.input("2.13.12")
-
-  def scalacOptions = T {
-    super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
-  }
-}
-
-trait ScalaVersionModule extends CrossScalaModule with ScalafmtModule {
-  override def scalaVersion = T.input("2.13.12")
-
-  def scalacOptions = T {
-    super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
-  }
-}
-
-trait BaseScalaNoPublishModule extends BaseModule with ScalaVersionModule {
-
-  override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"org.typelevel:::kind-projector:0.13.2"
-  )
-}
-
-trait BaseScala213NoPublishModule
-    extends BaseModule
-    with Scala213VersionModule {
-
-  override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"org.typelevel:::kind-projector:0.13.2"
-  )
-}
-
-trait BaseScalaModule extends BaseScalaNoPublishModule with BasePublishModule
-trait BaseScala213Module
-    extends BaseScala213NoPublishModule
-    with BasePublishModule
-
-trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
-  def scalaJSVersion = "1.11.0"
-  def moduleKind = ModuleKind.CommonJSModule
-}
-
-trait BaseJavaNoPublishModule extends BaseModule with JavaModule {}
-
-trait BaseJavaModule extends BaseJavaNoPublishModule with BasePublishModule
-
-trait BaseMunitTests extends TestModule.Munit {
-  def ivyDeps =
-    Agg(
-      ivy"org.scalameta::munit::${Deps.munitVersion}",
-      ivy"org.scalameta::munit-scalacheck::${Deps.munitVersion}"
-    )
-}
-
-object `json-schema` extends Cross[`json-schema-module`](scalaVersions)
-trait `json-schema-module` extends BaseScalaModule {
+object `json-schema` extends Cross[JsonSchemaModule](scalaVersions)
+trait JsonSchemaModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
   def moduleDeps = Seq(openapi())
 
+  def publishArtifactName = "smithytranslate-json-schema"
+
   def ivyDeps = Agg(
-    Deps.circe.jawn,
-    Deps.everit.jsonSchema,
-    Deps.collectionsCompat
+    buildDeps.circe.jawn,
+    buildDeps.everit.jsonSchema,
+    buildDeps.collectionsCompat
   )
 
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
-      Deps.smithy.build,
-      Deps.lihaoyi.oslib
+      buildDeps.smithy.build,
+      buildDeps.lihaoyi.oslib
     )
   }
 }
 
 object openapi extends Cross[OpenApiModule](scalaVersions)
-trait OpenApiModule extends BaseScalaModule {
-  def ivyDeps = Deps.swagger.parser ++ Agg(
-    Deps.smithy.model,
-    Deps.smithy.build,
-    Deps.cats.mtl,
-    Deps.ciString,
-    Deps.slf4j,
-    Deps.alloy.core,
-    Deps.collectionsCompat
+trait OpenApiModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-openapi"
+
+  def ivyDeps = buildDeps.swagger.parser ++ Agg(
+    buildDeps.smithy.model,
+    buildDeps.smithy.build,
+    buildDeps.cats.mtl,
+    buildDeps.ciString,
+    buildDeps.slf4j,
+    buildDeps.alloy.core,
+    buildDeps.collectionsCompat
   )
 
   def moduleDeps = Seq(
@@ -197,41 +68,48 @@ trait OpenApiModule extends BaseScalaModule {
 
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
-      Deps.smithy.build,
-      Deps.scalaJavaCompat
+      buildDeps.smithy.build,
+      buildDeps.scalaJavaCompat
     )
   }
 }
 
-object cli extends BaseScala213Module with buildinfo.BuildInfo {
+object cli
+    extends BaseScala213Module
+    with buildinfo.BuildInfo
+    with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-cli"
+
+  def moduleDeps =
+    Seq(
+      openapi(scala213),
+      proto(scala213),
+      `json-schema`(scala213),
+      formatter.jvm(scala213)
+    )
+
   def ivyDeps = Agg(
-    Deps.decline,
-    Deps.coursier,
-    Deps.lihaoyi.oslib,
-    Deps.lihaoyi.ujson,
-    Deps.smithy.build
+    buildDeps.decline,
+    buildDeps.coursier,
+    buildDeps.lihaoyi.oslib,
+    buildDeps.lihaoyi.ujson,
+    buildDeps.smithy.build
   )
 
   object tests extends this.ScalaTests with BaseMunitTests {
-    def ivyDeps = super.ivyDeps() ++ Agg(Deps.lihaoyi.oslib, Deps.lihaoyi.ujson)
+    def ivyDeps =
+      super.ivyDeps() ++ Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson)
   }
 
   def buildInfoPackageName = "smithytranslate.cli.internal"
 
   def buildInfoMembers = Seq(
-    BuildInfo.Value("alloyVersion", Deps.alloy.alloyVersion),
+    BuildInfo.Value("alloyVersion", buildDeps.alloy.alloyVersion),
     BuildInfo.Value("cliVersion", publishVersion().toString)
   )
 
-  def moduleDeps =
-    Seq(
-      openapi("2.13.12"),
-      proto.core("2.13.12"),
-      `json-schema`("2.13.12"),
-      formatter.jvm("2.13.12")
-    )
-
-  def runProtoAux = T.task { (inputs: List[Path], output: Path) =>
+  def runProtoAux = T.task { (inputs: List[os.Path], output: os.Path) =>
     val inputArgs = inputs.flatMap { p =>
       "--input" :: p.toString() :: Nil
     }.toList
@@ -247,44 +125,53 @@ object cli extends BaseScala213Module with buildinfo.BuildInfo {
 }
 
 object formatter extends BaseModule { outer =>
+
   val deps = Agg(
     ivy"org.typelevel::cats-parse::1.0.0",
-    Deps.collectionsCompat
+    buildDeps.collectionsCompat
   )
 
   object jvm extends Cross[JvmModule](scalaVersions)
 
-  trait JvmModule extends BaseScalaModule {
+  trait JvmModule
+      extends CrossScalaModule
+      with BaseScalaModule
+      with BasePublishModule { jvmOuter =>
+
+    def publishArtifactName = "smithytranslate-formatter"
+
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
     object tests extends this.ScalaTests with BaseMunitTests {
       def ivyDeps = super.ivyDeps() ++ Agg(
-        Deps.smithy.build,
-        Deps.lihaoyi.oslib
+        buildDeps.smithy.build,
+        buildDeps.lihaoyi.oslib
       )
     }
 
-    object `parser-test` extends Cross[ParserTestModule](scalaVersions)
-    trait ParserTestModule extends BaseScalaNoPublishModule {
-      def moduleDeps = Seq(formatter.jvm())
+    object `parser-test` extends BaseScalaModule {
+      def scalaVersion = jvmOuter.scalaVersion
+      def moduleDeps = Seq(jvmOuter)
       override def millSourcePath = outer.millSourcePath / "parser-test"
 
       def ivyDeps = Agg(
-        Deps.decline,
-        Deps.lihaoyi.oslib
+        buildDeps.decline,
+        buildDeps.lihaoyi.oslib
       )
     }
 
-    object shaded extends ShadedModule
-    trait ShadedModule extends BaseJavaModule {
+    object shaded extends BaseJavaModule with BasePublishModule {
+
       override def millSourcePath = outer.millSourcePath / "shaded"
 
+      def publishArtifactName = "smithytranslate-formatter-shaded"
+
       override def localClasspath: T[Seq[PathRef]] =
-        formatter.jvm().localClasspath()
+        jvmOuter.localClasspath()
 
       override def resolvedRunIvyDeps: T[Agg[PathRef]] =
-        formatter.jvm().resolvedRunIvyDeps()
+        jvmOuter.resolvedRunIvyDeps()
 
       override def publishXmlDeps = T.task { Agg.empty[Dependency] }
 
@@ -298,14 +185,16 @@ object formatter extends BaseModule { outer =>
       override def jar: T[PathRef] = assembly
     }
 
-    object `java-api` extends BaseJavaModule {
+    object `java-api` extends BaseJavaModule with BasePublishModule {
+      def publishArtifactName = "smithytranslate-formatter-java-api"
+
       override def unmanagedClasspath = T {
-        super.unmanagedClasspath() ++ Agg(formatter.jvm().shaded.jar())
+        super.unmanagedClasspath() ++ Agg(jvmOuter.shaded.jar())
       }
       override def publishXmlDeps = T.task {
         Agg(
           mill.scalalib.publish.Dependency(
-            formatter.jvm().shaded.publishSelfDependency(),
+            jvmOuter.shaded.publishSelfDependency(),
             Scope.Compile
           )
         )
@@ -315,7 +204,10 @@ object formatter extends BaseModule { outer =>
   }
 
   object js extends Cross[JsModule](scalaVersions)
-  trait JsModule extends BaseScalaJSModule {
+  trait JsModule extends CrossScalaModule with BaseScalaJSModule {
+
+    def publishArtifactName = "smithytranslate-formatter"
+
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
@@ -327,9 +219,12 @@ object formatter extends BaseModule { outer =>
   }
 }
 
-object traits extends BaseJavaModule {
+object traits extends BaseJavaModule with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-traits"
+
   def ivyDeps = Agg(
-    Deps.smithy.model
+    buildDeps.smithy.model
   )
 
   /** Exclude smithy file from source jars to avoid conflict with smithy files
@@ -351,20 +246,18 @@ object traits extends BaseJavaModule {
 
   object tests extends Cross[TestsModule](scalaVersions)
   trait TestsModule
-      extends JavaModuleTests
-      with ScalaVersionModule
+      extends CrossScalaModule
+      with JavaModuleTests
       with BaseMunitTests
 }
 
-//object `readme-validator`
-//    extends Cross[`readme-validator-module`](scalaVersions)
-object `readme-validator` extends BaseScala213NoPublishModule {
+object `readme-validator` extends BaseScala213Module {
   def moduleDeps =
-    Seq(openapi("2.13.12"), proto.core("2.13.12"), `json-schema`("2.13.12"))
+    Seq(openapi(scala213), proto(scala213), `json-schema`(scala213))
 
   def ivyDeps = Agg(
-    Deps.cats.parse,
-    Deps.lihaoyi.oslib
+    buildDeps.cats.parse,
+    buildDeps.lihaoyi.oslib
   )
 
   def readmeFile = T.sources { os.pwd / "README.md" }
@@ -379,262 +272,96 @@ object `readme-validator` extends BaseScala213NoPublishModule {
   }
 }
 
-object proto extends Module {
-  object core extends Cross[CoreModule](scalaVersions)
-  trait CoreModule extends BaseScalaModule {
-    def artifactName = "proto"
+object proto extends Cross[ProtoModule](scalaVersions)
+trait ProtoModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
 
-    def ivyDeps = Agg(
-      Deps.smithy.model,
-      Deps.alloy.core,
-      Deps.collectionsCompat
+  def publishArtifactName = "smithytranslate-proto"
+
+  def ivyDeps = Agg(
+    buildDeps.smithy.model,
+    buildDeps.alloy.core,
+    buildDeps.collectionsCompat
+  )
+  def moduleDeps = Seq(traits, transitive())
+  object tests extends this.ScalaTests with BaseMunitTests with ScalaPBModule {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      buildDeps.smithy.build,
+      buildDeps.scalapb.compilerPlugin,
+      buildDeps.scalapb.protocCache
     )
-    def moduleDeps = Seq(traits, transitive())
-    object tests
-        extends this.ScalaTests
-        with BaseMunitTests
-        with ScalaPBModule {
-      def ivyDeps = super.ivyDeps() ++ Agg(
-        Deps.smithy.build,
-        Deps.scalapb.compilerPlugin,
-        Deps.scalapb.protocCache
-      )
-      def scalaPBVersion = Deps.scalapb.version
+    def scalaPBVersion = buildDeps.scalapb.version
 
-      // There are no sources to generate in this module.
-      // We use scalaPB to unpack some files.
-      // Changes in the 0.10.10 version mill removed a check
-      // that ensures the directory existed before running the
-      // compiler and that breaks this build.
-      // See: https://github.com/com-lihaoyi/mill/pull/2126/files
-      def compileScalaPB = T {
-        val out = T.dest
-        PathRef(out)
-      }
+    // There are no sources to generate in this module.
+    // We use scalaPB to unpack some files.
+    // Changes in the 0.10.10 version mill removed a check
+    // that ensures the directory existed before running the
+    // compiler and that breaks this build.
+    // See: https://github.com/com-lihaoyi/mill/pull/2126/files
+    def compileScalaPB = T {
+      val out = T.dest
+      PathRef(out)
+    }
 
-      override def scalaPBOptions = "scala3_sources"
+    override def scalaPBOptions = "scala3_sources"
 
-      def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
+    def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
 
-      def resources = T.sources {
-        super.resources() ++ protobufDefinitions()
-      }
+    def resources = T.sources {
+      super.resources() ++ protobufDefinitions()
     }
   }
+}
 
-  object examples extends BaseScala213Module with ScalaPBModule {
-    def scalaPBVersion = Deps.scalapb.version
+object `proto-examples` extends BaseScala213Module with ScalaPBModule {
+  def scalaPBVersion = buildDeps.scalapb.version
 
-    def smithyFiles = T.sources {
-      os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
-        .map(p => PathRef(p))
-    }
-
-    def cliRunOutput = millSourcePath / "protobuf"
-
-    def scalaPBSources = T.sources { runCli()() }
-
-    // required to include wrappers proto definitions
-    def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
-
-    def runCli() = T.command {
-      os.remove.all(cliRunOutput)
-      os.makeDir.all(cliRunOutput)
-      val input = smithyFiles().toList.map(_.path)
-      val f = cli.runProtoAux()
-      f(input, cliRunOutput)
-      cliRunOutput
-    }
-
-    def ivyDeps = Agg(
-      Deps.grpc.netty,
-      Deps.grpc.services,
-      Deps.scalapb.runtimeGrpc
-    )
+  def smithyFiles = T.sources {
+    os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
+      .map(p => PathRef(p))
   }
+
+  def cliRunOutput = millSourcePath / "protobuf"
+
+  def scalaPBSources = T.sources { runCli()() }
+
+  // required to include wrappers proto definitions
+  def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
+
+  def runCli() = T.command {
+    os.remove.all(cliRunOutput)
+    os.makeDir.all(cliRunOutput)
+    val input = smithyFiles().toList.map(_.path)
+    val f = cli.runProtoAux()
+    f(input, cliRunOutput)
+    cliRunOutput
+  }
+
+  def ivyDeps = Agg(
+    buildDeps.grpc.netty,
+    buildDeps.grpc.services,
+    buildDeps.scalapb.runtimeGrpc
+  )
 }
 
 object transitive extends Cross[TransitiveModule](scalaVersions)
-trait TransitiveModule extends BaseScalaModule {
+trait TransitiveModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-transitive"
+
   def ivyDeps = Agg(
-    Deps.smithy.model,
-    Deps.smithy.build,
-    Deps.collectionsCompat
+    buildDeps.smithy.model,
+    buildDeps.smithy.build,
+    buildDeps.collectionsCompat
   )
   object tests extends ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
-      Deps.scalaJavaCompat
+      buildDeps.scalaJavaCompat
     )
   }
-}
-
-object Deps {
-  object alloy {
-    val alloyVersion = "0.2.8"
-    val core =
-      ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
-  }
-  object circe {
-    val jawn = ivy"io.circe::circe-jawn:0.14.6"
-  }
-  object everit {
-    val jsonSchema = ivy"com.github.erosb:everit-json-schema:1.14.3"
-  }
-  val slf4j =
-    ivy"org.slf4j:slf4j-nop:2.0.9" // needed since swagger-parser relies on slf4j-api
-  object swagger {
-    val parser = Agg(
-      ivy"io.swagger.parser.v3:swagger-parser:2.1.19",
-      // included to override the version brought in by swagger-parser which has a vulnerability
-      ivy"org.mozilla:rhino:1.7.14"
-    )
-  }
-  object smithy {
-    val smithyVersion = "1.41.1"
-    val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
-    val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
-  }
-  object cats {
-    val mtl = ivy"org.typelevel::cats-mtl:1.4.0"
-    val parse = ivy"org.typelevel::cats-parse:1.0.0"
-  }
-  val ciString = ivy"org.typelevel::case-insensitive:1.4.0"
-  val decline = ivy"com.monovore::decline:2.4.1"
-  object lihaoyi {
-    val oslib = ivy"com.lihaoyi::os-lib:0.9.2"
-    val ujson = ivy"com.lihaoyi::ujson:3.1.3"
-  }
-
-  val collectionsCompat =
-    ivy"org.scala-lang.modules::scala-collection-compat:2.11.0"
-
-  val scalaJavaCompat = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
-
-  val munitVersion = "1.0.0-M10"
-  object grpc {
-    val version = "1.59.1"
-    val netty = ivy"io.grpc:grpc-netty:$version"
-    val services = ivy"io.grpc:grpc-services:$version"
-  }
-  object scalapb {
-    val version = "0.11.14"
-    val runtimeGrpc = ivy"com.thesamet.scalapb::scalapb-runtime-grpc:$version"
-    val compilerPlugin =
-      ivy"com.thesamet.scalapb::compilerplugin:$version"
-    val protocCache = ivy"com.thesamet.scalapb::protoc-cache-coursier:0.9.6"
-  }
-  val coursier = ivy"io.get-coursier::coursier:2.1.8"
-}
-
-case class ScalaVersion(maj: Int, min: Int, patch: Int)
-object ScalaVersion {
-  def apply(scalaVersion: String): ScalaVersion = scalaVersion match {
-    case ZincWorkerUtil.ReleaseVersion(major, minor, patch) =>
-      ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case ZincWorkerUtil.MinorSnapshotVersion(major, minor, patch) =>
-      ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case ZincWorkerUtil.DottyVersion("0", minor, patch) =>
-      ScalaVersion(3, minor.toInt, patch.toInt)
-  }
-
-  implicit lazy val ordering: Ordering[ScalaVersion] =
-    (x: ScalaVersion, y: ScalaVersion) => {
-      if (
-        x.maj > y.maj || (x.maj == y.maj && x.min > y.min) || (x.maj == y.maj && x.min == y.min && x.patch > y.patch)
-      ) 1
-      else if (
-        x.maj < y.maj || (x.maj == y.maj && x.min < y.min) || (x.maj == y.maj && x.min == y.min && x.patch < y.patch)
-      ) -1
-      else 0
-    }
-}
-
-val v211 = ScalaVersion(2, 11, 0)
-val v212 = ScalaVersion(2, 12, 0)
-val v213 = ScalaVersion(2, 13, 0)
-val v300 = ScalaVersion(3, 0, 0)
-
-case class ScalacOption(
-    name: String,
-    isSupported: ScalaVersion => Boolean = _ => true
-)
-
-// format: off
-private val allScalacOptions = Seq(
-  ScalacOption("-Xsource:3", isSupported = version => v211 <= version || version < v300),                                                                     // Treat compiler input as Scala source for the specified version, see scala/bug#8126.
-  ScalacOption("-deprecation", isSupported = version => version < v213 || v300 <= version),                                // Emit warning and location for usages of deprecated APIs. Not really removed but deprecated in 2.13.
-  ScalacOption("-migration", isSupported = v300 <= _),                                                                     // Emit warning and location for migration issues from Scala 2.
-  ScalacOption("-explaintypes", isSupported = _ < v300),                                                                   // Explain type errors in more detail.
-  ScalacOption("-explain-types", isSupported = v300 <= _),                                                                 // Explain type errors in more detail.
-  ScalacOption("-explain", isSupported = v300 <= _),                                                                       // Explain errors in more detail.
-  ScalacOption("-feature"),                                                                                                // Emit warning and location for usages of features that should be imported explicitly.
-  ScalacOption("-language:existentials", isSupported = _ < v300),                                                          // Existential types (besides wildcard types) can be written and inferred
-  ScalacOption("-language:experimental.macros", isSupported = _ < v300),                                                   // Allow macro definition (besides implementation and application)
-  ScalacOption("-language:higherKinds", isSupported = _ < v300),                                                           // Allow higher-kinded types
-  ScalacOption("-language:implicitConversions", isSupported = _ < v300),                                                   // Allow definition of implicit functions called views
-  ScalacOption("-language:existentials,experimental.macros,higherKinds,implicitConversions", isSupported = v300 <= _),     // the four options above, dotty style
-  ScalacOption("-unchecked"),                                                                                              // Enable additional warnings where generated code depends on assumptions.
-  ScalacOption("-Xcheckinit", isSupported = _ < v300),                                                                     // Wrap field accessors to throw an exception on uninitialized access.
-  ScalacOption("-Xfatal-warnings"),                                                                                        // Fail the compilation if there are any warnings.
-  ScalacOption("-Xlint", isSupported = _ < v211),                                                                          // Used to mean enable all linting options but now the syntax for that is different (-Xlint:_ I think)
-  ScalacOption("-Xlint:adapted-args", isSupported = version => v211 <= version && version < v300),                         // Warn if an argument list is modified to match the receiver.
-  ScalacOption("-Xlint:by-name-right-associative", isSupported = version => v211 <= version && version < v213),            // By-name parameter of right associative operator.
-  ScalacOption("-Xlint:constant", isSupported = version => v212 <= version && version < v300),                             // Evaluation of a constant arithmetic expression results in an error.
-  ScalacOption("-Xlint:delayedinit-select", isSupported = version => v211 <= version && version < v300),                   // Selecting member of DelayedInit.
-  ScalacOption("-Xlint:deprecation", isSupported = version => v213 <= version && version < v300),                          // Emit warning and location for usages of deprecated APIs.
-  ScalacOption("-Xlint:doc-detached", isSupported = version => v211 <= version && version < v300),                         // A Scaladoc comment appears to be detached from its element.
-  ScalacOption("-Xlint:inaccessible", isSupported = version => v211 <= version && version < v300),                         // Warn about inaccessible types in method signatures.
-  ScalacOption("-Xlint:infer-any", isSupported = version => v211 <= version && version < v300),                            // Warn when a type argument is inferred to be `Any`.
-  ScalacOption("-Xlint:missing-interpolator", isSupported = version => v211 <= version && version < v300),                 // A string literal appears to be missing an interpolator id.
-  ScalacOption("-Xlint:nullary-override", isSupported = version => v211 <= version && version < ScalaVersion(2, 13, 3)),   // Warn when non-nullary `def f()' overrides nullary `def f'.
-  ScalacOption("-Xlint:nullary-unit", isSupported = version => v211 <= version && version < v300),                         // Warn when nullary methods return Unit.
-  ScalacOption("-Xlint:option-implicit", isSupported = version => v211 <= version && version < v300),                      // Option.apply used implicit view.
-  ScalacOption("-Xlint:package-object-classes", isSupported = version => v211 <= version && version < v300),               // Class or object defined in package object.
-  ScalacOption("-Xlint:poly-implicit-overload", isSupported = version => v211 <= version && version < v300),               // Parameterized overloaded implicit methods are not visible as view bounds.
-  ScalacOption("-Xlint:private-shadow", isSupported = version => v211 <= version && version < v300),                       // A private field (or class parameter) shadows a superclass field.
-  ScalacOption("-Xlint:stars-align", isSupported = version => v211 <= version && version < v300),                          // Pattern sequence wildcard must align with sequence component.
-  ScalacOption("-Xlint:type-parameter-shadow", isSupported = version => v211 <= version && version < v300),                // A local type parameter shadows a type already in scope.
-  ScalacOption("-Xlint:unsound-match", isSupported = version => v211 <= version && version < v213),                        // Pattern match may not be typesafe.
-  ScalacOption("-Wunused:nowarn", isSupported = version => v213 <= version && version < v300),                             // Ensure that a `@nowarn` annotation actually suppresses a warning.
-  ScalacOption("-Yno-adapted-args", isSupported = _ < v213),                                                               // Do not adapt an argument list (either by inserting () or creating a tuple) to match the receiver.
-  ScalacOption("-Ywarn-dead-code", isSupported = _ < v213),                                                                // Warn when dead code is identified.
-  ScalacOption("-Wdead-code", isSupported = version => v213 <= version && version < v300),                                 // ^ Replaces the above
-  ScalacOption("-Ywarn-extra-implicit", isSupported = version => v212 <= version && version < v213),                       // Warn when more than one implicit parameter section is defined.
-  ScalacOption("-Wextra-implicit", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
-  ScalacOption("-Ywarn-inaccessible", isSupported = _ < v211),                                                             // Warn about inaccessible types in method signatures. Alias for -Xlint:inaccessible so can be removed as of 2.11.
-  ScalacOption("-Ywarn-nullary-override", isSupported = _ < v213),                                                         // Warn when non-nullary `def f()' overrides nullary `def f'.
-  ScalacOption("-Ywarn-nullary-unit", isSupported = _ < v213),                                                             // Warn when nullary methods return Unit.
-  ScalacOption("-Ywarn-numeric-widen", isSupported = _ < v213),                                                            // Warn when numerics are widened.
-  ScalacOption("-Wnumeric-widen", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
-  ScalacOption("-Xlint:implicit-recursion", isSupported = version => ScalaVersion(2, 13, 3) <= version && version < v300), // Warn when an implicit resolves to an enclosing self-definition
-  ScalacOption("-Ywarn-unused", isSupported = version => v211 <= version && version < v212),                               // Warn when local and private vals, vars, defs, and types are unused.
-  ScalacOption("-Ywarn-unused-import", isSupported = version => v211 <= version && version < v212),                        // Warn if an import selector is not referenced.
-  ScalacOption("-Ywarn-unused:implicits", isSupported = version => v212 <= version && version < v213),                     // Warn if an implicit parameter is unused.
-  ScalacOption("-Wunused:implicits", isSupported = version => v213 <= version && version < v300),                          // ^ Replaces the above
-  ScalacOption("-Wunused:explicits", isSupported = version => v213 <= version && version < v300),                          // Warn if an explicit parameter is unused.
-  ScalacOption("-Ywarn-unused:imports", isSupported = version => v212 <= version && version < v213),                       // Warn if an import selector is not referenced.
-//  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
-  ScalacOption("-Ywarn-unused:locals", isSupported = version => v212 <= version && version < v213),                        // Warn if a local definition is unused.
-  ScalacOption("-Wunused:locals", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
-  ScalacOption("-Ywarn-unused:params", isSupported = version => v212 <= version && version < v213),                        // Warn if a value parameter is unused.
-  ScalacOption("-Wunused:params", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
-  ScalacOption("-Ywarn-unused:patvars", isSupported = version => v212 <= version && version < v213),                       // Warn if a variable bound in a pattern is unused.
-  ScalacOption("-Wunused:patvars", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
-  ScalacOption("-Ywarn-unused:privates", isSupported = version => v212 <= version && version < v213),                      // Warn if a private member is unused.
-  ScalacOption("-Wunused:privates", isSupported = version => v213 <= version && version < v300),                           // ^ Replaces the above
-  ScalacOption("-Ywarn-value-discard", isSupported = _ < v213),                                                            // Warn when non-Unit expression results are unused.
-  ScalacOption("-Wvalue-discard", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
-  ScalacOption("-Ykind-projector", isSupported = v300 <= _),                                                               // Enables a subset of kind-projector syntax (see https://github.com/lampepfl/dotty/pull/7775)
-  ScalacOption("-Vimplicits", isSupported = version => ScalaVersion(2, 13, 6) <= version && version < v300),               // Enables the tek/splain features to make the compiler print implicit resolution chains when no implicit value can be found
-  ScalacOption("-Vtype-diffs", isSupported = version => ScalaVersion(2, 13, 6) <= version && version < v300),              // Enables the tek/splain features to turn type error messages (found: X, required: Y) into colored diffs between the two types
-  ScalacOption("-Ypartial-unification", isSupported = version => ScalaVersion(2, 11, 9) <= version && version < v213)      // Enable partial unification in type constructor inference
-)
-// format: off
-
-def scalacOptionsFor(scalaVersion: String): Seq[String] = {
-  val commonOpts = Seq("-encoding", "utf8")
-  val scalaVer = ScalaVersion(scalaVersion)
-  val versionedOpts = allScalacOptions.filter(_.isSupported(scalaVer)).map(_.name)
-
-  commonOpts ++ versionedOpts
 }
