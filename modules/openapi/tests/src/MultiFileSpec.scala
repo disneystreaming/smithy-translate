@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyError
 final class MultiFileSpec extends munit.FunSuite {
 
   /* .
@@ -397,12 +399,12 @@ final class MultiFileSpec extends munit.FunSuite {
       expectedBin
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expectedModel
     ) =
       TestUtils.runConversion(inOne, inTwo)
     val expectedErrors = List(
-      ModelError.Restriction(
+      ToSmithyError.Restriction(
         "Ref ../../../bar.yaml#/components/schemas/Test goes too far up"
       )
     )

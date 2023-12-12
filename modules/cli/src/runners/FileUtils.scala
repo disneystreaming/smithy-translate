@@ -17,23 +17,23 @@ package cli
 package runners
 import cats.data
 import cats.data.NonEmptyList
+import smithytranslate.compiler.FileContents
 
 object FileUtils {
   def readAll(
       paths: NonEmptyList[os.Path],
       includedExtensions: List[String]
-  ): List[(data.NonEmptyList[String], String)] = {
+  ): List[FileContents] = {
     paths.toList.flatMap { path =>
       if (os.isDir(path)) {
         val files = os
           .walk(path)
           .filter(p => includedExtensions.contains(p.ext))
         files.map { in =>
-          pathToNel(in, path) -> os
-            .read(in)
+          FileContents(pathToNel(in, path), os.read(in))
         }.toList
       } else {
-        List((NonEmptyList.of(path.last), os.read(path)))
+        List(FileContents(NonEmptyList.of(path.last), os.read(path)))
       }
     }
   }

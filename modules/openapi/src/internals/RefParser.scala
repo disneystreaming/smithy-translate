@@ -13,11 +13,10 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
-
+package smithytranslate.compiler.internals.openapi
 import io.swagger.v3.oas.models.media.Schema
 
-object RefParser {
+private[openapi] object RefParser {
 
   def toSchema(ref: String): Schema[_] = {
     val sch = new Schema()

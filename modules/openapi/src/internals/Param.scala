@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler.internals.openapi
+import smithytranslate.compiler.internals._
 
 import io.swagger.v3.oas.models.media.Schema
 
-final case class Param(
+private[openapi] final case class Param(
     name: String,
     refOrSchema: RefOr[Schema[_]],
     hints: List[Hint]

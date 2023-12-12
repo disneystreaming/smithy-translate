@@ -13,20 +13,23 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema
+package smithytranslate.compiler.json_schema
 
-import software.amazon.smithy.model.Model
-import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
-import scala.jdk.CollectionConverters._
-import munit.Assertions
-import software.amazon.smithy.build.transforms.FilterSuppressions
-import software.amazon.smithy.build.TransformContext
-import cats.syntax.all._
-import munit.Location
 import cats.data.NonEmptyList
+import cats.syntax.all._
+import munit.Assertions
+import munit.Location
+import smithytranslate.compiler.FileContents
+import smithytranslate.compiler.SmithyVersion
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.ToSmithyResult
+import software.amazon.smithy.build.TransformContext
+import software.amazon.smithy.build.transforms.FilterSuppressions
+import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.node._
-import smithytranslate.openapi.OpenApiCompiler
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
+import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
+
+import scala.jdk.CollectionConverters._
 
 object TestUtils {
 
@@ -39,7 +42,7 @@ object TestUtils {
   )
 
   final case class ConversionResult(
-      result: OpenApiCompiler.Result[ModelWrapper],
+      result: ToSmithyResult[ModelWrapper],
       expected: ModelWrapper
   )
 
@@ -49,8 +52,8 @@ object TestUtils {
   ): ConversionResult = {
     val inputs = input0 +: remaining
     val result =
-      JsonSchemaCompiler.parseAndCompile(
-        OpenApiCompiler.Options(
+      JsonSchemaCompiler.compile(
+        ToSmithyCompilerOptions(
           useVerboseNames = false,
           validateInput = false,
           validateOutput = false,
@@ -58,7 +61,11 @@ object TestUtils {
           input0.smithyVersion == SmithyVersion.One,
           debug = true
         ),
-        inputs.map(i => i.filePath -> i.jsonSpec): _*
+        JsonSchemaCompilerInput.UnparsedSpecs(
+          inputs
+            .map(i => FileContents(i.filePath, i.jsonSpec))
+            .toList
+        )
       )
     val resultW = result.map(ModelWrapper(_))
 
@@ -92,10 +99,10 @@ object TestUtils {
       remaining: _*
     )
     res match {
-      case OpenApiCompiler.Failure(err, errors) =>
+      case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
-      case OpenApiCompiler.Success(_, output) =>
+      case ToSmithyResult.Success(_, output) =>
         Assertions.assertEquals(output, expected)
     }
   }

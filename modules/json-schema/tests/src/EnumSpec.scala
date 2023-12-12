@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema
+package smithytranslate.compiler.json_schema
 
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
+import smithytranslate.compiler.SmithyVersion
 
 final class EnumSpec extends munit.FunSuite {
 

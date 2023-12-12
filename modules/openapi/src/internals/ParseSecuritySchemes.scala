@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler
 package internals
+package openapi
 
 import io.swagger.v3.oas.models.OpenAPI
 import scala.jdk.CollectionConverters._
@@ -22,9 +23,9 @@ import io.swagger.v3.oas.models.security.SecurityScheme.Type._
 import io.swagger.v3.oas.models.security.SecurityScheme.In._
 import cats.syntax.all._
 
-object ParseSecuritySchemes
-    extends (OpenAPI => (List[ModelError], SecuritySchemes)) {
-  def apply(o: OpenAPI): (List[ModelError], SecuritySchemes) =
+private[openapi] object ParseSecuritySchemes
+    extends (OpenAPI => (List[ToSmithyError], SecuritySchemes)) {
+  def apply(o: OpenAPI): (List[ToSmithyError], SecuritySchemes) =
     Option(o.getComponents())
       .flatMap(c => Option(c.getSecuritySchemes()).map(_.asScala))
       .getOrElse(Map.empty)
@@ -35,7 +36,7 @@ object ParseSecuritySchemes
             ss.getIn() match {
               case COOKIE =>
                 error(
-                  ModelError.Restriction(
+                  ToSmithyError.Restriction(
                     "Cookie is not a supported ApiKey location."
                   )
                 )
@@ -62,26 +63,26 @@ object ParseSecuritySchemes
                 success(name -> SecurityScheme.BasicAuth)
               case format =>
                 error(
-                  ModelError.Restriction(
+                  ToSmithyError.Restriction(
                     s"$format is not a supported format of the http security scheme."
                   )
                 )
             }
           case OAUTH2 =>
             error(
-              ModelError.Restriction(
+              ToSmithyError.Restriction(
                 "OAuth2 is not a supported security scheme."
               )
             )
           case OPENIDCONNECT =>
             error(
-              ModelError.Restriction(
+              ToSmithyError.Restriction(
                 "OpenIdConnect is not a supported security scheme."
               )
             )
           case MUTUALTLS =>
             error(
-              ModelError.Restriction(
+              ToSmithyError.Restriction(
                 "MutualTLS is not a supported security scheme."
               )
             )
@@ -92,11 +93,11 @@ object ParseSecuritySchemes
 
   private def success(
       in: (String, SecurityScheme)
-  ): (List[ModelError], Option[(String, SecurityScheme)]) =
+  ): (List[ToSmithyError], Option[(String, SecurityScheme)]) =
     (Nil, Some(in))
 
   private def error(
-      modelError: ModelError
-  ): (List[ModelError], Option[(String, SecurityScheme)]) =
+      modelError: ToSmithyError
+  ): (List[ToSmithyError], Option[(String, SecurityScheme)]) =
     (List(modelError), None)
 }

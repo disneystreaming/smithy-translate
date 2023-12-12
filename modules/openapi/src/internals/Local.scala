@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import cats.data.NonEmptyChain
 import io.swagger.v3.oas.models.media.Schema
 
-case class Local(
+private[openapi] case class Local(
     context: Context,
     schema: Schema[_]
 ) {
@@ -33,7 +35,7 @@ case class Local(
 
 }
 
-object Local {
+private[openapi] object Local {
   def apply(path: Name, schema: Schema[_]): Local =
     Local(Context(path, Nil, Nil), schema)
 

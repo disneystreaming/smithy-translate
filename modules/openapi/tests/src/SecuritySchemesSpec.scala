@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyError
 
 final class SecuritySchemesSpec extends munit.FunSuite {
 
@@ -597,11 +599,11 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       None
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expected
     ) =
       TestUtils.runConversion(input)
-    val expectedError = ModelError.Restriction(
+    val expectedError = ToSmithyError.Restriction(
       "Operation testOperationId contains an unsupported security requirement: `List(BasicAuth, BearerAuth)`. " +
         "Security schemes cannot be ANDed together. BasicAuth will be used and List(BearerAuth) will be ignored."
     )
@@ -758,11 +760,11 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       None
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expected
     ) =
       TestUtils.runConversion(input)
-    val expectedError = ModelError.Restriction(
+    val expectedError = ToSmithyError.Restriction(
       "Operation testOperationId contains an unsupported security requirement: `List(BasicAuth, BearerAuth)`. " +
         "Security schemes cannot be ANDed together. BasicAuth will be used and List(BearerAuth) will be ignored."
     )
@@ -853,15 +855,15 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       None
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expected
     ) =
       TestUtils.runConversion(input)
     val expectedErrors = List(
-      ModelError.Restriction(
+      ToSmithyError.Restriction(
         "OpenIdConnect is not a supported security scheme."
       ),
-      ModelError.Restriction("OAuth2 is not a supported security scheme.")
+      ToSmithyError.Restriction("OAuth2 is not a supported security scheme.")
     )
     assertEquals(output, expected)
     assertEquals(errors, expectedErrors)

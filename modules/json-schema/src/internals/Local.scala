@@ -13,40 +13,42 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema.internals
+package smithytranslate.compiler
+package internals
+package json_schema
 
 import cats.data.NonEmptyChain
-import smithytranslate.openapi.internals.{Local => _, _}
+import smithytranslate.compiler.internals._
 import org.everit.json.schema.Schema
 import io.circe.Json
 
-case class Local(
+private[json_schema] case class Local(
     context: Context,
     schema: Schema,
     topLevelJson: Json
 ) {
 
-  def mapPath(f: Name => Name): Local =
+  final def mapPath(f: Name => Name): Local =
     copy(context = context.copy(path = f(context.path)))
 
-  def addHints(newHints: List[Hint]): Local =
+  final def addHints(newHints: List[Hint]): Local =
     copy(context = context.copy(hints = newHints ++ context.hints))
 
-  def addHints(newHints: Hint*): Local =
+  final def addHints(newHints: Hint*): Local =
     this.addHints(newHints.toList)
 
-  def filterHints(f: Hint => Boolean): Local =
+  final def filterHints(f: Hint => Boolean): Local =
     copy(context = context.copy(hints = context.hints.filter(f)))
 
-  def down(segment: Segment, subSchema: Schema): Local =
+  final def down(segment: Segment, subSchema: Schema): Local =
     new Local(context.append(segment), subSchema, topLevelJson)
 
-  def down(name: Name, subSchema: Schema): Local =
+  final def down(name: Name, subSchema: Schema): Local =
     new Local(context.append(name), subSchema, topLevelJson)
 
 }
 
-object Local {
+private[json_schema] object Local {
   def apply(path: Name, schema: Schema, topLevelJson: Json): Local =
     Local(Context(path, Nil, Nil), schema, topLevelJson)
 

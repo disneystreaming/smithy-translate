@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyError
 
 final class OperationMultipleSuccessSpec extends munit.FunSuite {
 
@@ -105,12 +107,12 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
       Some(expectedError)
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expectedModel
     ) =
       TestUtils.runConversion(input)
     val expectedErrors = List(
-      ModelError.Restriction(
+      ToSmithyError.Restriction(
         "Multiple success responses are not supported. Found status code 202 when 200 was already recorded"
       )
     )
@@ -205,12 +207,12 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
       None // no error namespace shapes because `alsoOkay` is defined as a reusable response
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expectedModel
     ) =
       TestUtils.runConversion(input)
     val expectedErrors = List(
-      ModelError.Restriction(
+      ToSmithyError.Restriction(
         "Multiple success responses are not supported. Found status code 202 when 200 was already recorded"
       )
     )

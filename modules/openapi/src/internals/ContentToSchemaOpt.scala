@@ -13,14 +13,17 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import io.swagger.v3.oas.models.media.Schema
 import scala.jdk.CollectionConverters._
 import io.swagger.v3.oas.models.media.Content
 import scala.collection.compat._
 
-object ContentToSchemaOpt extends (Content => Map[String, Schema[_]]) {
+private[openapi] object ContentToSchemaOpt
+    extends (Content => Map[String, Schema[_]]) {
 
   def apply(c: Content): Map[String, Schema[_]] =
     Option(c)

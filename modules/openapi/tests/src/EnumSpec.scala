@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
+import smithytranslate.compiler.SmithyVersion
+
 
 final class EnumSpec extends munit.FunSuite {
 

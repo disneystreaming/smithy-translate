@@ -13,23 +13,21 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema
+package smithytranslate.compiler
 package internals
+package json_schema
 
-import smithytranslate.openapi.internals.Primitive._
+import Primitive._
 import org.everit.json.schema.Schema
 import org.everit.json.schema._
-import smithytranslate.openapi.internals.Primitive
 import cats.data.NonEmptyChain
-import smithytranslate.openapi.internals.DefId
-import smithytranslate.openapi.ModelError
-import smithytranslate.openapi.internals.Hint
-import smithytranslate.openapi.internals.GetExtensions
+import smithytranslate.compiler.ToSmithyError
+import smithytranslate.compiler.internals.GetExtensions
 import scala.jdk.CollectionConverters._
 import cats.syntax.all._
 import scala.collection.compat._
 
-object Extractors {
+private[json_schema] object Extractors {
 
   type Path = NonEmptyChain[String]
 
@@ -252,8 +250,8 @@ object Extractors {
    * The most complicated thing
    */
   abstract class JsonSchemaCaseRefBuilder(id: Option[String], ns: Path)
-      extends smithytranslate.openapi.internals.CaseRefBuilder(ns) {
-    def unapply(sch: Schema): Option[Either[ModelError, DefId]] = sch match {
+      extends smithytranslate.compiler.internals.RefParser(ns) {
+    def unapply(sch: Schema): Option[Either[ToSmithyError, DefId]] = sch match {
       case ref: ReferenceSchema =>
         // For some reason the reference seems to get prefixed by the id every now and then
         val refValue = ref.getReferenceValue()

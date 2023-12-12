@@ -17,10 +17,14 @@ package smithytranslate.cli.runners.openapi
 
 import cats.data.NonEmptyList
 import smithytranslate.cli.runners.FileUtils.readAll
-import smithytranslate.openapi.OpenApiCompiler
+import smithytranslate.compiler.openapi.OpenApiCompiler
 import smithytranslate.cli.transformer.TranslateTransformer
 import software.amazon.smithy.model.Model
-import smithytranslate.json_schema.JsonSchemaCompiler
+import smithytranslate.compiler.json_schema.JsonSchemaCompiler
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.openapi.OpenApiCompilerInput
+import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
 
 object ParseAndCompile {
   def openapi(
@@ -31,10 +35,12 @@ object ParseAndCompile {
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
-  ): OpenApiCompiler.Result[Model] = {
+  ): ToSmithyResult[Model] = {
     val includedExtensions = List("yaml", "yml", "json")
-    val inputs = readAll(inputPaths, includedExtensions)
-    val opts = OpenApiCompiler.Options(
+    val input = OpenApiCompilerInput.UnparsedSpecs(
+      readAll(inputPaths, includedExtensions)
+    )
+    val opts = ToSmithyCompilerOptions(
       useVerboseNames,
       validateInput,
       validateOutput,
@@ -42,7 +48,7 @@ object ParseAndCompile {
       useEnumTraitSyntax,
       debug
     )
-    OpenApiCompiler.parseAndCompile(opts, inputs: _*)
+    OpenApiCompiler.compile(opts, input)
   }
 
   def jsonSchema(
@@ -53,10 +59,12 @@ object ParseAndCompile {
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean
-  ): OpenApiCompiler.Result[Model] = {
+  ): ToSmithyResult[Model] = {
     val includedExtensions = List("json")
-    val inputs = readAll(inputPaths, includedExtensions)
-    val opts = OpenApiCompiler.Options(
+    val input = JsonSchemaCompilerInput.UnparsedSpecs(
+      readAll(inputPaths, includedExtensions)
+    )
+    val opts = ToSmithyCompilerOptions(
       useVerboseNames,
       validateInput,
       validateOutput,
@@ -64,7 +72,7 @@ object ParseAndCompile {
       useEnumTraitSyntax,
       debug
     )
-    JsonSchemaCompiler.parseAndCompile(opts, inputs: _*)
+    JsonSchemaCompiler.compile(opts, input)
   }
 
 }

@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.responses.ApiResponse
-import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+import GetExtensions.HasExtensions
 
 import scala.jdk.CollectionConverters._
 
-object ApiResponseToParams
+private[openapi] object ApiResponseToParams
     extends ((Name, ApiResponse) => RefOr[HttpMessageInfo]) {
 
   def apply(
