@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 final class DocumentSpec extends munit.FunSuite {
 

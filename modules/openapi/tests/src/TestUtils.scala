@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
@@ -25,14 +25,15 @@ import cats.syntax.all._
 import munit.Location
 import cats.data.NonEmptyList
 import software.amazon.smithy.model.node._
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion
-import smithytranslate.openapi.TestUtils.ExpectedOutput.StringOutput
-import smithytranslate.openapi.TestUtils.ExpectedOutput.ModelOutput
 import software.amazon.smithy.model.transform.ModelTransformer
 import software.amazon.smithy.model.shapes.Shape
 import software.amazon.smithy.model.traits.Trait
 import software.amazon.smithy.model.traits.BoxTrait
 import scala.compat.java8.FunctionConverters._
+import smithytranslate.compiler.SmithyVersion
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.FileContents
 
 object TestUtils {
 
@@ -83,7 +84,7 @@ object TestUtils {
   }
 
   final case class ConversionResult(
-      result: OpenApiCompiler.Result[ModelWrapper],
+      result: ToSmithyResult[ModelWrapper],
       expected: ModelWrapper
   )
 
@@ -91,11 +92,11 @@ object TestUtils {
       input0: ConversionTestInput,
       remaining: ConversionTestInput*
   ): ConversionResult = {
-    val inputs = input0 +: remaining
+    val inputs = (input0 +: remaining).toList
 
     val result =
-      OpenApiCompiler.parseAndCompile(
-        OpenApiCompiler.Options(
+      OpenApiCompiler.compile(
+        ToSmithyCompilerOptions(
           useVerboseNames = false,
           validateInput = false,
           validateOutput = false,
@@ -103,7 +104,9 @@ object TestUtils {
           input0.smithyVersion == SmithyVersion.One,
           debug = true
         ),
-        inputs.map(i => i.filePath -> i.openapiSpec): _*
+        OpenApiCompilerInput.UnparsedSpecs(
+          inputs.map(i => FileContents(i.filePath, i.openapiSpec))
+        )
       )
 
     val resultW = result.map(ModelWrapper(_))
@@ -113,13 +116,13 @@ object TestUtils {
 
     inputs.foreach { i =>
       i.smithySpec match {
-        case StringOutput(str) =>
+        case TestUtils.ExpectedOutput.StringOutput(str) =>
           val name = i.filePath.mkString_("/") + ".smithy"
           val spec = s"""|$$version: "${i.smithyVersion}"
                      |
                      |${str}""".stripMargin
           assembler.addUnparsedModel(name, spec)
-        case ModelOutput(model) =>
+        case TestUtils.ExpectedOutput.ModelOutput(model) =>
           assembler.addModel(model)
       }
       i.errorSmithySpec.foreach(
@@ -146,10 +149,10 @@ object TestUtils {
     )
 
     res match {
-      case OpenApiCompiler.Failure(err, errors) =>
+      case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
-      case OpenApiCompiler.Success(_, output) =>
+      case ToSmithyResult.Success(_, output) =>
         Assertions.assertEquals(output, expected)
     }
   }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
 import software.amazon.smithy.model.shapes.LongShape
@@ -21,6 +21,9 @@ import software.amazon.smithy.model.shapes.ShapeId
 import software.amazon.smithy.model.traits.RangeTrait
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.FloatShape
+import smithytranslate.compiler.SmithyVersion
+import smithytranslate.compiler.ToSmithyResult
+import smithytranslate.compiler.ToSmithyError
 final class ConstraintSpec extends munit.FunSuite {
 
   test("length - string") {
@@ -239,15 +242,15 @@ final class ConstraintSpec extends munit.FunSuite {
       openapiString,
       expectedModel,
       None,
-      OpenApiCompiler.SmithyVersion.Two
+      SmithyVersion.Two
     )
     val TestUtils.ConversionResult(
-      OpenApiCompiler.Success(errors, output),
+      ToSmithyResult.Success(errors, output),
       expected
     ) =
       TestUtils.runConversion(input)
     val expectedErrors = List(
-      ModelError.Restriction(
+      ToSmithyError.Restriction(
         "Unable to automatically account for exclusiveMin/Max on decimal type Float"
       )
     )

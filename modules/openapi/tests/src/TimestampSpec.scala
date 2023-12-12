@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 final class TimestampSpec extends munit.FunSuite {
   test("date-time") {

@@ -13,27 +13,28 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import cats.kernel.Monoid
-import smithytranslate.openapi.ModelError
 
-case class SuppressionFor(id: String, reason: String)
+private[openapi] case class SuppressionFor(id: String, reason: String)
     extends (Namespace => Suppression) {
   def apply(namespace: Namespace): Suppression =
     Suppression(id, namespace, reason)
 }
 
-final case class ParseOperationsResult(
-    errors: List[ModelError],
+private[openapi] final case class ParseOperationsResult(
+    errors: List[ToSmithyError],
     results: Vector[OperationInfo],
     suppressions: Vector[SuppressionFor]
 ) {
-  def addErrors(err: Seq[ModelError]): ParseOperationsResult =
+  def addErrors(err: Seq[ToSmithyError]): ParseOperationsResult =
     this.copy(errors = this.errors ++ err)
 }
 
-object ParseOperationsResult {
+private[openapi] object ParseOperationsResult {
   implicit val monoid: Monoid[ParseOperationsResult] =
     new Monoid[ParseOperationsResult] {
       def empty: ParseOperationsResult =

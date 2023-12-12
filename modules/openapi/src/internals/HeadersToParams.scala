@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import io.swagger.v3.oas.models.headers.Header
-import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+import GetExtensions.HasExtensions
 
-object HeadersToParams extends (Iterable[(String, Header)] => Vector[Param]) {
+private[openapi] object HeadersToParams
+    extends (Iterable[(String, Header)] => Vector[Param]) {
 
   def apply(
       headerMap: Iterable[(String, Header)]

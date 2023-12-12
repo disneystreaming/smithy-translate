@@ -12,10 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
 import io.swagger.v3.oas.models.media.Schema
 
-final case class ContentTypeDiscriminatedSchema(members: Map[String, Schema[_]])
-    extends Schema[Any]
+private[openapi] final case class ContentTypeDiscriminatedSchema(
+    members: Map[String, Schema[_]]
+) extends Schema[Any]

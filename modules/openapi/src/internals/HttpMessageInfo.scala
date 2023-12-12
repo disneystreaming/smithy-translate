@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
-case class HttpMessageInfo(
+import smithytranslate.compiler.internals._
+
+private[openapi] case class HttpMessageInfo(
     name: Name,
     params: Vector[Param],
     hints: List[Hint]

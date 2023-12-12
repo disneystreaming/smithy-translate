@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler
 package internals
+package openapi
 
+import smithytranslate.compiler._
+import smithytranslate.compiler.internals._
 import io.swagger.v3.oas.models.media._
 import scala.jdk.CollectionConverters._
-import cats.data.NonEmptyChain
-import cats.syntax.all._
 import Primitive._
-import org.typelevel.ci.CIString
 
-object CaseEnum {
+private[openapi] object CaseEnum {
   def unapply(sch: Schema[_]): Option[Vector[String]] = sch match {
     case s: StringSchema if s.getEnum() != null && !s.getEnum().isEmpty =>
       Some(s.getEnum().asScala.toVector)
@@ -31,7 +31,7 @@ object CaseEnum {
   }
 }
 
-object CaseMap {
+private[openapi] object CaseMap {
   def unapply(sch: Schema[_]): Option[Schema[_]] = {
     sch match {
       case m: MapSchema =>
@@ -43,7 +43,7 @@ object CaseMap {
   }
 }
 
-object IsFreeForm {
+private[openapi] object IsFreeForm {
   def unapply(sch: Schema[_]): Boolean = {
     val isObjectSchema = sch.isInstanceOf[ObjectSchema]
     val hasNoProperties = Option(sch.getProperties()).forall(_.isEmpty())
@@ -56,19 +56,19 @@ object IsFreeForm {
   }
 }
 
-object Format {
+private[openapi] object Format {
   def unapply(sch: Schema[_]): Option[String] = Option(sch.getFormat())
 }
 
-object NoFormat {
+private[openapi] object NoFormat {
   def unapply(sch: Schema[_]): Boolean = Option(sch.getFormat()).isEmpty
 }
 
-object & {
+private[openapi] object & {
   def unapply[A](a: A): Some[(A, A)] = Some((a, a))
 }
 
-object CaseAllOf {
+private[openapi] object CaseAllOf {
   def unapply(sch: Schema[_]): Option[Vector[Schema[_]]] = sch match {
     case composed: ComposedSchema =>
       Option(composed.getAllOf()).map(_.asScala.toVector)
@@ -76,7 +76,7 @@ object CaseAllOf {
   }
 }
 
-object CaseOneOf {
+private[openapi] object CaseOneOf {
   def unapply(sch: Schema[_]): Option[Vector[Schema[_]]] = sch match {
     case composed: ComposedSchema =>
       Option(composed.getOneOf()).map(_.asScala.toVector)
@@ -84,7 +84,7 @@ object CaseOneOf {
   }
 }
 
-object CaseObject {
+private[openapi] object CaseObject {
   def unapply(sch: Schema[_]): Option[Schema[_]] = sch match {
     case o: ObjectSchema => Some(o)
     case s: Schema[_] if Option(s.getProperties()).exists(_.asScala.nonEmpty) =>
@@ -93,14 +93,14 @@ object CaseObject {
   }
 }
 
-object NonEmptySegments {
+private[openapi] object NonEmptySegments {
   def unapply(s: String): Option[(List[String], String)] = {
     val segments = s.split("/").toList.filterNot(_.isEmpty())
     segments.lastOption.map(last => segments.dropRight(1) -> last)
   }
 }
 
-object CasePrimitive {
+private[openapi] object CasePrimitive {
   def unapply(sch: Schema[_]): Option[Primitive] = sch match {
     // S:
     //   type: string
@@ -176,79 +176,8 @@ object CasePrimitive {
 /*
  * The most complicated thing
  */
-abstract class CaseRefBuilder(ns: Path) {
-  def unapply(sch: Schema[_]): Option[Either[ModelError, DefId]] =
+private[compiler] abstract class CaseRefBuilder(ns: Path)
+    extends smithytranslate.compiler.internals.RefParser(ns) {
+  def unapply(sch: Schema[_]): Option[Either[ToSmithyError, DefId]] =
     Option(sch.get$ref).map(this.apply)
-
-  private def handleRef(
-      uri: java.net.URI,
-      pathSegsIn: List[String],
-      fileName: String,
-      segments: Option[List[String]],
-      last: Option[String]
-  ): Either[ModelError, DefId] = {
-    val pathSegs = pathSegsIn.dropWhile(_ == ".")
-
-    val ups = pathSegs.takeWhile(_ == "..").size
-    if (ns.length < ups + 1) {
-      // namespace contains the name of the file
-      val error = ModelError.Restriction(s"Ref $uri goes too far up")
-      Left(error)
-    } else {
-      // Removing as many ".." as needed to standardise the namespace
-      val nsPrefix = ns.toChain.toList.dropRight(ups + 1)
-      val nsPrefix2 = pathSegs.drop(ups)
-      val splitName = fileName.split('.')
-      val nsLastPart =
-        if (splitName.size > 1) splitName.dropRight(1).mkString(".")
-        else fileName
-      val fullNs =
-        Namespace((nsPrefix ++ nsPrefix2 :+ nsLastPart))
-      val name = (segments, last) match {
-        case (Some(seg), Some(l)) =>
-          NonEmptyChain
-            .fromSeq(seg.map(s => Segment.Arbitrary(CIString(s))))
-            .map(Name(_))
-            .map(_ ++ Name.derived(l))
-            .getOrElse(Name.derived(l))
-        case _ => Name.derived(nsLastPart)
-      }
-      Right(DefId(fullNs, name))
-    }
-  }
-
-  def apply(ref: String): Either[ModelError, DefId] =
-    scala.util
-      .Try(java.net.URI.create(ref))
-      .toEither
-      .leftMap(_ => ModelError.BadRef(ref))
-      .flatMap(uri =>
-        Option(uri.getScheme()) match {
-          case Some("file") => Right(uri)
-          case None         => Right(uri)
-          case Some(_)      => Left(ModelError.BadRef(ref))
-        }
-      )
-      .flatMap { uri =>
-        (uri.getPath(), uri.getFragment()) match {
-          case ("", NonEmptySegments(segments, last)) =>
-            val n = Namespace(ns.toChain.toList)
-            val name =
-              NonEmptyChain
-                .fromSeq(
-                  segments.map(s => Segment.Arbitrary(CIString(s)))
-                )
-                .map(Name(_))
-                .map(_ ++ Name.derived(last))
-                .getOrElse(Name.derived(last))
-            Right(DefId(n, name))
-          case (NonEmptySegments(pathSegsIn, fileName), null) =>
-            handleRef(uri, pathSegsIn, fileName, None, None)
-          case (
-                NonEmptySegments(pathSegsIn, fileName),
-                NonEmptySegments(segments, last)
-              ) =>
-            handleRef(uri, pathSegsIn, fileName, Some(segments), Some(last))
-        }
-      }
 }

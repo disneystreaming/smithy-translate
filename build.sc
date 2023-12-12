@@ -21,12 +21,35 @@ val scala212 = "2.12.18"
 val scala213 = "2.13.12"
 val scalaVersions = List(scala213, scala212)
 
+object `compiler-core` extends Cross[CompilerCoreModule](scalaVersions)
+trait CompilerCoreModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-compiler-core"
+
+  def moduleDeps = Seq(traits)
+
+  def ivyDeps = Agg(
+    ivy"com.fasterxml.jackson.core:jackson-databind:2.15.3",
+    buildDeps.smithy.model,
+    buildDeps.smithy.build,
+    buildDeps.cats.mtl,
+    buildDeps.ciString,
+    buildDeps.slf4j,
+    buildDeps.alloy.core,
+    buildDeps.collectionsCompat
+  )
+
+}
+
 object `json-schema` extends Cross[JsonSchemaModule](scalaVersions)
 trait JsonSchemaModule
     extends CrossScalaModule
     with BaseScalaModule
     with BasePublishModule {
-  def moduleDeps = Seq(openapi())
+  def moduleDeps = Seq(`compiler-core`())
 
   def publishArtifactName = "smithytranslate-json-schema"
 
@@ -52,19 +75,10 @@ trait OpenApiModule
 
   def publishArtifactName = "smithytranslate-openapi"
 
-  def ivyDeps = buildDeps.swagger.parser ++ Agg(
-    buildDeps.smithy.model,
-    buildDeps.smithy.build,
-    buildDeps.cats.mtl,
-    buildDeps.ciString,
-    buildDeps.slf4j,
-    buildDeps.alloy.core,
-    buildDeps.collectionsCompat
-  )
+  def moduleDeps = Seq(`compiler-core`())
 
-  def moduleDeps = Seq(
-    traits
-  )
+  def ivyDeps =
+    buildDeps.swagger.parser
 
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(

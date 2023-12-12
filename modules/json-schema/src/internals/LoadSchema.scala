@@ -13,13 +13,15 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema.internals
+package smithytranslate.compiler
+package internals
+package json_schema
 
 import org.everit.json.schema.Schema
 import org.json.JSONObject
 import org.everit.json.schema.loader.SchemaLoader
 
-object LoadSchema extends (JSONObject => Schema) {
+private[compiler] object LoadSchema extends (JSONObject => Schema) {
   def apply(sch: JSONObject): Schema =
     SchemaLoader
       .builder()

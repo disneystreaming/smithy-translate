@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema.internals
+package smithytranslate.compiler.internals.json_schema
 
 import org.everit.json.schema.FormatValidator
 import java.util.Optional
 
-final class EmptyValidator(name: String) extends FormatValidator {
+private[json_schema] final class EmptyValidator(name: String)
+    extends FormatValidator {
   override def validate(subject: String): Optional[String] = Optional.empty()
   override def formatName(): String = name
 }

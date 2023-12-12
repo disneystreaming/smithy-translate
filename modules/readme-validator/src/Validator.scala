@@ -18,10 +18,11 @@ import java.nio.file.Path
 import scala.jdk.CollectionConverters._
 import scala.util.control.NoStackTrace
 import smithyproto.proto3.{Compiler => ProtoCompiler, ModelPreProcessor}
-import smithytranslate.openapi.OpenApiCompiler
+import smithytranslate.compiler._
+import smithytranslate.compiler.openapi._
+import smithytranslate.compiler.json_schema._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
-import smithytranslate.json_schema.JsonSchemaCompiler
 
 object Validator {
 
@@ -87,7 +88,7 @@ object Validator {
                            |
                            |$smithy""".stripMargin
     val options =
-      OpenApiCompiler.Options(
+      ToSmithyCompilerOptions(
         useVerboseNames = false,
         validateInput = true,
         validateOutput = true,
@@ -96,16 +97,18 @@ object Validator {
         debug = false
       )
     val result =
-      OpenApiCompiler.parseAndCompile(
+      OpenApiCompiler.compile(
         options,
-        (NonEmptyList.of(namespace), openapi)
+        OpenApiCompilerInput.UnparsedSpecs(
+          List(FileContents(NonEmptyList.of(namespace), openapi))
+        )
       )
     result match {
-      case OpenApiCompiler.Failure(err, _) =>
+      case ToSmithyResult.Failure(err, _) =>
         List(
           ValidationError.UnableToProduceOutput(err.getMessage)
         )
-      case OpenApiCompiler.Success(errors, expectedModel) =>
+      case ToSmithyResult.Success(errors, expectedModel) =>
         val actualModel = Model
           .assembler()
           .discoverModels()
@@ -135,7 +138,7 @@ object Validator {
                            |
                            |$smithy""".stripMargin
     val options =
-      OpenApiCompiler.Options(
+      ToSmithyCompilerOptions(
         useVerboseNames = false,
         validateInput = true,
         validateOutput = true,
@@ -144,16 +147,18 @@ object Validator {
         debug = false
       )
     val result =
-      JsonSchemaCompiler.parseAndCompile(
+      JsonSchemaCompiler.compile(
         options,
-        (NonEmptyList.of(namespace), json)
+        JsonSchemaCompilerInput.UnparsedSpecs(
+          List(FileContents(NonEmptyList.of(namespace), json))
+        )
       )
     result match {
-      case OpenApiCompiler.Failure(err, _) =>
+      case ToSmithyResult.Failure(err, _) =>
         List(
           ValidationError.UnableToProduceOutput(err.getMessage)
         )
-      case OpenApiCompiler.Success(errors, expectedModel) =>
+      case ToSmithyResult.Success(errors, expectedModel) =>
         val actualModel = Model
           .assembler()
           .discoverModels()

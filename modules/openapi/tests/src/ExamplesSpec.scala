@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 final class ExamplesSpec extends munit.FunSuite {
 
@@ -230,7 +230,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |
                             |use alloy#dataExamples
                             |
-                            |@dataExamples([{json: 
+                            |@dataExamples([{json:
                             |  {
                             |    foo: "bar"
                             |  }

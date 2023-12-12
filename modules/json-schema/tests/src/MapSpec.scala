@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema
+package smithytranslate.compiler.json_schema
 
 final class MapSpec extends munit.FunSuite {
 

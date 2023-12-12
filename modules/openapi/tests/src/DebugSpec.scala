@@ -13,12 +13,15 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
-import smithytranslate.openapi.OpenApiCompiler.Failure
-import smithytranslate.openapi.OpenApiCompiler.Success
+import smithytranslate.compiler.ToSmithyResult.Failure
+import smithytranslate.compiler.ToSmithyResult.Success
 import munit.Location
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.ToSmithyError
+import smithytranslate.compiler.FileContents
 
 final class DebugSpec extends munit.FunSuite {
 
@@ -27,25 +30,29 @@ final class DebugSpec extends munit.FunSuite {
       .fromResource(fileName)
       .getLines()
       .mkString("\n")
-    val inputs = Seq((NonEmptyList.of(fileName), content))
-    OpenApiCompiler.parseAndCompile(
-      OpenApiCompiler.Options(
-        useVerboseNames = false,
-        validateInput = false,
-        validateOutput = true,
-        List.empty,
-        useEnumTraitSyntax = false,
-        debug
-      ),
-      inputs: _*
+
+    val options = ToSmithyCompilerOptions(
+      useVerboseNames = false,
+      validateInput = false,
+      validateOutput = true,
+      List.empty,
+      useEnumTraitSyntax = false,
+      debug
     )
+
+    val input = OpenApiCompilerInput.UnparsedSpecs(
+      List(
+        FileContents(NonEmptyList.of(fileName), content)
+      )
+    )
+    OpenApiCompiler.compile(options, input)
   }
 
   private def testFilteredErrors(debug: Boolean, expectedCount: Int)(implicit
       loc: Location
   ) = {
     load("issue-23.json", debug) match {
-      case Failure(ModelError.SmithyValidationFailed(events), _) =>
+      case Failure(ToSmithyError.SmithyValidationFailed(events), _) =>
         assertEquals(events.size, expectedCount)
       case Failure(cause, _) =>
         fail(

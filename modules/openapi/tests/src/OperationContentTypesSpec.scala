@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 final class OperationContentTypesSpec extends munit.FunSuite {
 
@@ -274,10 +274,10 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                      |        '200':
                      |          content:
                      |            application/json:
-                     |             schema: 
+                     |             schema:
                      |               $ref: '#/components/schemas/Employee'
                      |            application/xml:
-                     |             schema: 
+                     |             schema:
                      |               $ref: '#/components/schemas/Employee'
                      |components:
                      |  schemas:
@@ -288,7 +288,7 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                      |          type: integer
                      |        name:
                      |          type: string
-                     |        fullTime: 
+                     |        fullTime:
                      |          type: boolean
                      |""".stripMargin
 

@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi.internals
+package smithytranslate.compiler
+package internals
+package openapi
 
-final case class OperationInfo(
+private[openapi] final case class OperationInfo(
     name: Name,
     method: HttpMethod,
     path: String,

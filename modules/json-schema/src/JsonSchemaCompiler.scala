@@ -13,25 +13,54 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema
+package smithytranslate.compiler.json_schema
 
-import software.amazon.smithy.model.{Model => SmithyModel}
 import cats.syntax.all._
 import cats.data.NonEmptyChain
-import smithytranslate.json_schema.internals.JsonSchemaToIModel
-import smithytranslate.openapi.internals.IModelPostProcessor
-import smithytranslate.openapi.internals.IModelToSmithy
+import smithytranslate.compiler.internals.json_schema.JsonSchemaToIModel
 import cats.data.NonEmptyList
-import software.amazon.smithy.build.TransformContext
 import org.everit.json.schema.Schema
 import org.json.JSONObject
-import smithytranslate.openapi.OpenApiCompiler._
 import io.circe.Json
-import smithytranslate.json_schema.internals.LoadSchema
+import smithytranslate.compiler.internals.json_schema._
+import smithytranslate.compiler.internals.IModel
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.AbstractToSmithyCompiler
+import JsonSchemaCompilerInput._
+import cats.data.Chain
+import smithytranslate.compiler.ToSmithyError
+import smithytranslate.compiler.FileContents
 
 /** Converts json schema to a smithy model.
   */
-object JsonSchemaCompiler {
+object JsonSchemaCompiler
+    extends AbstractToSmithyCompiler[JsonSchemaCompilerInput] {
+
+  protected def convertToInternalModel(
+      opts: ToSmithyCompilerOptions,
+      input: JsonSchemaCompilerInput
+  ): (Chain[ToSmithyError], IModel) = {
+    val prepared = input match {
+      case UnparsedSpecs(specs) =>
+        val parser: String => Schema =
+          schemaString => LoadSchema(new JSONObject(schemaString))
+        specs.map { case FileContents(path, content) =>
+          val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
+          val schema = parser(content)
+          val json = io.circe.jawn.parse(content) match {
+            case Left(error)  => throw error
+            case Right(value) => value
+          }
+          (ns, schema, json)
+        }
+      case ParsedSpec(path, rawJson, schema) =>
+        val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
+        List((ns, schema, rawJson))
+    }
+    prepared.foldMap { case (ns, schema, rawJson) =>
+      JsonSchemaToIModel.compile(ns, schema, rawJson)
+    }
+  }
 
   type Input = (NonEmptyChain[String], Schema, Json)
 
@@ -45,53 +74,5 @@ object JsonSchemaCompiler {
       path.toList.dropRight(1) :+ newLast.mkString(".")
     )
   }
-
-  def parseAndCompile(
-      opts: Options,
-      stringInputs: (NonEmptyList[String], String)*
-  ): Result[SmithyModel] = {
-    val parseSchema: String => Schema = schemaString =>
-      LoadSchema(new JSONObject(schemaString))
-    val inputs =
-      stringInputs.map { case (path, content) =>
-        val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        val schema = parseSchema(content)
-        val json = io.circe.jawn.parse(content) match {
-          case Left(error)  => throw error
-          case Right(value) => value
-        }
-        (ns, schema, json)
-      }
-    compile(opts, inputs: _*)
-  }
-
-  def compile(
-      opts: Options,
-      inputs: Input*
-  ): Result[SmithyModel] = {
-    val (errors0, smithy0) = inputs.toList
-      .foldMap { case (ns, s, raw) => JsonSchemaToIModel.compile(ns, s, raw) }
-      .map(IModelPostProcessor(opts.useVerboseNames))
-      .map(new IModelToSmithy(opts.useEnumTraitSyntax))
-    val errors = errors0.toList
-
-    scala.util
-      .Try(validate(smithy0))
-      .toEither
-      .leftMap(opts.debugModelValidationError)
-      .map(transform(opts))
-      .fold(
-        err => Failure(err, errors),
-        model => Success(errors.toList, model)
-      )
-  }
-
-  private def validate(model: SmithyModel): SmithyModel =
-    SmithyModel.assembler().discoverModels().addModel(model).assemble().unwrap()
-
-  private def transform(opts: Options)(model: SmithyModel): SmithyModel =
-    opts.transformers.foldLeft(model)((m, t) =>
-      t.transform(TransformContext.builder().model(m).build())
-    )
 
 }

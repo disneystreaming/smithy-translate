@@ -15,13 +15,14 @@
 
 package smithytranslate.cli.runners.openapi
 
-import smithytranslate.openapi.OpenApiCompiler
+import smithytranslate.compiler.openapi.OpenApiCompiler
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
 import scala.jdk.CollectionConverters._
 import software.amazon.smithy.build.transforms.FilterSuppressions
 import software.amazon.smithy.build.TransformContext
 import software.amazon.smithy.model.node.{Node, ObjectNode}
+import smithytranslate.compiler.ToSmithyResult
 
 final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
 
@@ -75,9 +76,9 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
         (path, os.Source.WritableSource(in._2))
       }
 
-  def apply(result: OpenApiCompiler.Result[Model], debug: Boolean): Unit = {
+  def apply(result: ToSmithyResult[Model], debug: Boolean): Unit = {
     result match {
-      case OpenApiCompiler.Failure(error, modelErrors) =>
+      case ToSmithyResult.Failure(error, modelErrors) =>
         val message = if (modelErrors.isEmpty) {
           "An error occurred while importing your Open API resources."
         } else {
@@ -92,7 +93,7 @@ final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
         } else {
           System.err.println(error.getMessage())
         }
-      case OpenApiCompiler.Success(modelErrors, model) =>
+      case ToSmithyResult.Success(modelErrors, model) =>
         modelErrors.foreach(e => System.err.println(e.getMessage()))
         val smithyFiles =
           if (outputJson) getSmithyJsonFiles(model) else getSmithyFiles(model)

@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler
 package internals
+package openapi
 
 import cats.data.{Chain, NonEmptyChain}
 import cats.syntax.all._
 import io.swagger.v3.oas.models
 import io.swagger.v3.oas.models.OpenAPI
 import org.typelevel.ci._
-import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+import GetExtensions.HasExtensions
 
 import scala.jdk.CollectionConverters._
-import smithytranslate.openapi.internals.Hint.Header
 
 import scala.collection.compat._
 
-object ParseOperations
+private[openapi] object ParseOperations
     extends (
         (
             SecuritySchemes,
@@ -77,7 +77,7 @@ private class ParseOperationsImpl(
 
     val opsAndErrors = paths
       .map { case (path, item) =>
-        val allCommonParams: Vector[Either[ModelError, Param]] =
+        val allCommonParams: Vector[Either[ToSmithyError, Param]] =
           Option(item.getParameters()).toVector
             .flatMap(_.asScala.toVector)
             .map(getParam)
@@ -162,7 +162,7 @@ private class ParseOperationsImpl(
       allParams
         .flatMap(_.hints)
         .exists {
-          case Header(name) =>
+          case Hint.Header(name) =>
             restrictedHeaders(CIString(name))
           case _ => false
         }
@@ -173,10 +173,10 @@ private class ParseOperationsImpl(
       hasGlobalSecurity: Boolean
   )(opInfo: IOpInfo): ParseOperationsResult = {
     import opInfo._
-    val localParams: Vector[Either[ModelError, Param]] = getLocalInputParams(op)
-    val body: Vector[Either[ModelError, Param]] =
+    val localParams: Vector[Either[ToSmithyError, Param]] = getLocalInputParams(op)
+    val body: Vector[Either[ToSmithyError, Param]] =
       getRequestBodyParam(op).toVector.map(Right(_))
-    val allInputParams: Vector[Either[ModelError, Param]] =
+    val allInputParams: Vector[Either[ToSmithyError, Param]] =
       opInfo.commonParams.map(Right(_)) ++ localParams ++ body
     val allValidInputParams = allInputParams.collect { case Right(p) => p }
     val allInputParamsErrors = allInputParams.collect { case Left(e) => e }
@@ -218,7 +218,7 @@ private class ParseOperationsImpl(
       securitySchemes: SecuritySchemes,
       opInfo: IOpInfo,
       hasGlobalSecurity: Boolean
-  ): (List[ModelError], Option[Hint.Auth]) = {
+  ): (List[ToSmithyError], Option[Hint.Auth]) = {
     import opInfo._
     val id = getOpId(opInfo)
     val security =
@@ -241,7 +241,7 @@ private class ParseOperationsImpl(
       else None
     val errors = allSecurityKeys.collect {
       case s if s.size > 1 =>
-        ModelError.Restriction(
+        ToSmithyError.Restriction(
           s"Operation ${id.segments.mkString_(".")} contains an unsupported security requirement: `$s`. " +
             s"Security schemes cannot be ANDed together. ${s.head} will be used and ${s.tail} will be ignored."
         )
@@ -280,8 +280,8 @@ private class ParseOperationsImpl(
 
   private def getParam(
       parameter: models.parameters.Parameter
-  ): Either[ModelError, Param] = {
-    val maybeResolvedParam: Either[ModelError, models.parameters.Parameter] =
+  ): Either[ToSmithyError, Param] = {
+    val maybeResolvedParam: Either[ToSmithyError, models.parameters.Parameter] =
       Option(parameter.get$ref())
         .toLeft(parameter)
         .leftFlatMap(ref =>
@@ -321,7 +321,7 @@ private class ParseOperationsImpl(
           Param(name, refOrSchema, hints)
         }
         .toRight(
-          ModelError.ProcessingError(
+          ToSmithyError.ProcessingError(
             s"Parameter ${name} should have in defined as `query`, `path` or `header."
           )
         )
@@ -330,7 +330,7 @@ private class ParseOperationsImpl(
 
   private def getLocalInputParams(
       op: models.Operation
-  ): Vector[Either[ModelError, Param]] = {
+  ): Vector[Either[ToSmithyError, Param]] = {
     Option(op.getParameters()).toVector
       .flatMap(
         _.asScala

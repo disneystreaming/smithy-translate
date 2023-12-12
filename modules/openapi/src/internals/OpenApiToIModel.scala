@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler
 package internals
+package openapi
 
 import cats.Parallel
 import cats.mtl.Tell
@@ -24,19 +25,19 @@ import io.swagger.v3.oas.models.media._
 import scala.jdk.CollectionConverters._
 import cats.data._
 import Primitive._
+import ToSmithyError._
 import cats.syntax.all._
-import ModelError._
 import cats.Monad
 import org.typelevel.ci._
-import smithytranslate.openapi.internals.GetExtensions.HasExtensions
+import GetExtensions.HasExtensions
 
-object OpenApiToIModel {
+private[compiler] object OpenApiToIModel {
 
   def compile(
       namespace: Path,
       openAPI: Either[List[String], OpenAPI]
-  ): (Chain[ModelError], IModel) = {
-    type ErrorLayer[A] = Writer[Chain[ModelError], A]
+  ): (Chain[ToSmithyError], IModel) = {
+    type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
     val (errors, (data, _)) =
@@ -55,176 +56,12 @@ object OpenApiToIModel {
         val parser = new OpenApiToIModel[F](namespace, openApi)
         parser.recordAll
       case Left(errors) =>
-        Tell.tell(Chain.one((ModelError.OpenApiParseError(namespace, errors))))
+        Tell.tell(Chain.one((ToSmithyError.OpenApiParseError(namespace, errors))))
     }
   }
-
-  final class OpenApiFolder[F[_]: Parallel: TellShape: TellError](
-      namespace: Path
-  ) {
-    implicit val F: Monad[F] = Parallel[F].monad
-
-    def id(context: Context): DefId = {
-      DefId(Namespace(namespace.toList), context.path)
-    }
-
-    def errorId(context: Context): DefId = {
-      DefId(errorNamespace, context.path)
-    }
-
-    private def errorNamespace: Namespace = Namespace(List("error"))
-
-    private def recordError(e: ModelError): F[Unit] =
-      Tell.tell(Chain.one(e))
-
-    private def recordDef(definition: Definition): F[Unit] =
-      Tell.tell(Chain.one(Right(definition)))
-
-    def std(name: String, hints: Hint*) =
-      (
-        DefId(
-          Namespace(List("smithy", "api")),
-          Name.stdLib(name)
-        ),
-        hints.toList
-      )
-    def smithyTranslate(name: String, hints: Hint*) =
-      (
-        DefId(Namespace(List("smithytranslate")), Name.stdLib(name)),
-        hints.toList
-      )
-    def alloy(name: String, hints: Hint*) =
-      (
-        DefId(Namespace(List("alloy")), Name.stdLib(name)),
-        hints.toList
-      )
-
-  // format: off
-  def idFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
-    primitive match {
-      case PInt       => std("Integer")
-      case PBoolean   => std("Boolean")
-      case PString    => std("String")
-      case PLong      => std("Long")
-      case PByte      => std("Byte")
-      case PFloat     => std("Float")
-      case PDouble    => std("Double")
-      case PShort     => std("Short")
-      case PBytes     => std("Blob")
-      case PFreeForm  => std("Document")
-      case PUUID      => alloy("UUID")
-      case PDate      => std("String", Hint.Timestamp(TimestampFormat.SimpleDate))
-      case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
-      case PTimestamp => std("Timestamp")
-    }
-    // format: on
-
-    /** Folds one layer into a type, recording definitions into the monadic tell
-      * as we go
-      */
-    def fold(layer: OpenApiPattern[DefId]): F[DefId] = {
-      layer.context.errors.traverse(recordError) *>
-        (layer match {
-          case OpenApiPrimitive(context, primitive) =>
-            val ntId = id(context)
-            val (target, hints) = idFromPrimitive(primitive)
-            val nt = Newtype(ntId, target, context.hints ++ hints)
-            recordDef(nt).as(ntId)
-
-          case OpenApiRef(context, target) =>
-            val ntId = id(context)
-            val nt = Newtype(ntId, target, context.hints)
-            recordDef(nt).as(ntId)
-
-          case OpenApiEnum(context, values) =>
-            val defId = id(context)
-            recordDef(
-              Enumeration(defId, values.filterNot(_ == null), context.hints)
-            ).as(defId)
-
-          case OpenApiNull(context) =>
-            val ntId = id(context)
-            val target =
-              DefId(Namespace(List("smithytranslate")), Name.stdLib("Null"))
-            val nt = Newtype(ntId, target, context.hints)
-            recordDef(nt).as(ntId)
-
-          case OpenApiMap(context, itemType) =>
-            val defId = id(context)
-            val (key, _) = idFromPrimitive(Primitive.PString)
-            val definition = MapDef(defId, key, itemType, context.hints)
-            recordDef(definition).as(defId)
-
-          case OpenApiArray(context, itemType) =>
-            val defId = id(context)
-            recordDef(ListDef(defId, itemType, context.hints)).as(defId)
-
-          case OpenApiSet(context, itemType) =>
-            val defId = id(context)
-            recordDef(SetDef(defId, itemType, context.hints)).as(defId)
-
-          case OpenApiAllOf(context, parentTypes) =>
-            val shapeId = id(context)
-            F.pure(Structure(shapeId, Vector.empty, parentTypes, context.hints))
-              .flatTap(recordDef)
-              .as(shapeId)
-
-          case OpenApiOneOf(context, alternatives, unionKind) =>
-            val shapeId = id(context)
-            alternatives
-              .parTraverse { case (hints, tpe @ DefId(_, name)) =>
-                val n = hints
-                  .collectFirst { case Hint.ContentTypeLabel(l) =>
-                    StringUtil.toCamelCase(l)
-                  }
-                  .getOrElse(name.segments.last.value)
-                val altId =
-                  MemberId(shapeId, Segment.Derived(CIString(n.toString)))
-                val alt = Alternative(altId, tpe, hints)
-                F.pure(alt)
-              }
-              .flatTap(alts =>
-                recordDef(Union(shapeId, alts, unionKind, context.hints))
-              )
-              .as(shapeId)
-
-          case OpenApiObject(context, items) =>
-            val shapeId = id(context)
-            items
-              .map { case ((name, required), tpe) =>
-                val fieldId = MemberId(shapeId, Segment.Derived(CIString(name)))
-                val hints = if (required) List(Hint.Required) else List.empty
-                Field(fieldId, tpe, hints)
-              }
-              .pure[F]
-              .flatTap { fields =>
-                recordDef(
-                  Structure(shapeId, fields, Vector.empty, context.hints)
-                )
-              }
-              .as(shapeId)
-
-          case OpenApiShortStop(context, error) =>
-            // When an error was encountered during the unfold, we materialise it
-            // as an empty shape in the `error` namespace
-            val shapeId = errorId(context)
-            val definition =
-              Structure(
-                shapeId,
-                Vector.empty,
-                Vector.empty,
-                context.hints :+ Hint.ErrorMessage(error.getMessage)
-              )
-            recordError(error) *>
-              recordDef(definition) *>
-              F.pure(shapeId)
-        })
-    }
-  }
-
 }
 
-private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
+private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     namespace: Path,
     openApi: OpenAPI
 ) {
@@ -349,16 +186,24 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
   private def recordSecurityErrors: F[Unit] =
     securityErrors.traverse(recordError).void
 
-  private def fold = new OpenApiToIModel.OpenApiFolder[F](namespace).fold _
+  private def fold = new PatternFolder[F](namespace).fold _
 
   private def refoldOne(start: Local): F[DefId] = {
     // Refolding each top value under openapi's "component/schema"
     // into a type, recording definitions using Tell as we go, during
     // the collapse (fold).
     def unfoldAndAddExts(local: Local) =
-      unfold(local).map(GetExtensions.transformPattern(local))
+      unfold(local).map(transformPattern(local))
 
     recursion.refoldPar(unfoldAndAddExts _, fold)(start)
+  }
+
+  private def transformPattern[A](
+      local: Local
+  ): OpenApiPattern[A] => OpenApiPattern[A] = {
+    val maybeHints = GetExtensions.from(HasExtensions.unsafeFrom(local.schema))
+    (pattern: OpenApiPattern[A]) =>
+      pattern.mapContext(_.addHints(maybeHints, retainTopLevel = true))
   }
 
   private def recordService(opDefIds: Vector[DefId]): F[Unit] = {
@@ -420,7 +265,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           .traverse { i =>
             val errorMessage =
               s"Multiple success responses are not supported. Found status code ${i.code} when ${output.code} was already recorded"
-            recordError(ModelError.Restriction(errorMessage)) *>
+            recordError(ToSmithyError.Restriction(errorMessage)) *>
               recordRefOrMessage(
                 i.refOrMessage.map(m =>
                   m.copy(hints = m.hints :+ Hint.ErrorMessage(errorMessage))
@@ -531,7 +376,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
   private def getRangeTrait(
       local: Local,
       prim: Primitive
-  ): (Option[Hint], Option[ModelError]) = {
+  ): (Option[Hint], Option[ToSmithyError]) = {
     val minR = Option(local.schema.getMinimum()).map(BigDecimal(_))
     val maxR = Option(local.schema.getMaximum()).map(BigDecimal(_))
     val range =
@@ -563,7 +408,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         val primType = prim.toString.drop("P".length())
         val errorMessage =
           s"Unable to automatically account for exclusiveMin/Max on decimal type $primType"
-        (r, Some(ModelError.Restriction(errorMessage)))
+        (r, Some(ToSmithyError.Restriction(errorMessage)))
       }
     }.unzip
     (updatedRange, error.flatten)
@@ -807,7 +652,7 @@ private class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
   // Utils
   // ///////////////////////////////////////////////////////////////////////////
 
-  private def recordError(e: ModelError): F[Unit] =
+  private def recordError(e: ToSmithyError): F[Unit] =
     Tell.tell(Chain.one(e))
 
   private def recordDef(definition: Definition): F[Unit] =

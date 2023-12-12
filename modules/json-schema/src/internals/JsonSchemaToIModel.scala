@@ -13,33 +13,32 @@
  * limitations under the License.
  */
 
-package smithytranslate.json_schema.internals
+package smithytranslate.compiler
+package internals
+package json_schema
 
 import cats.Parallel
 import scala.jdk.CollectionConverters._
 import cats.data._
 import cats.syntax.all._
-import smithytranslate.openapi.ModelError
-import smithytranslate.openapi.ModelError._
 import cats.Monad
 import org.typelevel.ci._
 import org.everit.json.schema.{Schema => ESchema}
-import smithytranslate.openapi.internals.{Local => _, _}
-import smithytranslate.openapi.internals.Suppression
+import smithytranslate.compiler.internals.Suppression
 import Extractors._
 import org.json.JSONObject
 import io.circe.Json
 import io.circe.ACursor
 import io.circe.JsonObject
 
-object JsonSchemaToIModel {
+private[compiler] object JsonSchemaToIModel {
 
   def compile(
       namespace: Path,
       jsonSchema: ESchema,
       rawJson: Json
-  ): (Chain[ModelError], IModel) = {
-    type ErrorLayer[A] = Writer[Chain[ModelError], A]
+  ): (Chain[ToSmithyError], IModel) = {
+    type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
     val (errors, (data, _)) =
@@ -124,7 +123,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
   val recordAll =
     refoldSchemas
 
-  private def fold = new OpenApiToIModel.OpenApiFolder[F](namespace).fold _
+  private def fold = new PatternFolder[F](namespace).fold _
 
   private def refoldOne(start: Local): F[DefId] = {
     // Refolding each top value under openapi's "component/schema"
@@ -282,7 +281,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
         F.pure(OpenApiNull(local.context))
 
       case s =>
-        val error = Restriction(s"Schema not supported:\n$s")
+        val error = ToSmithyError.Restriction(s"Schema not supported:\n$s")
         F.pure(OpenApiShortStop(local.context, error))
     }
   }

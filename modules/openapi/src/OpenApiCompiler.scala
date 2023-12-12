@@ -13,121 +13,37 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
-import scala.jdk.OptionConverters._
-import io.swagger.v3.oas.models.OpenAPI
-import software.amazon.smithy.model.{Model => SmithyModel}
-import cats.syntax.all._
+import cats.data.Chain
 import cats.data.NonEmptyChain
-import smithytranslate.openapi.internals.OpenApiToIModel
-import smithytranslate.openapi.internals.IModelPostProcessor
-import smithytranslate.openapi.internals.IModelToSmithy
-import io.swagger.parser.OpenAPIParser
 import cats.data.NonEmptyList
+import cats.syntax.all._
+import io.swagger.parser.OpenAPIParser
+import smithytranslate.compiler._
+import smithytranslate.compiler.internals._
+import smithytranslate.compiler.internals.openapi.OpenApiToIModel
+
 import scala.jdk.CollectionConverters._
-import software.amazon.smithy.build.ProjectionTransformer
-import software.amazon.smithy.build.TransformContext
-import cats.Functor
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion.One
-import smithytranslate.openapi.OpenApiCompiler.SmithyVersion.Two
-import software.amazon.smithy.model.validation.ValidatedResultException
-import software.amazon.smithy.model.validation.Severity
-import java.util.stream.Collectors
-import software.amazon.smithy.model.validation.ValidatedResult
+
+import OpenApiCompilerInput._
 
 /** Converts openapi to a smithy model.
   */
-object OpenApiCompiler {
+object OpenApiCompiler extends AbstractToSmithyCompiler[OpenApiCompilerInput] {
 
-  // Either the smithy validation fails, in which case we get a left with
-  // the list of errors. Or smithy validation works and we get a pair of
-  // errors (that still pass smithy validation) and a smithy model
-  sealed trait Result[+A]
-  case class Failure[A](cause: Throwable, errors: List[ModelError])
-      extends Result[A]
-  case class Success[A](error: List[ModelError], value: A) extends Result[A]
+  protected def convertToInternalModel(
+      opts: ToSmithyCompilerOptions,
+      input: OpenApiCompilerInput
+  ): (Chain[ToSmithyError], IModel) = {
+    val prepared = input match {
+      case UnparsedSpecs(specs) =>
+        val parser = new OpenAPIParser()
+        specs.map { case FileContents(path, content) =>
+          val cleanedPath = removeFileExtension(path)
+          val result = parser.readContents(content, null, null)
 
-  object Result {
-    implicit val functor: Functor[Result] = new Functor[Result]() {
-
-      override def map[A, B](fa: Result[A])(f: A => B): Result[B] = fa match {
-        case Failure(cause, errors) => Failure(cause, errors)
-        case Success(error, value)  => Success(error, f(value))
-      }
-
-    }
-  }
-
-  sealed abstract class SmithyVersion extends Product with Serializable {
-    override def toString(): String = this match {
-      case One => "1.0"
-      case Two => "2.0"
-    }
-  }
-  object SmithyVersion {
-    case object One extends SmithyVersion
-    case object Two extends SmithyVersion
-
-    def fromString(string: String): Either[String, SmithyVersion] = {
-      val versionOne = Set("1", "1.0")
-      val versionTwo = Set("2", "2.0")
-      if (versionOne(string)) Right(SmithyVersion.One)
-      else if (versionTwo(string)) Right(SmithyVersion.Two)
-      else
-        Left(
-          s"expected one of ${versionOne ++ versionTwo}, but got '$string'"
-        )
-    }
-  }
-
-  final case class Options(
-      useVerboseNames: Boolean,
-      validateInput: Boolean,
-      validateOutput: Boolean,
-      transformers: List[ProjectionTransformer],
-      useEnumTraitSyntax: Boolean,
-      debug: Boolean
-  ) {
-    val debugModelValidationError: Throwable => Throwable = {
-      case ex: ValidatedResultException if !debug =>
-        new ValidatedResultException(
-          ex.getValidationEvents()
-            .stream()
-            .filter(err =>
-              err.getSeverity == Severity.ERROR || err.getSeverity == Severity.DANGER
-            )
-            .collect(Collectors.toList())
-        )
-      case ex: Throwable => ex
-    }
-  }
-
-  type Input = (NonEmptyList[String], Either[List[String], OpenAPI])
-
-  private def removeFileExtension(
-      path: NonEmptyList[String]
-  ): NonEmptyList[String] = {
-    val lastSplit = path.last.split('.')
-    val newLast =
-      if (lastSplit.size > 1) lastSplit.dropRight(1) else lastSplit
-    NonEmptyList.fromListUnsafe(
-      path.toList.dropRight(1) :+ newLast.mkString(".")
-    )
-  }
-
-  def parseAndCompile(
-      opts: Options,
-      stringInputs: (NonEmptyList[String], String)*
-  ): Result[SmithyModel] = {
-    val parser = new OpenAPIParser()
-    val openapiInputs =
-      stringInputs.map(
-        _.bimap(
-          removeFileExtension,
-          in => {
-            val result = parser.readContents(in, null, null)
-
+          val parsed =
             if (
               opts.validateInput && !result
                 .getMessages()
@@ -141,74 +57,26 @@ object OpenApiCompiler {
               Option(result.getOpenAPI())
                 .toRight(result.getMessages().asScala.toList)
             }
-          }
-        )
-      )
-    compile(opts, openapiInputs: _*)
-  }
-
-  def compile(
-      opts: Options,
-      inputs: Input*
-  ): Result[SmithyModel] = {
-    val (errors0, smithy0) = inputs.toList
-      .map(_.leftMap(NonEmptyChain.fromNonEmptyList))
-      .foldMap { case (c, e) => OpenApiToIModel.compile(c, e) }
-      .map(IModelPostProcessor(opts.useVerboseNames))
-      .map(new IModelToSmithy(opts.useEnumTraitSyntax))
-    val translationErrors = errors0.toList
-
-    val assembled: ValidatedResult[SmithyModel] = validate(smithy0)
-    val validationEvents = if (opts.debug) {
-      assembled.getValidationEvents()
-    } else {
-      val errorEvents = assembled.getValidationEvents(Severity.ERROR)
-      val dangerEvents = assembled.getValidationEvents(Severity.DANGER)
-      val criticalErrors = new java.util.ArrayList(errorEvents)
-      criticalErrors.addAll(dangerEvents)
-      criticalErrors
-    }
-    val problematicSeverities = Set(Severity.DANGER, Severity.ERROR)
-    val hasProblematicEvents = validationEvents
-      .iterator()
-      .asScala
-      .map(_.getSeverity())
-      .exists(problematicSeverities)
-
-    val allErrors =
-      if (hasProblematicEvents) {
-        val smithyValidationFailed =
-          ModelError.SmithyValidationFailed(validationEvents.asScala.toList)
-        smithyValidationFailed :: translationErrors
-      } else {
-        translationErrors
-      }
-
-    val transformedModel =
-      assembled.getResult().toScala.map(transform(opts))
-
-    (transformedModel, NonEmptyList.fromList(allErrors)) match {
-      case (None, Some(nonEmptyErrors)) =>
-        Failure(nonEmptyErrors.head, nonEmptyErrors.tail)
-      case (None, None) =>
-        Failure(ModelError.SmithyValidationFailed(Nil), translationErrors)
-      case (Some(model), None) =>
-        Success(translationErrors, model)
-      case (Some(model), Some(nonEmptyErrors)) =>
-        if (opts.validateOutput) {
-          Failure(nonEmptyErrors.head, nonEmptyErrors.tail)
-        } else {
-          Success(allErrors, model)
+          (cleanedPath, parsed)
         }
+      case ParsedSpec(path, openapiModel) =>
+        val cleanedPath = removeFileExtension(path)
+        List(cleanedPath -> Right(openapiModel))
+    }
+    prepared.foldMap { case (path, parsed) =>
+      OpenApiToIModel.compile(NonEmptyChain.fromNonEmptyList(path), parsed)
     }
   }
 
-  private def validate(model: SmithyModel): ValidatedResult[SmithyModel] =
-    SmithyModel.assembler().discoverModels().addModel(model).assemble()
-
-  private def transform(opts: Options)(model: SmithyModel): SmithyModel =
-    opts.transformers.foldLeft(model)((m, t) =>
-      t.transform(TransformContext.builder().model(m).build())
+  private def removeFileExtension(
+      path: NonEmptyList[String]
+  ): NonEmptyList[String] = {
+    val lastSplit = path.last.split('.')
+    val newLast =
+      if (lastSplit.size > 1) lastSplit.dropRight(1) else lastSplit
+    NonEmptyList.fromListUnsafe(
+      path.toList.dropRight(1) :+ newLast.mkString(".")
     )
+  }
 
 }

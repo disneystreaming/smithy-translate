@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-package smithytranslate.openapi
+package smithytranslate.compiler.openapi
 
 import cats.data.NonEmptyList
-import smithytranslate.openapi.OpenApiCompiler.Failure
-import smithytranslate.openapi.OpenApiCompiler.Success
+import smithytranslate.compiler.ToSmithyResult.Failure
+import smithytranslate.compiler.ToSmithyResult.Success
+import smithytranslate.compiler.ToSmithyCompilerOptions
+import smithytranslate.compiler.ToSmithyError
+import smithytranslate.compiler.FileContents
 
 final class OutputValidationSpec extends munit.FunSuite {
 
   test("Output should be validated when specified") {
-    val input = """|openapi: '3.0.'
+    val spec = """|openapi: '3.0.'
                    |info:
                    |  title: test
                    |  version: '1.0'
@@ -38,9 +41,13 @@ final class OutputValidationSpec extends munit.FunSuite {
                    |                type: object
                    |""".stripMargin
 
-    val inputs = Seq((NonEmptyList.of("input.yaml"), input))
-    def convert(validateOutput: Boolean) = OpenApiCompiler.parseAndCompile(
-      OpenApiCompiler.Options(
+    val input = OpenApiCompilerInput.UnparsedSpecs(
+      List(
+        FileContents(NonEmptyList.of("input.yaml"), spec)
+      )
+    )
+    def convert(validateOutput: Boolean) = OpenApiCompiler.compile(
+      ToSmithyCompilerOptions(
         useVerboseNames = false,
         validateInput = false,
         validateOutput = validateOutput,
@@ -48,7 +55,7 @@ final class OutputValidationSpec extends munit.FunSuite {
         useEnumTraitSyntax = false,
         debug = false
       ),
-      inputs: _*
+      input
     )
 
     val resultExpectingSuccess = convert(validateOutput = false)
@@ -56,7 +63,7 @@ final class OutputValidationSpec extends munit.FunSuite {
 
     val resultExpectingFailure = convert(validateOutput = true)
     resultExpectingFailure match {
-      case Failure(ModelError.SmithyValidationFailed(events), _) =>
+      case Failure(ToSmithyError.SmithyValidationFailed(events), _) =>
         // Expecting a failure indicating that the "test" operation is invalid due to not having
         // an input member matching the `{test}` path segment.
         assertEquals(events.size, 1)
