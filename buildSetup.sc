@@ -107,14 +107,17 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
 }
 
 trait BaseScala213Module extends BaseScalaModule with ScalafmtModule {
-  override def scalaVersion = T.input("2.13.12")
+  override def scalaVersion = T.input(ScalaVersions.scala213)
 }
 
 trait BaseScalaModule extends ScalaModule with BaseModule {
-
-  override def scalacPluginIvyDeps = super.scalacPluginIvyDeps() ++ Agg(
-    ivy"org.typelevel:::kind-projector:0.13.2"
-  )
+  override def scalacPluginIvyDeps = T {
+    val sv = scalaVersion()
+    val plugins =
+      if (sv.startsWith("2.")) Agg(ivy"org.typelevel:::kind-projector:0.13.2")
+      else Agg.empty
+    super.scalacPluginIvyDeps() ++ plugins
+  }
 
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
