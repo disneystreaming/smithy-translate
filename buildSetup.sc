@@ -19,6 +19,14 @@ import mill.scalalib.api.ZincWorkerUtil
 
 import scala.Ordering.Implicits._
 
+object ScalaVersions {
+  val scala212 = "2.12.18"
+  val scala213 = "2.13.12"
+  val scala3 = "3.3.1"
+
+  val scalaVersions = List(scala213, scala212, scala3)
+}
+
 trait BaseModule extends Module with HeaderModule {
   def millSourcePath: os.Path = {
     val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
