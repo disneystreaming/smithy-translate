@@ -301,7 +301,7 @@ trait ProtoModule
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.scalapb.compilerPlugin,
-      buildDeps.scalapb.protocCache
+      buildDeps.scalapb.protocCache.withDottyCompat(scalaVersion())
     )
     def scalaPBVersion = buildDeps.scalapb.version
 
