@@ -58,7 +58,7 @@ private[closure] final class IdRefVisitor(
   override def listShape(shape: ListShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
-  @annotation.nowarn("msg=class SetShape in package shapes is deprecated")
+  @annotation.nowarn("msg=class SetShape in package (.*)shapes is deprecated")
   override def setShape(shape: SetShape): List[Shape] =
     visitSeqShape(shape.getMember())
 
