@@ -174,7 +174,7 @@ case class ScalacOption(
 
 // format: off
 private val allScalacOptions = Seq(
-  ScalacOption("-Xsource:3", isSupported = version => v211 <= version && version < v300),                                                                     // Treat compiler input as Scala source for the specified version, see scala/bug#8126.
+  ScalacOption("-Xsource:3", isSupported = version => v211 <= version && version < v300),                                  // Treat compiler input as Scala source for the specified version, see scala/bug#8126.
   ScalacOption("-deprecation", isSupported = version => version < v213 || v300 <= version),                                // Emit warning and location for usages of deprecated APIs. Not really removed but deprecated in 2.13.
   ScalacOption("-explaintypes", isSupported = _ < v300),                                                                   // Explain type errors in more detail.
   ScalacOption("-explain-types", isSupported = v300 <= _),                                                                 // Explain type errors in more detail.
@@ -187,7 +187,7 @@ private val allScalacOptions = Seq(
   ScalacOption("-language:existentials,experimental.macros,higherKinds,implicitConversions", isSupported = v300 <= _),     // the four options above, dotty style
   ScalacOption("-unchecked"),                                                                                              // Enable additional warnings where generated code depends on assumptions.
   ScalacOption("-Xcheckinit", isSupported = _ < v300),                                                                     // Wrap field accessors to throw an exception on uninitialized access.
-  ScalacOption("-Xfatal-warnings"),                                                                                        // Fail the compilation if there are any warnings.
+  ScalacOption("-Xfatal-warnings", isSupported = _ < v300),                                                                // Fail the compilation if there are any warnings. Disabled for scala3 because some warnings can't be `nowarn`ed
   ScalacOption("-Xlint", isSupported = _ < v211),                                                                          // Used to mean enable all linting options but now the syntax for that is different (-Xlint:_ I think)
   ScalacOption("-Xlint:adapted-args", isSupported = version => v211 <= version && version < v300),                         // Warn if an argument list is modified to match the receiver.
   ScalacOption("-Xlint:by-name-right-associative", isSupported = version => v211 <= version && version < v213),            // By-name parameter of right associative operator.
