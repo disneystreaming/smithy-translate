@@ -87,15 +87,15 @@ private[compiler] object OpenApiPattern {
 }
 
 // format: off
-  case class OpenApiPrimitive(context: Context, tpe: Primitive)                                             extends OpenApiPattern[Nothing]
-  case class OpenApiRef(context: Context, ref: DefId)                                                       extends OpenApiPattern[Nothing]
-  case class OpenApiEnum(context: Context, values: Vector[String])                                          extends OpenApiPattern[Nothing]
-  case class OpenApiShortStop(context: Context, error: ToSmithyError)                                          extends OpenApiPattern[Nothing]
-  case class OpenApiNull(context: Context)                                                                  extends OpenApiPattern[Nothing]
-  case class OpenApiMap[A](context: Context, items: A)                                                      extends OpenApiPattern[A]
-  case class OpenApiArray[A](context: Context, items: A)                                                    extends OpenApiPattern[A]
-  case class OpenApiSet[A](context: Context, items: A)                                                      extends OpenApiPattern[A]
-  case class OpenApiAllOf[A](context: Context, allOfs: Vector[A])                                           extends OpenApiPattern[A]
-  case class OpenApiOneOf[A](context: Context, alternatives: Vector[HintedAlternative[A]], kind: UnionKind) extends OpenApiPattern[A]
-  case class OpenApiObject[A](context: Context, items: Vector[((String, Boolean), A)])                      extends OpenApiPattern[A]
+case class OpenApiPrimitive(context: Context, tpe: Primitive)                                             extends OpenApiPattern[Nothing]
+case class OpenApiRef(context: Context, ref: DefId)                                                       extends OpenApiPattern[Nothing]
+case class OpenApiEnum(context: Context, values: Vector[String])                                          extends OpenApiPattern[Nothing]
+case class OpenApiShortStop(context: Context, error: ToSmithyError)                                          extends OpenApiPattern[Nothing]
+case class OpenApiNull(context: Context)                                                                  extends OpenApiPattern[Nothing]
+case class OpenApiMap[A](context: Context, items: A)                                                      extends OpenApiPattern[A]
+case class OpenApiArray[A](context: Context, items: A)                                                    extends OpenApiPattern[A]
+case class OpenApiSet[A](context: Context, items: A)                                                      extends OpenApiPattern[A]
+case class OpenApiAllOf[A](context: Context, allOfs: Vector[A])                                           extends OpenApiPattern[A]
+case class OpenApiOneOf[A](context: Context, alternatives: Vector[HintedAlternative[A]], kind: UnionKind) extends OpenApiPattern[A]
+case class OpenApiObject[A](context: Context, items: Vector[((String, Boolean), A)])                      extends OpenApiPattern[A]
   // format: on
