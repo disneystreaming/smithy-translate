@@ -44,131 +44,164 @@ import scala.jdk.CollectionConverters._
 private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
 
-  def apply(iModel: IModel): Model = {
-    val shapes = iModel.definitions.map {
-      case Structure(id, fields, _, structHints) =>
-        val members = fields.map { case Field(id, tpe, hints) =>
-          val memName = id.memberName.value.toString
-          val nameWillNeedChange = sanitizeMemberName(memName) != memName
-          def isHeaderOrQuery = hints.exists {
-            case Header(_)     => true
-            case QueryParam(_) => true
-            case _             => false
-          }
-          val jsonNameHint =
-            if (nameWillNeedChange && !isHeaderOrQuery)
-              List(Hint.JsonName(memName))
-            else List.empty
+  def toStructure(s: Structure): JShape = {
+    val members = s.localFields.map { case Field(id, tpe, hints) =>
+      val memName = id.memberName.value.toString
+      val nameWillNeedChange = sanitizeMemberName(memName) != memName
+      def isHeaderOrQuery = hints.exists {
+        case Header(_)     => true
+        case QueryParam(_) => true
+        case _             => false
+      }
+      val jsonNameHint =
+        if (nameWillNeedChange && !isHeaderOrQuery)
+          List(Hint.JsonName(memName))
+        else List.empty
 
-          MemberShape
-            .builder()
-            .id(id.toSmithy)
-            .target(tpe.toSmithy)
-            .addHints(hints ++ jsonNameHint)
-            .build()
-        }
-        val mixins = structHints.collect { case Hint.HasMixin(defId) =>
-          StructureShape.builder.id(defId.toSmithy).build()
-        }.asJava
-        val builder = StructureShape
-          .builder()
-          .id(id.toSmithy)
-          .addHints(structHints)
-        members.foreach(builder.addMember(_))
-        mixins.forEach { m =>
-          val _ = builder.addMixin(m)
-        }
-        builder.build()
-      case MapDef(id, key, value, hints) =>
-        MapShape
-          .builder()
-          .id(id.toSmithy)
-          .key(key.toSmithy)
-          .value(value.toSmithy)
-          .addHints(hints)
-          .build()
-      case ListDef(id, member, hints) =>
-        ListShape
-          .builder()
-          .id(id.toSmithy)
-          .member(member.toSmithy)
-          .addHints(hints)
-          .build()
-      case SetDef(id, member, hints) =>
-        ListShape
-          .builder()
-          .id(id.toSmithy)
-          .member(member.toSmithy)
-          .addHints(hints)
-          .addTrait(new UniqueItemsTrait())
-          .build()
-      case Union(id, altNames, unionKind, hints) =>
-        val builder =
-          UnionShape.builder().id(id.toSmithy).addHints(hints)
-        altNames.foreach { alt =>
-          val memName = alt.id.memberName.value.toString
-          val nameWillNeedChange = sanitizeMemberName(memName) != memName
-          val jsonNameHint =
-            if (nameWillNeedChange)
-              List(Hint.JsonName(memName))
-            else List.empty
-          val member = MemberShape
-            .builder()
-            .id(alt.id.toSmithy)
-            .target(alt.tpe.toSmithy)
-            .addHints(alt.hints ++ jsonNameHint)
-            .build()
-          builder.addMember(member)
-        }
-        unionKind match {
-          case UnionKind.Discriminated(d) =>
-            builder.addTrait(new DiscriminatedUnionTrait(d))
-          case UnionKind.Untagged => builder.addTrait(new UntaggedUnionTrait())
-          case UnionKind.ContentTypeDiscriminated =>
-            builder.addTrait(new ContentTypeDiscriminatedTrait())
-          case UnionKind.Tagged => ()
-        }
-        builder.build()
-      case Newtype(id, target, hints) =>
-        val builder = target.name.segments.last.value.toString match {
-          case "String"     => StringShape.builder()
-          case "Integer"    => IntegerShape.builder()
-          case "Long"       => LongShape.builder()
-          case "BigInteger" => BigIntegerShape.builder()
-          case "BigDecimal" => BigDecimalShape.builder()
-          case "Short"      => ShortShape.builder()
-          case "Float"      => FloatShape.builder()
-          case "Double"     => DoubleShape.builder()
-          case "Boolean"    => BooleanShape.builder()
-          case "Byte"       => ByteShape.builder()
-          case "Timestamp"  => TimestampShape.builder()
-          case "Document"   => DocumentShape.builder()
-          case "UUID" => StringShape.builder().addTrait(new UuidFormatTrait())
-          case "Null" =>
-            StructureShape.builder().addTrait(new NullFormatTrait())
-          case other => sys.error(s"error processing $id, found $other")
-        }
-        builder.id(id.toSmithy)
-        hintsToTraits(hints).foreach(builder.addTrait(_))
-        builder.build()
-      case OperationDef(id, input, output, errors, hints) =>
-        val builder =
-          OperationShape.builder().id(id.toSmithy)
-        output.foreach(o => builder.output(o.toSmithy))
-        input.foreach(i => builder.input(i.toSmithy))
-        hintsToTraits(hints).foreach(builder.addTrait(_))
-        errors.foreach(e => builder.addError(e.toSmithy))
-        builder.build()
-      case ServiceDef(id, operations, hints) =>
-        val builder = ServiceShape
-          .builder()
-          .id(id.toSmithy)
-          .addHints(hints)
-        operations.foreach(o => builder.addOperation(o.toSmithy))
-        builder.build()
-      case e: Enumeration => buildEnum(e)
-      case other =>
-        throw new IllegalArgumentException(s"Unexpected input: $other")
+      val memberBuilder = MemberShape
+        .builder()
+        .id(id.toSmithy)
+        .target(tpe.toSmithy)
+
+      hintsToTraits(hints ++ jsonNameHint).foreach(memberBuilder.addTrait(_))
+      memberBuilder.build()
+    }
+    val mixins = s.hints.collect { case Hint.HasMixin(defId) =>
+      StructureShape.builder.id(defId.toSmithy).build()
+    }.asJava
+    val builder = StructureShape
+      .builder()
+      .id(s.id.toSmithy)
+
+    hintsToTraits(s.hints).foreach(builder.addTrait(_))
+    members.foreach(builder.addMember(_))
+    mixins.forEach { m =>
+      val _ = builder.addMixin(m)
+    }
+    builder.build()
+  }
+
+  def toMap(m: MapDef): JShape = {
+    val builder = MapShape
+      .builder()
+      .id(m.id.toSmithy)
+      .key(m.key.toSmithy)
+      .value(m.value.toSmithy)
+
+    hintsToTraits(m.hints).foreach(builder.addTrait(_))
+    builder.build()
+  }
+
+  def toList(l: ListDef): JShape = {
+    val builder = ListShape
+      .builder()
+      .id(l.id.toSmithy)
+      .member(l.member.toSmithy)
+    hintsToTraits(l.hints).foreach(builder.addTrait(_))
+    builder.build()
+  }
+
+  def toSet(s: SetDef): JShape = {
+    val builder = ListShape
+      .builder()
+      .id(s.id.toSmithy)
+      .member(s.member.toSmithy)
+      .addTrait(new UniqueItemsTrait())
+
+    hintsToTraits(s.hints).foreach(builder.addTrait(_))
+    builder.build()
+  }
+
+  def toUnion(u: Union): JShape = {
+    val builder =
+      UnionShape.builder().id(u.id.toSmithy)
+    u.alts.foreach { alt =>
+      val memName = alt.id.memberName.value.toString
+      val nameWillNeedChange = sanitizeMemberName(memName) != memName
+      val jsonNameHint =
+        if (nameWillNeedChange)
+          List(Hint.JsonName(memName))
+        else List.empty
+      val memberBuilder = MemberShape
+        .builder()
+        .id(alt.id.toSmithy)
+        .target(alt.tpe.toSmithy)
+
+      hintsToTraits(alt.hints ++ jsonNameHint)
+        .foreach(memberBuilder.addTrait(_))
+      builder.addMember(memberBuilder.build())
+    }
+    u.kind match {
+      case UnionKind.Discriminated(d) =>
+        builder.addTrait(new DiscriminatedUnionTrait(d))
+      case UnionKind.Untagged => builder.addTrait(new UntaggedUnionTrait())
+      case UnionKind.ContentTypeDiscriminated =>
+        builder.addTrait(new ContentTypeDiscriminatedTrait())
+      case UnionKind.Tagged => ()
+    }
+    hintsToTraits(u.hints).foreach(builder.addTrait(_))
+    builder.build()
+  }
+
+  def toPrimitive(n: Newtype): JShape = {
+    val builder
+        : AbstractShapeBuilder[_ <: AbstractShapeBuilder[_, _], _ <: JShape] =
+      n.target.name.segments.last.value.toString match {
+        case "String"     => StringShape.builder()
+        case "Integer"    => IntegerShape.builder()
+        case "Long"       => LongShape.builder()
+        case "BigInteger" => BigIntegerShape.builder()
+        case "BigDecimal" => BigDecimalShape.builder()
+        case "Short"      => ShortShape.builder()
+        case "Float"      => FloatShape.builder()
+        case "Double"     => DoubleShape.builder()
+        case "Boolean"    => BooleanShape.builder()
+        case "Byte"       => ByteShape.builder()
+        case "Timestamp"  => TimestampShape.builder()
+        case "Document"   => DocumentShape.builder()
+        case "UUID" => StringShape.builder().addTrait(new UuidFormatTrait())
+        case "Null" =>
+          StructureShape.builder().addTrait(new NullFormatTrait())
+        case other =>
+          sys.error(
+            s"error processing ${n.id}, found $other"
+          )
+      }
+    hintsToTraits(n.hints).foreach(builder.addTrait(_))
+    builder.id(n.id.toSmithy)
+    builder.build()
+  }
+
+  def toOperation(op: OperationDef): JShape = {
+    val builder =
+      OperationShape.builder().id(op.id.toSmithy)
+    op.output.foreach(o => builder.output(o.toSmithy))
+    op.input.foreach(i => builder.input(i.toSmithy))
+    hintsToTraits(op.hints).foreach(builder.addTrait(_))
+    op.errors.foreach(e => builder.addError(e.toSmithy))
+    builder.build()
+  }
+
+  def toService(s: ServiceDef): JShape = {
+    val builder = ServiceShape
+      .builder()
+      .id(s.id.toSmithy)
+    hintsToTraits(s.hints).foreach(builder.addTrait(_))
+    s.operations.foreach(o => builder.addOperation(o.toSmithy))
+    builder.build()
+  }
+
+  def apply(iModel: IModel): Model = {
+    val shapes: Vector[JShape] = iModel.definitions.map {
+      case s: Structure     => toStructure(s)
+      case m: MapDef        => toMap(m)
+      case l: ListDef       => toList(l)
+      case s: SetDef        => toSet(s)
+      case u: Union         => toUnion(u)
+      case n: Newtype       => toPrimitive(n)
+      case op: OperationDef => toOperation(op)
+      case s: ServiceDef    => toService(s)
+      case e: Enumeration   => buildEnum(e)
     }
     val builder = Model.builder()
     if (iModel.suppressions.nonEmpty) {
@@ -198,7 +231,9 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         val name = sanitizeEnumMember(value, idx)
         enumBuilder.addMember(name, value)
       }
-      enumBuilder.addHints(hints).build()
+
+      hintsToTraits(hints).foreach(enumBuilder.addTrait(_))
+      enumBuilder.build()
     }
 
   }
@@ -394,15 +429,6 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())
     case _ => List.empty
-  }
-
-  implicit class ShapeBuilderOps[A <: AbstractShapeBuilder[A, S], S <: JShape](
-      builder: AbstractShapeBuilder[A, S]
-  ) {
-    final def addHints(hints: List[Hint]): A = {
-      hintsToTraits(hints).foreach(builder.addTrait)
-      builder.asInstanceOf[A]
-    }
   }
 
 }
