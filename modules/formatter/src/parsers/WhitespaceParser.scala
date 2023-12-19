@@ -51,6 +51,6 @@ object WhitespaceParser {
     .rep0
     .map(_.flatMap(_.swap.toOption.flatMap(_.swap.toOption)))
     .map(_.flatMap(_.toOption))
-    .map(Whitespace)
+    .map(Whitespace(_))
 
 }

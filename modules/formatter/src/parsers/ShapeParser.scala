@@ -83,7 +83,7 @@ object ShapeParser {
   val enumTypeNames: Set[String] = Set("enum", "intEnum")
 
   val simple_type_name: Parser[SimpleTypeName] =
-    Parser.stringIn(simpleNames).map(SimpleTypeName)
+    Parser.stringIn(simpleNames).map(SimpleTypeName(_))
   val enum_type_name: Parser[String] = Parser.stringIn(enumTypeNames)
 
   // see comments on ValueAssignment
@@ -134,12 +134,10 @@ object ShapeParser {
 
     val explicit_list_member: Parser[ExplicitListMember] =
       Parser.string("member") *> sp0 *> Parser.charIn(':') *> sp0 *> shape_id
-        .map(
-          ExplicitListMember
-        )
+        .map(ExplicitListMember(_))
 
     val elided_list_member: Parser[ElidedListMember] =
-      shape_id_member.map(ElidedListMember)
+      shape_id_member.map(ElidedListMember(_))
 
     val list_member: Parser[ListMember] =
       (trait_statements.with1.soft ~ (explicit_list_member.backtrack | elided_list_member))
@@ -173,17 +171,15 @@ object ShapeParser {
 
   object map_parsers {
     val elided_map_key: Parser[ElidedMapKey] =
-      shape_id_member.map(ElidedMapKey)
+      shape_id_member.map(ElidedMapKey(_))
     val explicit_map_key: Parser[ExplicitMapKey] =
-      Parser.string("key") *> sp0 *> colon *> sp0 *> shape_id.map(
-        ExplicitMapKey
-      )
+      Parser.string("key") *> sp0 *> colon *> sp0 *>
+        shape_id.map(ExplicitMapKey(_))
     val elided_map_value: Parser[ElidedMapValue] =
-      shape_id_member.map(ElidedMapValue)
+      shape_id_member.map(ElidedMapValue(_))
     val explicit_map_value: Parser[ExplicitMapValue] =
-      Parser.string("value") *> sp0 *> colon *> sp0 *> shape_id.map(
-        ExplicitMapValue
-      )
+      Parser.string("value") *> sp0 *> colon *> sp0 *>
+        shape_id.map(ExplicitMapValue(_))
     val map_value: Parser[MapValue] =
       (trait_statements.?.with1.soft ~ (explicit_map_value.backtrack | elided_map_value))
         .map { case (traits, member) =>
@@ -210,9 +206,9 @@ object ShapeParser {
   object structure_parsers {
     val explicit_structure_member: Parser[ExplicitStructureMember] =
       ((identifier <* sp0 <* Parser.charIn(':') <* sp0) ~ shape_id)
-        .map(ExplicitStructureMember.tupled)
+        .map((ExplicitStructureMember.apply _).tupled)
     val elided_structure_member: Parser[ElidedStructureMember] =
-      (Parser.charIn('$') *> identifier).map(ElidedStructureMember)
+      (Parser.charIn('$') *> identifier).map(ElidedStructureMember(_))
     val structure_member: Parser[StructureMember] = {
       ((explicit_structure_member.backtrack | elided_structure_member) ~ value_assigments.backtrack.?)
         .map { case (member, va) =>
@@ -231,7 +227,7 @@ object ShapeParser {
         }
     val structure_resource: Parser[StructureResource] =
       (sp0.with1 *> Parser.string("for") *> sp0 *> shape_id)
-        .map(StructureResource)
+        .map(StructureResource(_))
     val structure_statement: Parser[StructureStatement] = (Parser.string(
       "structure"
     ) *> sp0 *> identifier ~ structure_resource.backtrack.? ~ mixinBT.? ~ ws ~ structure_members)
@@ -243,7 +239,7 @@ object ShapeParser {
   object union_parsers {
     val union_member: Parser[UnionMember] =
       (structure_parsers.explicit_structure_member | structure_parsers.elided_structure_member)
-        .map(UnionMember)
+        .map(UnionMember(_))
     val union_members: Parser[UnionMembers] =
       (openCurly *> ws ~ (trait_statements.with1 ~ union_member ~ ws).rep0 <* closeCurly)
         .map { case (ws0, members) =>
@@ -347,8 +343,8 @@ object ShapeParser {
     }
   }
   val shape_statement_or_apply: Parser[ShapeStatementsCase] =
-    shape_statement.map(ShapeStatementCase) |
-      apply_statement.map(ApplyStatementCase)
+    shape_statement.map(ShapeStatementCase(_)) |
+      apply_statement.map(ApplyStatementCase(_))
 
   // The optional trailing BR is not in the spec but it exists in a lot of
   // files.
@@ -366,7 +362,7 @@ object ShapeParser {
     (Parser.string("use") *> sp *> absolute_root_shape_id ~ br).map {
       case (arsi, br) => UseStatement(arsi, br)
     }
-  val use_section: Parser0[UseSection] = use_statement.rep0.map(UseSection)
+  val use_section: Parser0[UseSection] = use_statement.rep0.map(UseSection(_))
   val shape_section: Parser0[ShapeSection] =
     (namespace_statement ~ use_section ~ shape_statements.?).?.map { op =>
       ShapeSection(op.map { case ((ns, use), ss) =>
