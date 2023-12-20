@@ -39,7 +39,7 @@ private[compiler] object OpenApiToIModel {
       namespace: Path,
       openAPI: Either[List[String], OpenAPI]
   ): (Chain[ToSmithyError], IModel) = {
-    type ErrorLayer[A] = WriterT[cats.Id, Chain[ToSmithyError], A]
+    type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
 
