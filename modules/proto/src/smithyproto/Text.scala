@@ -22,10 +22,10 @@ import scala.annotation.tailrec
   */
 sealed trait Text
 object Text {
-  final case class Line(string: String) extends Text
-  final case class Many(texts: List[Text]) extends Text
-  final case class Indent(text: Text) extends Text
-  final case object NewLine extends Text
+  case class Line(string: String) extends Text
+  case class Many(texts: List[Text]) extends Text
+  case class Indent(text: Text) extends Text
+  case object NewLine extends Text
 
   def line(string: String): Text.Line = Text.Line(string)
 

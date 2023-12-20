@@ -30,6 +30,7 @@ import org.json.JSONObject
 import io.circe.Json
 import io.circe.ACursor
 import io.circe.JsonObject
+import cats.catsParallelForId
 
 private[compiler] object JsonSchemaToIModel {
 
@@ -293,7 +294,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
   private implicit class WithDescriptionSyntax(p: OpenApiPattern[Local]) {
     def withDescription(local: Local): OpenApiPattern[Local] = {
       val maybeDesc =
-        Option(local.schema.getDescription()).map(Hint.Description).toList
+        Option(local.schema.getDescription()).map(Hint.Description(_)).toList
       p.mapContext(_.addHints(maybeDesc, retainTopLevel = true))
     }
   }

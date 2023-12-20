@@ -33,6 +33,6 @@ object ControlParser {
     }
 
   val control_section: Parser0[ControlSection] =
-    control_statement.rep0.map(ControlSection)
+    control_statement.rep0.map(ControlSection(_))
 
 }

@@ -93,7 +93,7 @@ private[compiler] object recursion {
     type PatternWithLabel[T] = WithLabel[Pattern[T]]
     implicit val patternWithLabelTraverse : Traverse[PatternWithLabel] = Traverse[WithLabel].compose[Pattern]
 
-    refoldPar[F, PatternWithLabel, A, B](unfold, fold.tupled)(a)
+    refoldPar[F, PatternWithLabel, A, B](unfold, (fold.apply _).tupled)(a)
   }
 
 }

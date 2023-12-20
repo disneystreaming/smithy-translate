@@ -53,10 +53,10 @@ object NodeParser {
     }
 
   val escaped_char: Parser[EscapedChar] =
-    escape *> (Parser.charIn(escapeChars).map(CharCase) | unicode_escape)
+    escape *> (Parser.charIn(escapeChars).map(CharCase(_)) | unicode_escape)
   val quoted_char: Parser[QuotedChar] =
-    qChar.backtrack.map(SimpleCharCase) |
-      escaped_char.backtrack.map(EscapedCharCase) |
+    qChar.backtrack.map(SimpleCharCase(_)) |
+      escaped_char.backtrack.map(EscapedCharCase(_)) |
       nl.as(NewLineCase)
 
   val three_dquotes: Parser[Unit] = dquote *> dquote *> dquote
@@ -66,17 +66,17 @@ object NodeParser {
     }
   val text_block: Parser[TextBlock] =
     ((three_dquotes ~ sp0 *> nl) *> text_block_content.rep0 <* three_dquotes)
-      .map(TextBlock)
+      .map(TextBlock(_))
   val quoted_text: Parser[QuotedText] =
-    (dquote *> quoted_char.rep0 <* dquote).map(QuotedText)
-  val node_string_value: Parser[NodeStringValue] = shape_id.backtrack.map(
-    ShapeIdCase
-  ) | text_block.backtrack.map(TextBlockCase) | quoted_text.backtrack
-    .map(QuotedTextCase)
+    (dquote *> quoted_char.rep0 <* dquote).map(QuotedText(_))
+  val node_string_value: Parser[NodeStringValue] =
+    shape_id.backtrack.map(ShapeIdCase(_)) |
+      text_block.backtrack.map(TextBlockCase(_)) |
+      quoted_text.backtrack.map(QuotedTextCase(_))
   val node_keywords: Parser[NodeKeyword] =
-    Parser.stringIn(Set("true", "false", "null")).map(NodeKeyword)
+    Parser.stringIn(Set("true", "false", "null")).map(NodeKeyword(_))
 
-  val frac: Parser[Frac] = Parser.char('.') *> digit.rep.string.map(Frac)
+  val frac: Parser[Frac] = Parser.char('.') *> digit.rep.string.map(Frac(_))
   val exp: Parser[Exp] =
     (Parser.charIn('e', 'E') ~ opParser.? ~ digit.rep.string)
       .map { case ((a, b), c) =>
@@ -92,10 +92,9 @@ object NodeParser {
     nodeArray.backtrack | nodeObject.backtrack | number.backtrack | node_keywords.backtrack | node_string_value.backtrack
   )
 
-  val node_object_key: Parser[NodeObjectKey] = quoted_text.backtrack
-    .map(
-      NodeObjectKey.QuotedTextNok
-    ) | identifier.map(NodeObjectKey.IdentifierNok)
+  val node_object_key: Parser[NodeObjectKey] =
+    quoted_text.backtrack.map(NodeObjectKey.QuotedTextNok(_)) |
+      identifier.map(NodeObjectKey.IdentifierNok(_))
 
   lazy val node_object_kvp: Parser[NodeObjectKeyValuePair] =
     ((node_object_key ~ ws <* colon) ~ ws ~ node_value).map {
@@ -109,7 +108,7 @@ object NodeParser {
       }
 
   val nodeArray: Parser[NodeArray] = {
-    val valueP = (node_value ~ ws).map(NodeArrayValue.tupled)
+    val valueP = (node_value ~ ws).map((NodeArrayValue.apply _).tupled)
     ((openSquare *> ws ~ valueP.backtrack.rep0) <* (ws ~ closeSquare))
       .map { case (whitespace, maybeTuple) =>
         NodeArray(whitespace, maybeTuple)

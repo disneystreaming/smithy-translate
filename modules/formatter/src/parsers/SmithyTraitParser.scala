@@ -39,13 +39,12 @@ object SmithyTraitParser {
   //       TraitStructureKvp *(*WS TraitStructureKvp)
   val trait_structure: Parser[TraitStructure] =
     (trait_structure_kvp ~ (ws.with1 ~ trait_structure_kvp).backtrack.rep0)
-      .map(TraitStructure.tupled)
+      .map((TraitStructure.apply _).tupled)
 
   //    trait_structure / node_value
   val strait_body_value: Parser0[SmithyTraitBodyValue] =
-    trait_structure.backtrack.map(SmithyTraitStructureCase) | node_value.map(
-      NodeValueCase
-    )
+    trait_structure.backtrack.map(SmithyTraitStructureCase(_)) |
+      node_value.map(NodeValueCase(_))
   //  "(" ws trait_body_value ws ")"
   val strait_body: Parser0[TraitBody] =
     ((openParentheses *> ws ~ strait_body_value.? ~ ws) <* closeParentheses)
@@ -54,7 +53,9 @@ object SmithyTraitParser {
       }
   //  "@" shape_id [trait_body]
   val strait: Parser[SmithyTrait] =
-    Parser.char('@') *> (shape_id ~ strait_body.?).map { SmithyTrait.tupled }
+    Parser.char('@') *> (shape_id ~ strait_body.?).map {
+      (SmithyTrait.apply _).tupled
+    }
   // *(ws trait) ws
   val trait_statements: Parser0[TraitStatements] =
     ((ws.with1 ~ strait).backtrack.rep0 ~ ws).map { case (traits, ws) =>
@@ -73,7 +74,7 @@ object SmithyTraitParser {
         ApplyStatementBlock(a, b, c)
       }
   val apply_statement: Parser[ApplyStatement] =
-    apply_block.backtrack.eitherOr(apply_singular).map(ApplyStatement)
+    apply_block.backtrack.eitherOr(apply_singular).map(ApplyStatement(_))
 
 }
 

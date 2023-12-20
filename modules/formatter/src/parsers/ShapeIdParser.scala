@@ -33,16 +33,16 @@ import cats.parse.Rfc5234.{alpha, digit}
 object ShapeIdParser {
   val underscore: Parser[Underscore] = Parser.charIn('_').as(Underscore)
   val identifier_chars: Parser[IdentifierChar] =
-    (Parser.charIn('_') | digit | alpha).map(IdentifierChar)
+    (Parser.charIn('_') | digit | alpha).map(IdentifierChar(_))
   val identifier_start: Parser[IdentifierStart] =
-    (underscore.rep0.with1 ~ alpha).map(IdentifierStart.tupled)
+    (underscore.rep0.with1 ~ alpha).map((IdentifierStart.apply _).tupled)
   val identifier: Parser[Identifier] =
-    (identifier_start ~ identifier_chars.rep0).map(Identifier.tupled)
+    (identifier_start ~ identifier_chars.rep0).map((Identifier.apply _).tupled)
   val shape_id_member: Parser[ShapeIdMember] =
-    (Parser.char('$') *> identifier).map(ShapeIdMember)
+    (Parser.char('$') *> identifier).map(ShapeIdMember(_))
   val namespace: Parser[Namespace] =
     (identifier ~ (Parser.charIn('.') *> identifier).rep0)
-      .map(Namespace.tupled)
+      .map((Namespace.apply _).tupled)
   val absolute_root_shape_id: Parser[AbsoluteRootShapeId] =
     ((namespace <* Parser.char('#')) ~ identifier)
       .map { case (ns, id) => AbsoluteRootShapeId.apply(ns, id) }
@@ -51,7 +51,7 @@ object ShapeIdParser {
       .eitherOr(identifier)
       .map(either => RootShapeId(either.swap))
   val shape_id: Parser[ShapeId] =
-    (root_shape_id ~ shape_id_member.backtrack.?).map(ShapeId.tupled)
+    (root_shape_id ~ shape_id_member.backtrack.?).map((ShapeId.apply _).tupled)
 }
 
 /*

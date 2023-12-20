@@ -34,7 +34,7 @@ object MetadataParser {
       }
 
   val metadata_section: Parser0[MetadataSection] =
-    metadata_statement.rep0.map(MetadataSection)
+    metadata_statement.rep0.map(MetadataSection(_))
 }
 
 /*

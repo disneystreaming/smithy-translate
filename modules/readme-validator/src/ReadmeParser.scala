@@ -69,15 +69,15 @@ object ReadmeParser {
     val openapiSection =
       sectionParser(openapiHeader, smithyHeader)
         .map(_.map(_.head))
-        .map(Example.OpenApi.tupled)
+        .map((Example.OpenApi.apply _).tupled)
     val jsonSection =
       sectionParser(jsonHeader, smithyHeader)
         .map(_.map(_.head))
-        .map(Example.JsonSchema.tupled)
+        .map((Example.JsonSchema.apply _).tupled)
     val protoSection =
       sectionParser(smithyHeader, protoHeader)
         .map(_.map(_.head))
-        .map(Example.Proto.tupled)
+        .map((Example.Proto.apply _).tupled)
     val section = openapiSection.backtrack
       .orElse(jsonSection)
       .backtrack

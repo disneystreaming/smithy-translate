@@ -84,7 +84,7 @@ private[json_schema] object Extractors {
             else Some(PDouble)
 
           val (typedMin, typedMax): (Double, Double) = prim match {
-            case Some(PInt) => (Int.MinValue, Int.MaxValue)
+            case Some(PInt) => (Int.MinValue.toDouble, Int.MaxValue.toDouble)
             case _          => (Double.MinValue, Double.MaxValue)
           }
 
@@ -127,7 +127,7 @@ private[json_schema] object Extractors {
         //  type: string
         case (s: StringSchema) =>
           val pattern =
-            Option(s.getPattern()).map(_.pattern()).map(Hint.Pattern)
+            Option(s.getPattern()).map(_.pattern()).map(Hint.Pattern(_))
           val max = Option(s.getMaxLength()).map(n => n.longValue())
           val min = Option(s.getMinLength()).map(n => n.longValue())
           val length =
@@ -296,7 +296,7 @@ private[json_schema] object Extractors {
         case other                    => other
       }
       .map(GetExtensions.anyToNode)
-      .map(Hint.DefaultValue)
+      .map(Hint.DefaultValue(_))
     List(description, default, current, target).flatten ++ extensions
   }
 

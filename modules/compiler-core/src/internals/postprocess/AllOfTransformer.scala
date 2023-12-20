@@ -63,7 +63,6 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
             case _: ServiceDef => false
           }
           loop(tail, hasRef)
-        case _ :: tail => loop(tail, isReferenced)
       }
 
     loop(allShapes.toList)

@@ -30,6 +30,7 @@ import cats.syntax.all._
 import cats.Monad
 import org.typelevel.ci._
 import GetExtensions.HasExtensions
+import cats.catsParallelForId
 
 private[compiler] object OpenApiToIModel {
 
@@ -40,8 +41,8 @@ private[compiler] object OpenApiToIModel {
     type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
-    val (errors, (data, _)) =
-      compileF[WriterLayer](namespace, openAPI).run.run
+
+    val (errors, (data, _)) = compileF[WriterLayer](namespace, openAPI).run.run
     val definitions = data.collect { case Right(d) => d }
     val suppressions = data.collect { case Left(s) => s }
     (errors, IModel(definitions.toVector, suppressions.toVector))
@@ -56,7 +57,9 @@ private[compiler] object OpenApiToIModel {
         val parser = new OpenApiToIModel[F](namespace, openApi)
         parser.recordAll
       case Left(errors) =>
-        Tell.tell(Chain.one((ToSmithyError.OpenApiParseError(namespace, errors))))
+        Tell.tell(
+          Chain.one((ToSmithyError.OpenApiParseError(namespace, errors)))
+        )
     }
   }
 }
@@ -368,7 +371,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
   private implicit class WithDescriptionSyntax(p: OpenApiPattern[Local]) {
     def withDescription(local: Local): OpenApiPattern[Local] = {
       val maybeDesc =
-        Option(local.schema.getDescription()).map(Hint.Description).toList
+        Option(local.schema.getDescription()).map(Hint.Description(_)).toList
       p.mapContext(_.addHints(maybeDesc, retainTopLevel = true))
     }
   }
@@ -456,7 +459,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
             if (minL.isDefined || maxL.isDefined) Some(Hint.Length(minL, maxL))
             else None
 
-          val pattern = Option(local.schema.getPattern).map(Hint.Pattern)
+          val pattern = Option(local.schema.getPattern).map(Hint.Pattern(_))
           val sensitive = Option(local.schema.getFormat()).flatMap(f =>
             if (f == "password") Some(Hint.Sensitive) else None
           )

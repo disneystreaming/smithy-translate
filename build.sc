@@ -3,6 +3,7 @@ import $file.buildDeps
 
 import mill._
 import buildSetup._
+import buildSetup.ScalaVersions._
 import coursier.maven.MavenRepository
 import mill.contrib.scalapblib.ScalaPBModule
 import mill.contrib.buildinfo
@@ -16,10 +17,6 @@ import mill.scalalib.publish._
 import mill.contrib.buildinfo.BuildInfo
 
 import scala.Ordering.Implicits._
-
-val scala212 = "2.12.18"
-val scala213 = "2.13.12"
-val scalaVersions = List(scala213, scala212)
 
 object `compiler-core` extends Cross[CompilerCoreModule](scalaVersions)
 trait CompilerCoreModule
@@ -304,7 +301,7 @@ trait ProtoModule
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.scalapb.compilerPlugin,
-      buildDeps.scalapb.protocCache
+      buildDeps.scalapb.protocCache.withDottyCompat(scalaVersion())
     )
     def scalaPBVersion = buildDeps.scalapb.version
 
