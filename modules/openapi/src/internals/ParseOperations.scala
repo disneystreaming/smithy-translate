@@ -173,7 +173,9 @@ private class ParseOperationsImpl(
       hasGlobalSecurity: Boolean
   )(opInfo: IOpInfo): ParseOperationsResult = {
     import opInfo._
-    val localParams: Vector[Either[ToSmithyError, Param]] = getLocalInputParams(op)
+    val localParams: Vector[Either[ToSmithyError, Param]] = getLocalInputParams(
+      op
+    )
     val body: Vector[Either[ToSmithyError, Param]] =
       getRequestBodyParam(op).toVector.map(Right(_))
     val allInputParams: Vector[Either[ToSmithyError, Param]] =
@@ -186,11 +188,12 @@ private class ParseOperationsImpl(
     val outputs = getOutputs(opInfo)
     val (errors, securityHint) =
       getSecurityHint(securitySchemes, opInfo, hasGlobalSecurity)
-    val descHint = Option(op.getDescription()).map(Hint.Description).toList
+    val descHint = Option(op.getDescription()).map(Hint.Description(_)).toList
     val exDocs = Option(opInfo.op.getExternalDocs()).map(e =>
       Hint.ExternalDocs(Option(e.getDescription()), e.getUrl())
     )
-    val tags = Option(op.getTags()).map(_.asScala.toList).map(Hint.Tags).toList
+    val tags =
+      Option(op.getTags()).map(_.asScala.toList).map(Hint.Tags(_)).toList
 
     val hints =
       GetExtensions.from(
@@ -307,7 +310,7 @@ private class ParseOperationsImpl(
       }
       val description =
         Option(resolvedParam.getDescription())
-          .map[Hint](Hint.Description)
+          .map[Hint](Hint.Description(_))
           .toList
       httpBinding
         .map { b =>
