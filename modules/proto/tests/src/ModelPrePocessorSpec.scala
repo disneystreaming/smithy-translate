@@ -320,6 +320,75 @@ class ModelPrePocessorSpec extends FunSuite {
     }
   }
 
+  test("apply PreventEnumConflicts - across namespace") {
+    val smithyTest =
+      """|$version: "2"
+         |namespace test
+         |
+         |enum Enum1 {
+         |  VCONFLICT
+         |}
+         |
+         |enum Enum2 {
+         |  VCONFLICT
+         |}
+         |""".stripMargin
+
+    val other =
+      """|$version: "2"
+            |namespace a.ns
+            |
+            |enum OtherEnum {
+            |  VCONFLICT
+            |}
+            |""".stripMargin
+    val original = buildModel(smithyTest, other)
+    val transformed =
+      process(original, ModelPreProcessor.transformers.PreventEnumConflicts)
+    def getEnumNames(m: Model, shapeId: ShapeId): List[String] = {
+      m.getShape(shapeId)
+        .toScala
+        .toList
+        .collect {
+          case shape: EnumShape =>
+            shape.getMemberNames.asScala.toList
+          case shape: IntEnumShape =>
+            shape.getMemberNames.asScala.toList
+        }
+        .flatten
+    }
+
+    assertEquals(
+      getEnumNames(original, ShapeId.from("test#Enum1")),
+      List("VCONFLICT")
+    )
+
+    assertEquals(
+      getEnumNames(transformed, ShapeId.from("test#Enum1")),
+      List("ENUM1_VCONFLICT")
+    )
+
+    assertEquals(
+      getEnumNames(original, ShapeId.from("test#Enum2")),
+      List("VCONFLICT")
+    )
+
+    assertEquals(
+      getEnumNames(transformed, ShapeId.from("test#Enum2")),
+      List("ENUM2_VCONFLICT")
+    )
+
+    assertEquals(
+      getEnumNames(original, ShapeId.from(s"a.ns#OtherEnum")),
+      List("VCONFLICT")
+    )
+
+    assertEquals(
+      getEnumNames(transformed, ShapeId.from(s"a.ns#OtherEnum")),
+      List("VCONFLICT")
+    )
+  }
+
   private def checkTransformer(src: String, t: ProjectionTransformer)(
       check: (Model, Model) => Unit
   ): Unit = {
@@ -328,13 +397,16 @@ class ModelPrePocessorSpec extends FunSuite {
     check(original, transformed)
   }
 
-  private def buildModel(src: String): Model = {
-    Model
+  private def buildModel(srcs: String*): Model = {
+    val assembler = Model
       .assembler()
       .discoverModels()
-      .addUnparsedModel("inlined-in-test.smithy", src)
-      .assemble()
-      .unwrap()
+
+    srcs.zipWithIndex.foreach { case (s, i) =>
+      assembler.addUnparsedModel(s"inlined-in-test.$i.smithy", s)
+    }
+
+    assembler.assemble().unwrap()
   }
 
   private def process(m: Model, t: ProjectionTransformer): Model = {
