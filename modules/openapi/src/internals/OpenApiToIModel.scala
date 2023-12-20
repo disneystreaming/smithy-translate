@@ -30,7 +30,6 @@ import cats.syntax.all._
 import cats.Monad
 import org.typelevel.ci._
 import GetExtensions.HasExtensions
-import cats.NonEmptyParallel
 import cats.catsParallelForId
 
 private[compiler] object OpenApiToIModel {

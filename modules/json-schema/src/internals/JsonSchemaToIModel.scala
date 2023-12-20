@@ -30,7 +30,6 @@ import org.json.JSONObject
 import io.circe.Json
 import io.circe.ACursor
 import io.circe.JsonObject
-import cats.NonEmptyParallel
 import cats.catsParallelForId
 
 private[compiler] object JsonSchemaToIModel {
