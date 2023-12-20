@@ -113,75 +113,62 @@ object ModelPreProcessor {
         def getName(): String = "prevent-enum-conflicts"
         def transform(x: TransformContext): Model = {
           val currentModel = x.getModel
-          val enumsShapes: List[EnumShape] =
-            currentModel.getEnumShapes.asScala.toList
-              .filter(s => !Prelude.isPreludeShape(s))
+          val enumsShapes: List[EnumShape] = currentModel
+            .getEnumShapes()
+            .asScala
+            .filterNot(Prelude.isPreludeShape)
+            .toList
 
-          val intEnums: List[IntEnumShape] =
-            currentModel.getIntEnumShapes.asScala.toList.filter(s =>
-              !Prelude.isPreludeShape(s)
-            )
+          val intEnums: List[IntEnumShape] = currentModel
+            .getIntEnumShapes()
+            .asScala
+            .filterNot(Prelude.isPreludeShape)
+            .toList
 
           val allEnums: List[Shape] = enumsShapes ++ intEnums
 
-          val enumLabelsPerNamespace = allEnums
-            .groupMapReduce(_.getId.getNamespace)(es =>
-              es.getMemberNames.asScala.toList
-            )(_ ++ _)
+          val allCombos = for {
+            e <- allEnums
+            memberName <- e.getMemberNames().asScala.toList
+          } yield (e.getId().getNamespace(), memberName)
 
-          val enumHasConflictMap: Map[String, Boolean] = {
-            allEnums.flatMap { es =>
-              val id = es.getId
-              val enums = es.getMemberNames.asScala.toList
-
-              val allEnumValues =
-                enumLabelsPerNamespace.getOrElse(id.getNamespace, List.empty)
-
-              enums.map { enumName =>
-                enumName -> (allEnumValues.count(_ == enumName) > 1)
+          val allRepeatedCombos =
+            allCombos
+              .groupBy(identity)
+              .view
+              .mapValues(_.size)
+              .collect {
+                case (k, v) if v > 1 => k
               }
-            }.toMap
+              .toSet
 
-          }
-          def enumHasConflict(enumValue: String): Boolean = {
-            enumHasConflictMap.getOrElse(enumValue, false)
-          }
+          def hasConflict(member: MemberShape): Boolean = allRepeatedCombos(
+            (member.getId().getNamespace(), member.getMemberName())
+          )
 
-          val newEnumShapes: List[Shape] = enumsShapes
-            .map { enumShape =>
-              {
-                val b = enumShape.toBuilder
-                b.clearMembers()
-                enumShape.getAllMembers.asScala.foreach {
-                  case (memberName, member) =>
-                    val newMember = if (enumHasConflict(memberName)) {
-                      renameMember(member)
-                    } else {
-                      member
-                    }
-                    b.addMember(newMember)
-                }
-                b.build()
-              }
+          val newEnumShapes: List[Shape] = enumsShapes.map { enumShape =>
+            val b = enumShape.toBuilder
+            b.clearMembers()
+            enumShape.members.asScala.foreach {
+              case member if hasConflict(member) =>
+                b.addMember(renameMember(member))
+              case member =>
+                b.addMember(member)
             }
+            b.build()
+          }
 
-          val newIntEnumShapes = intEnums
-            .map { enumShape =>
-              {
-                val b = enumShape.toBuilder
-                b.clearMembers()
-                enumShape.getAllMembers.asScala.foreach {
-                  case (memberName, member) =>
-                    val newMember = if (enumHasConflict(memberName)) {
-                      renameMember(member)
-                    } else {
-                      member
-                    }
-                    b.addMember(newMember)
-                }
-                b.build()
-              }
+          val newIntEnumShapes = intEnums.map { intEnumShape =>
+            val b = intEnumShape.toBuilder
+            b.clearMembers()
+            intEnumShape.members.asScala.foreach {
+              case member if hasConflict(member) =>
+                b.addMember(renameMember(member))
+              case member =>
+                b.addMember(member)
             }
+            b.build()
+          }
 
           val allShapes = newEnumShapes ++ newIntEnumShapes
 
