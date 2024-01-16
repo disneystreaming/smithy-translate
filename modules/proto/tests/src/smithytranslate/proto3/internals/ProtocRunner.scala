@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto.validation
+package smithytranslate.proto3.internals
 
 import coursier._
 import coursier.core.Extension

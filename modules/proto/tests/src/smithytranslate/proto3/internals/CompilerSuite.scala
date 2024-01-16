@@ -13,19 +13,22 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import munit._
-import smithyproto.proto3.ProtoIR._
-import smithyproto.proto3.ProtoIR.Statement._
+import ProtoIR._
+import Statement._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.StringShape
+import software.amazon.smithy.model.shapes.StructureShape
+import alloy.proto.ProtoEnabledTrait
+import software.amazon.smithy.model.shapes.ShapeId
 
 class CompilerSuite extends FunSuite {
 
-  private val someString = TopLevelDef.MessageDef(
+  private val someStruct = TopLevelDef.MessageDef(
     Message(
-      "SomeString",
+      "Struct",
       List(
         MessageElement.FieldElement(
           Field(
@@ -42,15 +45,26 @@ class CompilerSuite extends FunSuite {
 
   test("compile a simple smithy model") {
     val namespace = "com.example"
-    val sut = new Compiler()
     val model = {
       val mb = Model.builder()
       mb.addShape(
-        StringShape.builder().id(s"$namespace#SomeString").build()
+        StringShape
+          .builder()
+          .id(ShapeId.fromParts("com.example", "MyString"))
+          .build()
+      )
+      mb.addShape(
+        StructureShape
+          .builder()
+          .addTrait(new ProtoEnabledTrait())
+          .id(s"$namespace#Struct")
+          .addMember("value", ShapeId.fromParts("com.example", "MyString"))
+          .build()
       )
       mb.build()
     }
-    val actual = sut.compile(model)
+    val sut = new Compiler(model, allShapes = true)
+    val actual = sut.compile()
     val expected = List(
       OutputFile(
         List(
@@ -64,7 +78,7 @@ class CompilerSuite extends FunSuite {
           ),
           List(
             TopLevelStatement(
-              someString
+              someStruct
             )
           ),
           List.empty
@@ -114,15 +128,26 @@ class CompilerSuite extends FunSuite {
   private def namespaceTest(namespace: String, expectedFilePath: List[String])(
       implicit loc: Location
   ): Unit = {
-    val sut = new Compiler()
     val model = {
       val mb = Model.builder()
       mb.addShape(
-        StringShape.builder().id(s"$namespace#SomeString").build()
+        StringShape
+          .builder()
+          .id(ShapeId.fromParts("com.example", "MyString"))
+          .build()
+      )
+      mb.addShape(
+        StructureShape
+          .builder()
+          .addTrait(new ProtoEnabledTrait())
+          .id(s"$namespace#Struct")
+          .addMember("value", ShapeId.fromParts("com.example", "MyString"))
+          .build()
       )
       mb.build()
     }
-    val actual = sut.compile(model)
+    val sut = new Compiler(model, allShapes = true)
+    val actual = sut.compile()
     val expected = List(
       OutputFile(
         expectedFilePath,
@@ -132,7 +157,7 @@ class CompilerSuite extends FunSuite {
           ),
           List(
             TopLevelStatement(
-              someString
+              someStruct
             )
           ),
           List.empty

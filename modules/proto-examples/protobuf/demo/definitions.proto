@@ -6,9 +6,9 @@ import "google/protobuf/empty.proto";
 
 import "demo/common/common.proto";
 
-import "google/protobuf/wrappers.proto";
+import "google/protobuf/timestamp.proto";
 
-import "smithytranslate/definitions.proto";
+import "google/protobuf/struct.proto";
 
 service Hello {
   rpc SayHello(demo.HelloRequest) returns (demo.HelloResponse);
@@ -20,13 +20,13 @@ message HelloRequest {
   string name = 1;
   demo.common.Language lang = 2;
   int32 requiredInt = 4;
-  google.protobuf.Int32Value int = 5;
-  smithytranslate.UUID id = 6;
+  int32 int = 5;
+  string id = 6;
 }
 
 message HelloResponse {
   string message = 1;
-  google.protobuf.UInt64Value size = 2;
+  uint64 size = 2;
   demo.UseApiStruct apiStruct = 3;
   oneof apiUnion {
     string version = 4;
@@ -36,7 +36,11 @@ message HelloResponse {
 }
 
 message UseApiStruct {
-  smithytranslate.BigInteger bigInt = 1;
-  smithytranslate.BigDecimal bigDec = 2;
-  smithytranslate.Timestamp ts = 3;
+  string bigInt = 1;
+  string bigDec = 2;
+  google.protobuf.Timestamp ts = 3;
+}
+
+message DocumentWrapper {
+  google.protobuf.Value doc = 1;
 }

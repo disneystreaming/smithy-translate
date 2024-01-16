@@ -13,21 +13,33 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import munit._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.validation.ValidatedResultException
-import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
 
   test("top level - union") {
     val source = """|namespace com.example
                     |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |list StringList {
+                    |  member: String
+                    |}
+                    |
+                    |map StringMap {
+                    |  key: String,
+                    |  value: String
+                    |}
+                    |
                     |union MyUnion {
-                    |  name: String,
+                    |  name: String
                     |  id: Integer
+                    |  stringList: StringList
+                    |  stringMap: StringMap
                     |}
                     |""".stripMargin
 
@@ -35,10 +47,20 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package com.example;
                       |
+                      |message StringList {
+                      |  repeated string value = 1;
+                      |}
+                      |
+                      |message StringMap {
+                      |  map<string, string> value = 1;
+                      |}
+                      |
                       |message MyUnion {
                       |  oneof definition {
                       |    string name = 1;
                       |    int32 id = 2;
+                      |    com.example.StringList stringList = 3;
+                      |    com.example.StringMap stringMap = 4;
                       |  }
                       |}
                       |""".stripMargin
@@ -131,268 +153,344 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("top level - document") {
+  test("document") {
     val source = """|namespace com.example
                     |
-                    |document SomeDoc
-                    |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "google/protobuf/any.proto";
-                    |
-                    |message SomeDoc {
-                    |  google.protobuf.Any value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - string") {
-    val source = """|namespace com.example
-                  |
-                  |string SomeString
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeString {
-                    |  string value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - structure") {
-    val source = """|namespace com.example
-                  |
-                  |structure MyStruct {
-                  |  @required
-                  |  value: String
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message MyStruct {
-                    |  string value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - int") {
-    val source = """|namespace com.example
-                  |
-                  |integer SomeInt
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeInt {
-                    |  int32 value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - long") {
-    val source = """|namespace com.example
-                  |
-                  |long SomeLong
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeLong {
-                    |  int64 value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - double") {
-    val source = """|namespace com.example
-                  |
-                  |double SomeDouble
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeDouble {
-                    |  double value = 1;
+                    |structure SomeDoc {
+                    |  value: Document
                     |}
                     |""".stripMargin
 
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - float") {
-    val source = """|namespace com.example
-                  |
-                  |float SomeFloat
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeFloat {
-                    |  float value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-
-  }
-
-  test("top level - short") {
-    val source = """|namespace com.example
-                  |
-                  |short SomeShort
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeShort {
-                    |  int32 value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - bool") {
-    val source = """|namespace com.example
-                  |
-                  |boolean SomeBool
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeBool {
-                    |  bool value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - bytes") {
-    val source = """|namespace com.example
-                  |
-                  |blob SomeBlob
-                  |""".stripMargin
-    val someBlob = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message SomeBlob {
-                    |  bytes value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> someBlob))
-  }
-
-  test("top level - big integer") {
-    val source = """|namespace com.example
-                  |
-                  |bigInteger SomeBigInt
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "smithytranslate/definitions.proto";
-                    |
-                    |message SomeBigInt {
-                    |  smithytranslate.BigInteger value = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("top level - big decimal") {
-    val source = """|namespace com.example
-                  |
-                  |bigDecimal SomeBigDec
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "smithytranslate/definitions.proto";
-                    |
-                    |message SomeBigDec {
-                    |  smithytranslate.BigDecimal value = 1;
-                    |}
-                    |""".stripMargin
-    convertWithApiCheck(
-      source,
-      Map("com/example/example.proto" -> expected)
-    )
-  }
-
-  test("top level - timestamp") {
-    val source = """|namespace com.example
-                  |
-                  |timestamp SomeTs
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "smithytranslate/definitions.proto";
-                    |
-                    |message SomeTs {
-                    |  smithytranslate.Timestamp value = 1;
-                    |}
-                    |""".stripMargin
-    convertWithApiCheck(
-      source,
-      Map("com/example/example.proto" -> expected)
-    )
-  }
-
-  test("proto top-level deprecated") {
-    val source = """|$version: "2"
-                    |
-                    |namespace another.namespace
-                    |
-                    |@deprecated
-                    |string SomeString
-                    |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
-                      |package another.namespace;
+                      |package com.example;
                       |
-                      |message SomeString {
-                      |  string value = 1 [deprecated = true];
+                      |import "google/protobuf/struct.proto";
+                      |
+                      |message SomeDoc {
+                      |  google.protobuf.Value value = 1;
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
+
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
-  test("proto structure deprecated") {
+  test("Primitive fields") {
+    val source = """|namespace com.example
+                    |
+                    |structure Struct {
+                    |  boolean: Boolean
+                    |  int: Integer
+                    |  long: Long
+                    |  byte: Byte
+                    |  short: Short
+                    |  float: Float
+                    |  double: Double
+                    |  bigInteger: BigInteger
+                    |  bigDecimal: BigDecimal
+                    |  blob: Blob
+                    |  document: Document
+                    |  string: String
+                    |  timestamp: Timestamp
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/struct.proto";
+                      |
+                      |import "google/protobuf/timestamp.proto";
+                      |
+                      |message Struct {
+                      |  bool boolean = 1;
+                      |  int32 int = 2;
+                      |  int64 long = 3;
+                      |  int32 byte = 4;
+                      |  int32 short = 5;
+                      |  float float = 6;
+                      |  double double = 7;
+                      |  string bigInteger = 8;
+                      |  string bigDecimal = 9;
+                      |  bytes blob = 10;
+                      |  google.protobuf.Value document = 11;
+                      |  string string = 12;
+                      |  google.protobuf.Timestamp timestamp = 13;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("Primitive fields (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |structure Struct {
+                    |  @protoWrapped
+                    |  boolean: Boolean
+                    |  @protoWrapped
+                    |  int: Integer
+                    |  @protoWrapped
+                    |  long: Long
+                    |  @protoWrapped
+                    |  byte: Byte
+                    |  @protoWrapped
+                    |  short: Short
+                    |  @protoWrapped
+                    |  float: Float
+                    |  @protoWrapped
+                    |  double: Double
+                    |  @protoWrapped
+                    |  bigInteger: BigInteger
+                    |  @protoWrapped
+                    |  bigDecimal: BigDecimal
+                    |  @protoWrapped
+                    |  blob: Blob
+                    |  @protoWrapped
+                    |  document: Document
+                    |  @protoWrapped
+                    |  string: String
+                    |  @protoWrapped
+                    |  timestamp: Timestamp
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/wrappers.proto";
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message Struct {
+                      |  google.protobuf.BoolValue boolean = 1;
+                      |  google.protobuf.Int32Value int = 2;
+                      |  google.protobuf.Int64Value long = 3;
+                      |  alloy.protobuf.ByteValue byte = 4;
+                      |  alloy.protobuf.ShortValue short = 5;
+                      |  google.protobuf.FloatValue float = 6;
+                      |  google.protobuf.DoubleValue double = 7;
+                      |  alloy.protobuf.BigIntegerValue bigInteger = 8;
+                      |  alloy.protobuf.BigDecimalValue bigDecimal = 9;
+                      |  google.protobuf.BytesValue blob = 10;
+                      |  alloy.protobuf.DocumentValue document = 11;
+                      |  google.protobuf.StringValue string = 12;
+                      |  alloy.protobuf.TimestampValue timestamp = 13;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("Primitive references") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |boolean MyBoolean
+                    |integer MyInt
+                    |long MyLong
+                    |byte MyByte
+                    |short MyShort
+                    |float MyFloat
+                    |double MyDouble
+                    |bigInteger MyBigInt
+                    |bigDecimal MyBigDecimal
+                    |blob MyBlob
+                    |document MyDocument
+                    |string MyString
+                    |timestamp MyTimestamp
+                    |
+                    |structure Struct {
+                    |  boolean: Boolean
+                    |  int: Integer
+                    |  long: Long
+                    |  byte: Byte
+                    |  short: Short
+                    |  float: Float
+                    |  double: Double
+                    |  bigInteger: BigInteger
+                    |  bigDecimal: BigDecimal
+                    |  blob: Blob
+                    |  document: Document
+                    |  string: String
+                    |  timestamp: Timestamp
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/struct.proto";
+                      |
+                      |import "google/protobuf/timestamp.proto";
+                      |
+                      |message Struct {
+                      |  bool boolean = 1;
+                      |  int32 int = 2;
+                      |  int64 long = 3;
+                      |  int32 byte = 4;
+                      |  int32 short = 5;
+                      |  float float = 6;
+                      |  double double = 7;
+                      |  string bigInteger = 8;
+                      |  string bigDecimal = 9;
+                      |  bytes blob = 10;
+                      |  google.protobuf.Value document = 11;
+                      |  string string = 12;
+                      |  google.protobuf.Timestamp timestamp = 13;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("Primitives reference (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoWrapped
+                    |boolean MyBoolean
+                    |@protoWrapped
+                    |integer MyInt
+                    |@protoWrapped
+                    |long MyLong
+                    |@protoWrapped
+                    |byte MyByte
+                    |@protoWrapped
+                    |short MyShort
+                    |@protoWrapped
+                    |float MyFloat
+                    |@protoWrapped
+                    |double MyDouble
+                    |@protoWrapped
+                    |bigInteger MyBigInt
+                    |@protoWrapped
+                    |bigDecimal MyBigDecimal
+                    |@protoWrapped
+                    |blob MyBlob
+                    |@protoWrapped
+                    |document MyDocument
+                    |@protoWrapped
+                    |string MyString
+                    |@protoWrapped
+                    |timestamp MyTimestamp
+                    |
+                    |structure Struct {
+                    |  boolean: MyBoolean
+                    |  int: MyInt
+                    |  long: MyLong
+                    |  byte: MyByte
+                    |  short: MyShort
+                    |  float: MyFloat
+                    |  double: MyDouble
+                    |  bigInteger: MyBigInt
+                    |  bigDecimal: MyBigDecimal
+                    |  blob: MyBlob
+                    |  document: MyDocument
+                    |  string: MyString
+                    |  timestamp: MyTimestamp
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/struct.proto";
+                      |
+                      |import "google/protobuf/timestamp.proto";
+                      |
+                      |message MyBoolean {
+                      |  bool value = 1;
+                      |}
+                      |
+                      |message MyInt {
+                      |  int32 value = 1;
+                      |}
+                      |
+                      |message MyLong {
+                      |  int64 value = 1;
+                      |}
+                      |
+                      |message MyByte {
+                      |  int32 value = 1;
+                      |}
+                      |
+                      |message MyShort {
+                      |  int32 value = 1;
+                      |}
+                      |
+                      |message MyFloat {
+                      |  float value = 1;
+                      |}
+                      |
+                      |message MyDouble {
+                      |  double value = 1;
+                      |}
+                      |
+                      |message MyBigInt {
+                      |  string value = 1;
+                      |}
+                      |
+                      |message MyBigDecimal {
+                      |  string value = 1;
+                      |}
+                      |
+                      |message MyBlob {
+                      |  bytes value = 1;
+                      |}
+                      |
+                      |message MyDocument {
+                      |  google.protobuf.Value value = 1;
+                      |}
+                      |
+                      |message MyString {
+                      |  string value = 1;
+                      |}
+                      |
+                      |message MyTimestamp {
+                      |  google.protobuf.Timestamp value = 1;
+                      |}
+                      |
+                      |message Struct {
+                      |  com.example.MyBoolean boolean = 1;
+                      |  com.example.MyInt int = 2;
+                      |  com.example.MyLong long = 3;
+                      |  com.example.MyByte byte = 4;
+                      |  com.example.MyShort short = 5;
+                      |  com.example.MyFloat float = 6;
+                      |  com.example.MyDouble double = 7;
+                      |  com.example.MyBigInt bigInteger = 8;
+                      |  com.example.MyBigDecimal bigDecimal = 9;
+                      |  com.example.MyBlob blob = 10;
+                      |  com.example.MyDocument document = 11;
+                      |  com.example.MyString string = 12;
+                      |  com.example.MyTimestamp timestamp = 13;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("deprecated field") {
     val source = """|$version: "2"
                     |
                     |namespace another.namespace
                     |
-                    |structure MyStruct {
-                    |  @required
+                    |structure Struct {
                     |  @deprecated
                     |  value: String
                     |}
                     |""".stripMargin
+
     val expected = """|syntax = "proto3";
                       |
                       |package another.namespace;
                       |
-                      |message MyStruct {
+                      |message Struct {
                       |  string value = 1 [deprecated = true];
                       |}
                       |""".stripMargin
@@ -401,156 +499,134 @@ class CompilerRendererSuite extends FunSuite {
 
   test("protoNumType") {
     val source = """|namespace com.example
-                  |
-                  |use alloy.proto#protoNumType
-                  |
-                  |structure LongNumbers {
-                  |    @protoNumType("SIGNED")
-                  |    signed: Long,
-                  |
-                  |    @protoNumType("UNSIGNED")
-                  |    unsigned: Long,
-                  |
-                  |    @protoNumType("FIXED")
-                  |    fixed: Long,
-                  |
-                  |    @protoNumType("FIXED_SIGNED")
-                  |    FIXED_SIGNED: Long
-                  |}
-                  |
-                  |structure IntNumbers {
-                  |    @protoNumType("SIGNED")
-                  |    signed: Integer,
-                  |
-                  |    @protoNumType("UNSIGNED")
-                  |    unsigned: Integer,
-                  |
-                  |    @protoNumType("FIXED")
-                  |    fixed: Integer,
-                  |
-                  |    @protoNumType("FIXED_SIGNED")
-                  |    FIXED_SIGNED: Integer
-                  |}
-                  |
-                  |structure RequiredLongNumbers {
-                  |    @protoNumType("SIGNED")
-                  |    @required
-                  |    signed: Long,
-                  |
-                  |    @protoNumType("UNSIGNED")
-                  |    @required
-                  |    unsigned: Long,
-                  |
-                  |    @protoNumType("FIXED")
-                  |    @required
-                  |    fixed: Long,
-                  |
-                  |    @protoNumType("FIXED_SIGNED")
-                  |    @required
-                  |    FIXED_SIGNED: Long
-                  |}
-                  |
-                  |structure RequiredIntNumbers {
-                  |    @protoNumType("SIGNED")
-                  |    @required
-                  |    signed: Integer,
-                  |
-                  |    @protoNumType("UNSIGNED")
-                  |    @required
-                  |    unsigned: Integer,
-                  |
-                  |    @protoNumType("FIXED")
-                  |    @required
-                  |    fixed: Integer,
-                  |
-                  |    @protoNumType("FIXED_SIGNED")
-                  |    @required
-                  |    FIXED_SIGNED: Integer
-                  |}
-                  |""".stripMargin
+                    |
+                    |use alloy.proto#protoNumType
+                    |use alloy.proto#protoWrapped
+                    |
+                    |structure LongNumbers {
+                    |    @protoNumType("SIGNED")
+                    |    signed: Long,
+                    |
+                    |    @protoNumType("UNSIGNED")
+                    |    unsigned: Long,
+                    |
+                    |    @protoNumType("FIXED")
+                    |    fixed: Long,
+                    |
+                    |    @protoNumType("FIXED_SIGNED")
+                    |    fixed_signed: Long
+                    |}
+                    |
+                    |structure IntNumbers {
+                    |    @protoNumType("SIGNED")
+                    |    signed: Integer,
+                    |
+                    |    @protoNumType("UNSIGNED")
+                    |    unsigned: Integer,
+                    |
+                    |    @protoNumType("FIXED")
+                    |    fixed: Integer,
+                    |
+                    |    @protoNumType("FIXED_SIGNED")
+                    |    fixed_signed: Integer
+                    |}
+                    |
+                    |structure WrappedLongNumbers {
+                    |    @protoNumType("SIGNED")
+                    |    @protoWrapped
+                    |    signed: Long,
+                    |
+                    |    @protoNumType("UNSIGNED")
+                    |    @protoWrapped
+                    |    unsigned: Long,
+                    |
+                    |    @protoNumType("FIXED")
+                    |    @protoWrapped
+                    |    fixed: Long,
+                    |
+                    |    @protoNumType("FIXED_SIGNED")
+                    |    @protoWrapped
+                    |    fixed_signed: Long
+                    |}
+                    |
+                    |structure WrappedIntNumbers {
+                    |    @protoNumType("SIGNED")
+                    |    @protoWrapped
+                    |    signed: Integer,
+                    |
+                    |    @protoNumType("UNSIGNED")
+                    |    @protoWrapped
+                    |    unsigned: Integer,
+                    |
+                    |    @protoNumType("FIXED")
+                    |    @protoWrapped
+                    |    fixed: Integer,
+                    |
+                    |    @protoNumType("FIXED_SIGNED")
+                    |    @protoWrapped
+                    |    fixed_signed: Integer
+                    |}
+                    |""".stripMargin
 
     val expected = """|syntax = "proto3";
                       |
                       |package com.example;
                       |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
                       |import "google/protobuf/wrappers.proto";
                       |
                       |message LongNumbers {
-                      |  google.protobuf.Int64Value signed = 1;
-                      |  google.protobuf.UInt64Value unsigned = 2;
-                      |  google.protobuf.Int64Value fixed = 3;
-                      |  google.protobuf.Int64Value FIXED_SIGNED = 4;
-                      |}
-                      |
-                      |message IntNumbers {
-                      |  google.protobuf.Int32Value signed = 1;
-                      |  google.protobuf.UInt32Value unsigned = 2;
-                      |  google.protobuf.Int32Value fixed = 3;
-                      |  google.protobuf.Int32Value FIXED_SIGNED = 4;
-                      |}
-                      |
-                      |message RequiredLongNumbers {
                       |  sint64 signed = 1;
                       |  uint64 unsigned = 2;
                       |  fixed64 fixed = 3;
-                      |  sfixed64 FIXED_SIGNED = 4;
+                      |  sfixed64 fixed_signed = 4;
                       |}
                       |
-                      |message RequiredIntNumbers {
+                      |message IntNumbers {
                       |  sint32 signed = 1;
                       |  uint32 unsigned = 2;
                       |  fixed32 fixed = 3;
-                      |  sfixed32 FIXED_SIGNED = 4;
-                      |}""".stripMargin
+                      |  sfixed32 fixed_signed = 4;
+                      |}
+                      |
+                      |message WrappedLongNumbers {
+                      |  alloy.protobuf.SInt64Value signed = 1;
+                      |  google.protobuf.UInt64Value unsigned = 2;
+                      |  alloy.protobuf.Fixed64Value fixed = 3;
+                      |  alloy.protobuf.SFixed64Value fixed_signed = 4;
+                      |}
+                      |
+                      |message WrappedIntNumbers {
+                      |  alloy.protobuf.SInt32Value signed = 1;
+                      |  google.protobuf.UInt32Value unsigned = 2;
+                      |  alloy.protobuf.Fixed32Value fixed = 3;
+                      |  alloy.protobuf.SFixed32Value fixed_signed = 4;
+                      |}
+                      |""".stripMargin
     convertCheck(
       source,
       Map("com/example/example.proto" -> expected)
     )
   }
 
-  test("inlined sparse maps") {
+  test("maps") {
     val source = """|namespace com.example
-                  |
-                  |@sparse
-                  |map StringMap {
-                  |   key: String,
-                  |   value: String
-                  |}
-                  |
-                  |structure Foo {
-                  |   object: StringMap
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
                     |
-                    |package com.example;
+                    |structure MapItem {
+                    |  @required
+                    |  name: String
+                    |}
                     |
-                    |import "google/protobuf/wrappers.proto";
+                    |map Map {
+                    |   key: String,
+                    |   value: MapItem
+                    |}
                     |
-                    |message Foo {
-                    |  map<string, google.protobuf.StringValue> object = 1;
+                    |structure Foo {
+                    |   values: Map
                     |}
                     |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("inlined maps message") {
-    val source = """|namespace com.example
-                  |
-                  |structure MapItem {
-                  |  @required
-                  |  name: String
-                  |}
-                  |
-                  |map Map {
-                  |   key: String,
-                  |   value: MapItem
-                  |}
-                  |
-                  |structure Foo {
-                  |   values: Map
-                  |}
-                  |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
                       |package com.example;
@@ -566,202 +642,249 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
-  test("inlined maps") {
-    val source = """|namespace com.example
-                  |
-                  |map StringMap {
-                  |   key: String,
-                  |   value: Integer
-                  |}
-                  |
-                  |structure Foo {
-                  |   strings: StringMap
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message Foo {
-                    |  map<string, int32> strings = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("inlined lists") {
-    val source = """|namespace com.example
-                  |
-                  |list StringList {
-                  |   member: String
-                  |}
-                  |
-                  |structure Foo {
-                  |   strings: StringList
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |message Foo {
-                    |  repeated string strings = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("inlined sparse lists") {
-    val source = """|namespace com.example
-                  |
-                  |@sparse
-                  |list StringList {
-                  |   member: String
-                  |}
-                  |
-                  |structure Foo {
-                  |   strings: StringList
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                    |
-                    |package com.example;
-                    |
-                    |import "google/protobuf/wrappers.proto";
-                    |
-                    |message Foo {
-                    |  repeated google.protobuf.StringValue strings = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-  }
-
-  test("inlined lists message") {
-    val source = """|namespace com.example
-                  |
-                  |structure ListItem {
-                  |  @required
-                  |  name: String
-                  |}
-                  |
-                  |list List {
-                  |   member: ListItem
-                  |}
-                  |
-                  |structure Foo {
-                  |   strings: List
-                  |}
-                  |""".stripMargin
-
-    val expected = """|syntax = "proto3";
-                   |
-                   |package com.example;
-                   |
-                   |message ListItem {
-                   |  string name = 1;
-                   |}
-                   |
-                   |message Foo {
-                   |  repeated com.example.ListItem strings = 1;
-                   |}
-                   |""".stripMargin
-    convertCheck(source, Map("com/example/example.proto" -> expected))
-
-  }
-
-  test("inline list with a union") {
+  test("maps (bis)") {
     val source = """|namespace com.example
                     |
-                    |union MyUnion {
-                    |  name: String,
-                    |  id: Integer
+                    |map StringMap {
+                    |   key: String,
+                    |   value: Integer
                     |}
                     |
-                    |structure UnionStruct {
-                    |  @required
-                    |  value: MyUnion
-                    |}
-                    |
-                    |list ListOfUnion {
-                    |  member: UnionStruct
-                    |}
-                    |
-                    |structure Unions {
-                    |  @required
-                    |  values: ListOfUnion
+                    |structure Foo {
+                    |   strings: StringMap
+                    |   @alloy.proto#protoWrapped
+                    |   wrappedStrings: StringMap
                     |}
                     |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
                       |package com.example;
                       |
-                      |message MyUnion {
-                      |  oneof definition {
-                      |    string name = 1;
-                      |    int32 id = 2;
-                      |  }
+                      |message StringMap {
+                      |  map<string, int32> value = 1;
                       |}
                       |
-                      |message UnionStruct {
-                      |  com.example.MyUnion value = 1;
+                      |message Foo {
+                      |  map<string, int32> strings = 1;
+                      |  com.example.StringMap wrappedStrings = 2;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("maps (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoWrapped
+                    |map StringMap {
+                    |   key: String,
+                    |   @protoWrapped
+                    |   value: Integer
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: StringMap
+                    |}
+                    |""".stripMargin
+    val expected =
+      """|syntax = "proto3";
+         |
+         |package com.example;
+         |
+         |import "google/protobuf/wrappers.proto";
+         |
+         |message StringMap {
+         |  map<string, google.protobuf.Int32Value> value = 1;
+         |}
+         |
+         |message Foo {
+         |  com.example.StringMap strings = 1;
+         |}
+         |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("lists") {
+    val source = """|namespace com.example
+                    |
+                    |list StringList {
+                    |   member: String
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: StringList
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message Foo {
+                      |  repeated string strings = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
+  test("lists (bis)") {
+    val source = """|namespace com.example
+                    |
+                    |structure ListItem {
+                    |  @required
+                    |  name: String
+                    |}
+                    |
+                    |list List {
+                    |   member: ListItem
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: List
+                    |   @alloy.proto#protoWrapped
+                    |   wrappedStrings: List
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |message ListItem {
+                      |  string name = 1;
                       |}
                       |
-                      |message Unions {
-                      |  repeated com.example.UnionStruct values = 1;
-                      |}""".stripMargin
+                      |message List {
+                      |  repeated com.example.ListItem value = 1;
+                      |}
+                      |
+                      |message Foo {
+                      |  repeated com.example.ListItem strings = 1;
+                      |  com.example.List wrappedStrings = 2;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+
+  }
+
+  test("lists (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoWrapped
+                    |list StringList {
+                    |   @protoWrapped
+                    |   member: String
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: StringList
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/wrappers.proto";
+                      |
+                      |message StringList {
+                      |  repeated google.protobuf.StringValue value = 1;
+                      |}
+                      |
+                      |message Foo {
+                      |  com.example.StringList strings = 1;
+                      |}
+                      |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("transitive structure with protoEnabled") {
     val source = """|namespace test
-                  |
-                  |use alloy.proto#protoEnabled
-                  |
-                  |@protoEnabled
-                  |structure Test {
-                  |  o: Other
-                  |}
-                  |
-                  |structure Other {
-                  |  s: String
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
                     |
-                    |package test;
+                    |use alloy.proto#protoEnabled
                     |
-                    |import "google/protobuf/wrappers.proto";
-                    |
-                    |message Test {
-                    |  test.Other o = 1;
-                    |}
-                    |
-                    |message Other {
-                    |  google.protobuf.StringValue s = 1;
-                    |}
-                    |""".stripMargin
-    convertCheck(source, Map("test/definitions.proto" -> expected))
-
-  }
-
-  test("uuid can be used") {
-    val source = """|namespace test
-                    |
-                    |use smithytranslate#UUID
-                    |
+                    |@protoEnabled
                     |structure Test {
-                    |  @required
-                    |  id: UUID
+                    |  o: Other
+                    |}
+                    |
+                    |structure Other {
+                    |  s: String
                     |}
                     |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
                       |package test;
                       |
-                      |import "smithytranslate/definitions.proto";
+                      |message Test {
+                      |  test.Other o = 1;
+                      |}
+                      |
+                      |message Other {
+                      |  string s = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected),
+      allShapes = false
+    )
+
+  }
+
+  test("uuid translates to string by default") {
+    val source = """|namespace test
+                    |
+                    |use alloy#uuidFormat
+                    |
+                    |@uuidFormat
+                    |string MyUUID
+                    |
+                    |structure Test {
+                    |  id: MyUUID
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
                       |
                       |message Test {
-                      |  smithytranslate.UUID id = 1;
+                      |  string id = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test(
+    "uuid translates to message by when annotated with @protoCompactUUID"
+  ) {
+    val source = """|namespace test
+                    |
+                    |use alloy#uuidFormat
+                    |use alloy.proto#protoCompactUUID
+                    |
+                    |@uuidFormat
+                    |@protoCompactUUID
+                    |string MyUUID
+                    |
+                    |structure Test {
+                    |  id: MyUUID
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message Test {
+                      |  alloy.protobuf.CompactUUID id = 1;
                       |}""".stripMargin
 
     convertCheck(
@@ -799,52 +922,7 @@ class CompilerRendererSuite extends FunSuite {
 
   test("service with protoEnabled") {
     val source = """|namespace test
-                  |
-                  |use alloy.proto#protoEnabled
-                  |
-                  |@protoEnabled
-                  |service Test {
-                  |  operations: [Op]
-                  |}
-                  |
-                  |@http(method: "POST", uri: "/test", code: 200)
-                  |operation Op {
-                  |  input: Struct,
-                  |  output: Struct
-                  |}
-                  |
-                  |structure Struct {
-                  |  s: String
-                  |}
-                  |
-                  |/// This one should not be converted
-                  |service Other {
-                  |  operations: [Op]
-                  |}
-                  |""".stripMargin
-    val expected = """|syntax = "proto3";
-                      |
-                      |package test;
-                      |
-                      |import "google/protobuf/wrappers.proto";
-                      |
-                      |service Test {
-                      |  rpc Op(test.Struct) returns (test.Struct);
-                      |}
-                      |
-                      |message Struct {
-                      |  google.protobuf.StringValue s = 1;
-                      |}
-                      |""".stripMargin
-
-    convertCheck(source, Map("test/definitions.proto" -> expected))
-  }
-
-  test("enum with protoIndex") {
-    val source = """|$version: "2"
-                    |namespace test
                     |
-                    |use alloy.proto#protoIndex
                     |use alloy.proto#protoEnabled
                     |
                     |@protoEnabled
@@ -859,8 +937,65 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |
                     |structure Struct {
-                    | s: LoveProto
-                    | }
+                    |  s: String
+                    |}
+                    |
+                    |/// This one should not be converted
+                    |service Other {
+                    |  operations: [Op]
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |service Test {
+                      |  rpc Op(test.Struct) returns (test.Struct);
+                      |}
+                      |
+                      |message Struct {
+                      |  string s = 1;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected),
+      allShapes = false
+    )
+  }
+
+  test("enum without protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |enum LoveProto {
+                    |  YES
+                    |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("enum with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
                     |
                     |enum LoveProto {
                     |  @protoIndex(0)
@@ -873,17 +1008,153 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package test;
                       |
-                      |service Test {
-                      |  rpc Op(test.Struct) returns (test.Struct);
-                      |}
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("intEnum without protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |intEnum LoveProto {
+                    |  YES = 0
+                    |  NO = 2
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
                       |
-                      |message Struct {
-                      |  test.LoveProto s = 1;
-                      |}
+                      |package test;
                       |
                       |enum LoveProto {
                       |  YES = 0;
                       |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("intEnum with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |intEnum LoveProto {
+                    |  @protoIndex(0)
+                    |  YES = 1
+                    |  @protoIndex(2)
+                    |  NO = 3
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("open string enum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy#openEnum
+                    |
+                    |structure EnumWrapper {
+                    |  value: LoveProto
+                    |}
+                    |
+                    |@openEnum
+                    |enum LoveProto {
+                    |  YES
+                    |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message EnumWrapper {
+                      |  string value = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("open intEnum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy#openEnum
+                    |
+                    |structure EnumWrapper {
+                    |  value: LoveProto
+                    |}
+                    |
+                    |@openEnum
+                    |intEnum LoveProto {
+                    |  YES = 1
+                    |  NO = 3
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message EnumWrapper {
+                      |  int32 value = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("conflicting enum values") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |enum MyStringEnum {
+                    |  FOO
+                    |}
+                    |
+                    |intEnum MyIntEnum {
+                    |  FOO = 0
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum MyStringEnum {
+                      |  MyStringEnum_FOO = 0;
+                      |}
+                      |
+                      |enum MyIntEnum {
+                      |  MyIntEnum_FOO = 0;
                       |}""".stripMargin
 
     convertCheck(
@@ -923,7 +1194,7 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("union with @protoInlinedOneOf and @protoIndex") {
+  test("union with @protoInlinedOneOf and @protoIndex (invalid)") {
     val source = """|$version: "2"
                     |namespace test
                     |
@@ -1081,13 +1352,15 @@ class CompilerRendererSuite extends FunSuite {
   test("multiple namespaces") {
     def src(ns: String) = s"""|namespace com.$ns
                               |
-                              |string SomeString
+                              |structure Struct {
+                              |  value: String
+                              |}
                               |""".stripMargin
     def expected(ns: String) = s"""|syntax = "proto3";
                                    |
                                    |package com.$ns;
                                    |
-                                   |message SomeString {
+                                   |message Struct {
                                    |  string value = 1;
                                    |}
                                    |""".stripMargin
@@ -1112,7 +1385,9 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |namespace another.namespace
                     |
-                    |string SomeString
+                    |structure Struct {
+                    |  value: String
+                    |}
                     |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
@@ -1121,75 +1396,36 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package another.namespace;
                       |
-                      |message SomeString {
+                      |message Struct {
                       |  string value = 1;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
   }
 
-  /** Perform the same check as convertCheck but include the smithytranslate
-    * namespace. To do so it prepends the proto api to your `expected` value.
-    */
-  private def convertWithApiCheck(
-      source: String,
-      expected: Map[String, String]
-  )(implicit loc: Location): Unit = {
-    val expectedApi = s"""|syntax = "proto3";
-                          |
-                          |package smithytranslate;
-                          |
-                          |message BigDecimal {
-                          |  string value = 1;
-                          |}
-                          |
-                          |message BigInteger {
-                          |  string value = 1;
-                          |}
-                          |
-                          |message Timestamp {
-                          |  int64 value = 1;
-                          |}
-                          |
-                          |message UUID {
-                          |  int64 upper_bits = 1;
-                          |  int64 lower_bits = 2;
-                          |}
-                          |""".stripMargin
-    val newExpected = Map(
-      "smithytranslate/definitions.proto" -> expectedApi
-    ) ++ expected
-    convertCheck(source, newExpected, excludeProtoApi = false)
-  }
-
   private def convertCheck(
       source: String,
       expected: Map[String, String],
-      excludeProtoApi: Boolean = true
+      allShapes: Boolean = true
   )(implicit loc: Location): Unit = {
     convertChecks(
       Map("inlined-in-test.smithy" -> source),
       expected,
-      excludeProtoApi
+      allShapes
     )
   }
 
   private def convertChecks(
       sources: Map[String, String],
       expected: Map[String, String],
-      excludeProtoApi: Boolean = true
+      allShapes: Boolean = true
   )(implicit loc: Location): Unit = {
     def render(srcs: Map[String, String]): List[(String, String)] = {
       val m = {
         val assembler = Model
           .assembler()
           .discoverModels()
-          .addShapes(
-            smithytranslate.BigInteger.shape,
-            smithytranslate.BigDecimal.shape,
-            smithytranslate.Timestamp.shape,
-            smithytranslate.UUID.shape
-          )
+
         srcs.foreach { case (name, src) =>
           assembler.addUnparsedModel(name, src)
         }
@@ -1198,36 +1434,26 @@ class CompilerRendererSuite extends FunSuite {
           .assemble()
           .unwrap()
       }
-      val c = new Compiler()
-      val res = c.compile(m)
-      if (res.isEmpty) { fail("Expected compiler output") }
+      val c = new Compiler(m, allShapes = allShapes)
+      val res = c.compile()
+      if (res.isEmpty) { fail("Compiler didn't produce any output") }
       res.map { of =>
         val fileName = of.path.mkString("/")
         fileName -> Renderer.render(of.unit)
       }
     }
 
-    val actual = render(sources).sortWith { case ((name1, _), (_, _)) =>
-      name1.startsWith("smithytranslate")
-    }
-    ProtoValidator.run(actual: _*)
-    val exclude =
-      if (excludeProtoApi)
-        Set("smithytranslate/definitions.proto")
-      else Set.empty[String]
-
-    val finalFiles = actual.collect {
-      case (name, contents) if !exclude(name) => (name, contents)
-    }.toMap
+    val renderedFiles = render(sources).toMap
 
     // Checking that we get the same keyset as expected
-    assertEquals(finalFiles.keySet, expected.keySet)
+    assertEquals(renderedFiles.keySet, expected.keySet)
     // Checking that all contents match
     for {
       (file, content) <- expected
     } {
-      assertEquals(finalFiles(file).trim(), content.trim())
+      assertEquals(renderedFiles(file).trim(), content.trim())
     }
+    ProtoValidator.run(renderedFiles.toSeq: _*)
   }
 
 }

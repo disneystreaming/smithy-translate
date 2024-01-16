@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto.scalapb.demo
+package smithytranslate.scalapb.demo
 
 import demo.definitions.HelloGrpc
 import demo.definitions.HelloRequest

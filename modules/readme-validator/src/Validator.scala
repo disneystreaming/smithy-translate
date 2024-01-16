@@ -17,12 +17,12 @@ import cats.data.NonEmptyList
 import java.nio.file.Path
 import scala.jdk.CollectionConverters._
 import scala.util.control.NoStackTrace
-import smithyproto.proto3.{Compiler => ProtoCompiler, ModelPreProcessor}
 import smithytranslate.compiler._
 import smithytranslate.compiler.openapi._
 import smithytranslate.compiler.json_schema._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
+import smithytranslate.proto3.SmithyToProtoCompiler
 
 object Validator {
 
@@ -191,10 +191,10 @@ object Validator {
         val ns = "foo"
         ns ->
           s"""|$$version: "2"
-            |
-            |namespace $ns
-            |
-            |$smithy""".stripMargin
+              |
+              |namespace $ns
+              |
+              |$smithy""".stripMargin
       }
     val getActualProto: String => String = { proto =>
       val lines = proto.split("\n")
@@ -209,7 +209,6 @@ object Validator {
       }
     }
     val ActualProto = List(getActualProto(proto))
-    val compiler = new ProtoCompiler()
     val inputModel = Model
       .assembler()
       .discoverModels()
@@ -217,22 +216,16 @@ object Validator {
       .assemble()
       .unwrap()
 
-    val result = compiler.compile(
-      ModelPreProcessor(
-        inputModel,
-        List(ModelPreProcessor.transformers.PreventEnumConflicts)
-      )
-    )
-    val rendered = result
+    val rendered = SmithyToProtoCompiler
+      .compile(inputModel)
       .filter(_.path.contains(namespace))
-      .map(r => smithyproto.proto3.Renderer.render(r.unit))
+      .map(_.contents)
       .sorted
-    rendered match {
-      case Nil => List(ValidationError.UnableToProduceOutput(actualSmithy))
-      case ActualProto => Nil
-      case other =>
-        List(ValidationError.ProtoConversionError(other, ActualProto))
-    }
+
+    if (rendered == ActualProto) Nil
+    else if (rendered.isEmpty)
+      List(ValidationError.UnableToProduceOutput(actualSmithy))
+    else List(ValidationError.ProtoConversionError(rendered, ActualProto))
   }
 
   def validate(

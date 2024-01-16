@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto
+package smithytranslate
 package proto3
+package internals
 
-object Renderer {
+private[proto3] object Renderer {
 
   import ProtoIR._
   import Text._
@@ -159,14 +160,13 @@ object Renderer {
       case Bool     => "bool"
       case String   => "string"
       case Bytes    => "bytes"
-      case ty @ MapType(_, valueType) =>
-        s"map<${renderType(ty.foldedKeyType)}, ${renderType(valueType)}>"
+      case MapType(keyType, valueType) =>
+        s"map<${renderType(keyType)}, ${renderType(valueType)}>"
       case ListType(valueType) => s"repeated ${renderType(valueType)}"
-      case MessageType(fqn, _) => fqn.render
-      case EnumType(fqn, _)    => fqn.render
+      case RefType(fqn, _)     => fqn.render
       case Any                 => Any.fqn.render
       case Empty               => Empty.fqn.render
-      case w: Wrappers         => w.fqn.render
+      case w: PredefinedType   => w.fqn.render
     }
   }
 

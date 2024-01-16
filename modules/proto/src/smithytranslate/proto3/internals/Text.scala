@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-package smithyproto
+package smithytranslate.proto3.internals
 
 import scala.annotation.tailrec
 
 /** A language for building and rendering structured text, including newlines
   * and indentation.
   */
-sealed trait Text
-object Text {
+private[internals] sealed trait Text
+private[internals] object Text {
   case class Line(string: String) extends Text
   case class Many(texts: List[Text]) extends Text
   case class Indent(text: Text) extends Text
