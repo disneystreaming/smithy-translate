@@ -10,6 +10,8 @@ import "google/protobuf/wrappers.proto";
 
 import "smithytranslate/definitions.proto";
 
+import "google/protobuf/any.proto";
+
 service Hello {
   rpc SayHello(demo.HelloRequest) returns (demo.HelloResponse);
   rpc Greet(google.protobuf.Empty) returns (demo.HelloResponse);
@@ -39,4 +41,8 @@ message UseApiStruct {
   smithytranslate.BigInteger bigInt = 1;
   smithytranslate.BigDecimal bigDec = 2;
   smithytranslate.Timestamp ts = 3;
+}
+
+message DocumentWrapper {
+  google.protobuf.Any doc = 1;
 }

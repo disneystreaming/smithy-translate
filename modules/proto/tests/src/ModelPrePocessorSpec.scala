@@ -51,16 +51,13 @@ class ModelPrePocessorSpec extends FunSuite {
         ShapeId.from("test#Other")
       )
       removed.foreach { sId =>
-        assertEquals(original.getShape(sId).isPresent(), true)
-        assertEquals(transformed.getShape(sId).isPresent(), false)
+        assert(original.getShape(sId).isPresent())
+        assert(transformed.getShape(sId).isEmpty())
       }
-      val kept = Set(
-        ShapeId.from("test#Test$s"),
-        ShapeId.from("test#Test")
-      )
+      val kept = Set(ShapeId.from("test#Test$s"), ShapeId.from("test#Test"))
       kept.foreach { sId =>
-        assertEquals(original.getShape(sId).isPresent(), true)
-        assertEquals(transformed.getShape(sId).isPresent(), true)
+        assert(original.getShape(sId).isPresent())
+        assert(transformed.getShape(sId).isPresent())
       }
     }
   }
@@ -99,8 +96,8 @@ class ModelPrePocessorSpec extends FunSuite {
         ShapeId.from("test#Other")
       )
       removed.foreach { sId =>
-        assertEquals(original.getShape(sId).isPresent(), true)
-        assertEquals(transformed.getShape(sId).isPresent(), false)
+        assert(original.getShape(sId).isPresent())
+        assert(transformed.getShape(sId).isEmpty())
       }
     }
   }
@@ -117,13 +114,9 @@ class ModelPrePocessorSpec extends FunSuite {
       smithy,
       ModelPreProcessor.transformers.CompactUUID
     ) { case (original, transformed) =>
-      assertEquals(
-        original.getShape(ShapeId.from("alloy#UUID")).isPresent(),
-        true
-      )
-      assertEquals(
-        transformed.getShape(ShapeId.from("smithytranslate#UUID")).isPresent(),
-        false
+      assert(original.getShape(ShapeId.from("alloy#UUID")).isPresent())
+      assert(
+        transformed.getShape(ShapeId.from("smithytranslate#UUID")).isEmpty()
       )
     }
   }
@@ -146,8 +139,8 @@ class ModelPrePocessorSpec extends FunSuite {
         ShapeId.from("alloy#UUID")
       )
       removed.foreach { sId =>
-        assertEquals(original.getShape(sId).isPresent(), true)
-        assertEquals(transformed.getShape(sId).isPresent(), false)
+        assert(original.getShape(sId).isPresent())
+        assert(transformed.getShape(sId).isEmpty())
       }
       assert(
         transformed.getShape(ShapeId.from("smithytranslate#UUID")).isPresent()
@@ -158,14 +151,10 @@ class ModelPrePocessorSpec extends FunSuite {
   def testPreludeReplacements(
       name: String,
       smithyShape: String,
-      kept: Set[ShapeId],
-      removed: Set[ShapeId]
+      present: Set[ShapeId],
+      absent: Set[ShapeId]
   ) = {
 
-    /** Here, only BigInteger is used. We expect smithytranslate#BigInteger to
-      * be included, but not smithytranslate#BigDecimal or
-      * smithytranslate#Timestamp
-      */
     test(
       s"PreludeReplacements - $name"
     ) {
@@ -186,13 +175,20 @@ class ModelPrePocessorSpec extends FunSuite {
           pruned,
           ModelPreProcessor.transformers.PreludeReplacements
         )
-        kept.foreach { sId =>
-          assertEquals(pruned.getShape(sId).isPresent(), false)
-          assertEquals(resultModel.getShape(sId).isPresent(), true)
+
+        resultModel
+          .shapes()
+          .iterator()
+          .asScala
+          .filter(_.getId().getNamespace() != "smithy.api")
+          .foreach(println)
+
+        present.foreach { sId =>
+          assert(resultModel.getShape(sId).isPresent(), sId)
         }
-        removed.foreach { sId =>
-          assertEquals(pruned.getShape(sId).isPresent(), false)
-          assertEquals(resultModel.getShape(sId).isPresent(), false)
+
+        absent.foreach { sId =>
+          assert(resultModel.getShape(sId).isEmpty(), sId)
         }
       }
     }
@@ -201,36 +197,58 @@ class ModelPrePocessorSpec extends FunSuite {
   testPreludeReplacements(
     "keep big int",
     "BigInteger",
-    Set(
+    present = Set(
       ShapeId.from("smithytranslate#BigInteger")
     ),
-    Set(
+    absent = Set(
       ShapeId.from("smithytranslate#BigDecimal"),
-      ShapeId.from("smithytranslate#Timestamp")
+      ShapeId.from("smithytranslate#Timestamp"),
+      ShapeId.from("smithytranslate#Document")
     )
   )
 
   testPreludeReplacements(
     "keep timestamp",
     "Timestamp",
-    Set(
+    present = Set(
       ShapeId.from("smithytranslate#Timestamp")
     ),
-    Set(
+    absent = Set(
       ShapeId.from("smithytranslate#BigDecimal"),
-      ShapeId.from("smithytranslate#BigInteger")
+      ShapeId.from("smithytranslate#BigInteger"),
+      ShapeId.from("smithytranslate#Document")
     )
   )
 
   testPreludeReplacements(
     "keep big decimal",
     "BigDecimal",
-    Set(
+    present = Set(
       ShapeId.from("smithytranslate#BigDecimal")
     ),
-    Set(
+    absent = Set(
       ShapeId.from("smithytranslate#Timestamp"),
-      ShapeId.from("smithytranslate#BigInteger")
+      ShapeId.from("smithytranslate#BigInteger"),
+      ShapeId.from("smithytranslate#Document")
+    )
+  )
+
+  testPreludeReplacements(
+    "keep document",
+    "Document",
+    present = Set(
+      ShapeId.from("smithytranslate#Document"),
+      ShapeId.from("smithytranslate#DNull"),
+      ShapeId.from("smithytranslate#DObject"),
+      ShapeId.from("smithytranslate#DArray"),
+      ShapeId.from("smithytranslate#DBoolean"),
+      ShapeId.from("smithytranslate#DNumber"),
+      ShapeId.from("smithytranslate#DString")
+    ),
+    absent = Set(
+      ShapeId.from("smithytranslate#Timestamp"),
+      ShapeId.from("smithytranslate#BigInteger"),
+      ShapeId.from("smithytranslate#BigDecimal")
     )
   )
 

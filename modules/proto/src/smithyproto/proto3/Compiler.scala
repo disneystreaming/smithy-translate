@@ -51,7 +51,8 @@ class Compiler() {
         "BigInteger",
         "BigDecimal",
         "Timestamp",
-        "UUID"
+        "UUID",
+        "Document"
       ).map(name => ShapeId.fromParts("smithytranslate", name))
     private def excludeInternal(shape: Shape): Boolean = {
       val excludeNs = Set("alloy.proto", "alloy", "smithytranslate")
@@ -374,7 +375,7 @@ class Compiler() {
             val fieldName = m.getMemberName
             val fieldIndex = findFieldIndex(m).getOrElse(indexStart + fn)
             // We assume the model is well-formed so the result should be non-null
-            val targetShape = model.getShape(m.getTarget).get
+            val targetShape = model.expectShape(m.getTarget)
             val numType = extractNumType(m)
             val fieldType =
               targetShape

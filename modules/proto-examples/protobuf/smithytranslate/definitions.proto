@@ -10,6 +10,17 @@ message BigInteger {
   string value = 1;
 }
 
+message Document {
+  oneof definition {
+    smithytranslate.DNull dNull = 1;
+    smithytranslate.DBoolean dBoolean = 2;
+    smithytranslate.DNumber dNumber = 3;
+    smithytranslate.DString dString = 4;
+    smithytranslate.DArray dArray = 5;
+    smithytranslate.DObject dObject = 6;
+  }
+}
+
 message Timestamp {
   int64 value = 1;
 }

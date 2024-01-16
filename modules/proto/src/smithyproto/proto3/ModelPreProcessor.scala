@@ -25,6 +25,7 @@ import software.amazon.smithy.model.shapes._
 
 import java.util
 import scala.jdk.CollectionConverters._
+import scala.jdk.OptionConverters._
 import scala.collection.compat._
 
 object ModelPreProcessor {
@@ -65,28 +66,35 @@ object ModelPreProcessor {
       *   - BigInteger
       *   - BigDecimal
       *   - Timestamp
+      *   - Document
       * @param original
       * @return
       */
     val PreludeReplacements = new ProjectionTransformer() {
       // Prelude.getPreludeModel is not accessible
-      private val preludeModel = Model.assembler().assemble().unwrap()
       private val addIfUsed = Map(
         // format: off
-        (classOf[BigIntegerShape], (smithytranslate.BigInteger.shape, smithytranslate.BigInteger.target)),
-        (classOf[BigDecimalShape], (smithytranslate.BigDecimal.shape, smithytranslate.BigDecimal.target)),
-        (classOf[TimestampShape], (smithytranslate.Timestamp.shape, smithytranslate.Timestamp.target))
+        ShapeType.BIG_INTEGER -> List(smithytranslate.BigInteger.shape),
+        ShapeType.BIG_DECIMAL -> List(smithytranslate.BigDecimal.shape),
+        ShapeType.TIMESTAMP -> List(smithytranslate.Timestamp.shape),
+        ShapeType.DOCUMENT -> smithytranslate.Document.shapes.asScala.toList
         // format: on
       )
 
       def getName(): String = "prelude-replacements"
       def transform(x: TransformContext): Model = {
         val m = x.getModel()
+
+        val usedShapeTypes = m
+          .getMemberShapes()
+          .asScala
+          .map(_.getTarget())
+          .flatMap(target => m.getShape(target).toScala.map(_.getType()))
+
         val toAdd =
-          addIfUsed.flatMap { case (clazz, (shape, preludeShapeId)) =>
-            if (m.toSet(clazz).size() > 0) {
-              List(shape, preludeModel.expectShape(preludeShapeId))
-            } else List.empty
+          addIfUsed.flatMap { case (shapeType, shapes) =>
+            if (usedShapeTypes(shapeType)) shapes
+            else List.empty
           }.toList
 
         m.toBuilder()
@@ -261,12 +269,14 @@ object ModelPreProcessor {
                 .build()
             }
           }
+
           val uuidUsage = x
             .getModel()
             .getMemberShapes()
             .stream()
             .filter { _.getTarget() == uuidShapeId }
             .count()
+
           if (uuidUsage > 0) {
             val updatedShapes: util.List[Shape] = x
               .getModel()
