@@ -20,12 +20,16 @@ import smithyproto.proto3.ProtoIR._
 import smithyproto.proto3.ProtoIR.Statement._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.StringShape
+import alloy.proto.ProtoWrappedTrait
+import software.amazon.smithy.model.shapes.StructureShape
+import alloy.proto.ProtoEnabledTrait
+import software.amazon.smithy.model.shapes.ShapeId
 
 class CompilerSuite extends FunSuite {
 
-  private val someString = TopLevelDef.MessageDef(
+  private val someStruct = TopLevelDef.MessageDef(
     Message(
-      "SomeString",
+      "Struct",
       List(
         MessageElement.FieldElement(
           Field(
@@ -45,7 +49,18 @@ class CompilerSuite extends FunSuite {
     val model = {
       val mb = Model.builder()
       mb.addShape(
-        StringShape.builder().id(s"$namespace#SomeString").build()
+        StringShape
+          .builder()
+          .id(ShapeId.fromParts("com.example", "MyString"))
+          .build()
+      )
+      mb.addShape(
+        StructureShape
+          .builder()
+          .addTrait(new ProtoEnabledTrait())
+          .id(s"$namespace#Struct")
+          .addMember("value", ShapeId.fromParts("com.example", "MyString"))
+          .build()
       )
       mb.build()
     }
@@ -64,7 +79,7 @@ class CompilerSuite extends FunSuite {
           ),
           List(
             TopLevelStatement(
-              someString
+              someStruct
             )
           ),
           List.empty
@@ -117,7 +132,18 @@ class CompilerSuite extends FunSuite {
     val model = {
       val mb = Model.builder()
       mb.addShape(
-        StringShape.builder().id(s"$namespace#SomeString").build()
+        StringShape
+          .builder()
+          .id(ShapeId.fromParts("com.example", "MyString"))
+          .build()
+      )
+      mb.addShape(
+        StructureShape
+          .builder()
+          .addTrait(new ProtoEnabledTrait())
+          .id(s"$namespace#Struct")
+          .addMember("value", ShapeId.fromParts("com.example", "MyString"))
+          .build()
       )
       mb.build()
     }
@@ -132,7 +158,7 @@ class CompilerSuite extends FunSuite {
           ),
           List(
             TopLevelStatement(
-              someString
+              someStruct
             )
           ),
           List.empty
