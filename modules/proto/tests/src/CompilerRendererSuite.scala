@@ -136,7 +136,6 @@ class CompilerRendererSuite extends FunSuite {
   test("document") {
     val source = """|namespace com.example
                     |
-                    |@alloy.proto#protoEnabled
                     |structure SomeDoc {
                     |  value: Document
                     |}
@@ -159,7 +158,6 @@ class CompilerRendererSuite extends FunSuite {
   test("Primitive fields") {
     val source = """|namespace com.example
                     |
-                    |@alloy.proto#protoEnabled
                     |structure Struct {
                     |  boolean: Boolean
                     |  int: Integer
@@ -207,7 +205,6 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |use alloy.proto#protoWrapped
                     |
-                    |@alloy.proto#protoEnabled
                     |structure Struct {
                     |  @protoWrapped
                     |  boolean: Boolean
@@ -284,7 +281,6 @@ class CompilerRendererSuite extends FunSuite {
                     |string MyString
                     |timestamp MyTimestamp
                     |
-                    |@alloy.proto#protoEnabled
                     |structure Struct {
                     |  boolean: Boolean
                     |  int: Integer
@@ -359,7 +355,6 @@ class CompilerRendererSuite extends FunSuite {
                     |@protoWrapped
                     |timestamp MyTimestamp
                     |
-                    |@alloy.proto#protoEnabled
                     |structure Struct {
                     |  boolean: MyBoolean
                     |  int: MyInt
@@ -725,7 +720,11 @@ class CompilerRendererSuite extends FunSuite {
                       |  string s = 1;
                       |}
                       |""".stripMargin
-    convertCheck(source, Map("test/definitions.proto" -> expected))
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected),
+      allShapes = false
+    )
 
   }
 
@@ -733,12 +732,10 @@ class CompilerRendererSuite extends FunSuite {
     val source = """|namespace test
                     |
                     |use alloy#uuidFormat
-                    |use alloy.proto#protoEnabled
                     |
                     |@uuidFormat
                     |string MyUUID
                     |
-                    |@protoEnabled
                     |structure Test {
                     |  id: MyUUID
                     |}
@@ -855,7 +852,11 @@ class CompilerRendererSuite extends FunSuite {
                       |}
                       |""".stripMargin
 
-    convertCheck(source, Map("test/definitions.proto" -> expected))
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected),
+      allShapes = false
+    )
   }
 
   test("enum with protoIndex") {
@@ -863,22 +864,6 @@ class CompilerRendererSuite extends FunSuite {
                     |namespace test
                     |
                     |use alloy.proto#protoIndex
-                    |use alloy.proto#protoEnabled
-                    |
-                    |@protoEnabled
-                    |service Test {
-                    |  operations: [Op]
-                    |}
-                    |
-                    |@http(method: "POST", uri: "/test", code: 200)
-                    |operation Op {
-                    |  input: Struct,
-                    |  output: Struct
-                    |}
-                    |
-                    |structure Struct {
-                    | s: LoveProto
-                    | }
                     |
                     |enum LoveProto {
                     |  @protoIndex(0)
@@ -890,14 +875,6 @@ class CompilerRendererSuite extends FunSuite {
     val expected = """|syntax = "proto3";
                       |
                       |package test;
-                      |
-                      |service Test {
-                      |  rpc Op(test.Struct) returns (test.Struct);
-                      |}
-                      |
-                      |message Struct {
-                      |  test.LoveProto s = 1;
-                      |}
                       |
                       |enum LoveProto {
                       |  YES = 0;
@@ -1099,7 +1076,6 @@ class CompilerRendererSuite extends FunSuite {
   test("multiple namespaces") {
     def src(ns: String) = s"""|namespace com.$ns
                               |
-                              |@alloy.proto#protoEnabled
                               |structure Struct {
                               |  value: String
                               |}
@@ -1133,7 +1109,6 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |namespace another.namespace
                     |
-                    |@alloy.proto#protoEnabled
                     |structure Struct {
                     |  value: String
                     |}
@@ -1155,19 +1130,19 @@ class CompilerRendererSuite extends FunSuite {
   private def convertCheck(
       source: String,
       expected: Map[String, String],
-      excludeProtoApi: Boolean = true
+      allShapes: Boolean = true
   )(implicit loc: Location): Unit = {
     convertChecks(
       Map("inlined-in-test.smithy" -> source),
       expected,
-      excludeProtoApi
+      allShapes
     )
   }
 
   private def convertChecks(
       sources: Map[String, String],
       expected: Map[String, String],
-      excludeProtoApi: Boolean = true
+      allShapes: Boolean = true
   )(implicit loc: Location): Unit = {
     def render(srcs: Map[String, String]): List[(String, String)] = {
       val m = {
@@ -1183,7 +1158,7 @@ class CompilerRendererSuite extends FunSuite {
           .assemble()
           .unwrap()
       }
-      val c = new Compiler(m)
+      val c = new Compiler(m, allShapes = allShapes)
       val res = c.compile()
       if (res.isEmpty) { fail("Compiler didn't produce any output") }
       res.map { of =>
@@ -1192,27 +1167,17 @@ class CompilerRendererSuite extends FunSuite {
       }
     }
 
-    val actual = render(sources).sortWith { case ((name1, _), (_, _)) =>
-      name1.startsWith("smithytranslate")
-    }
-    val exclude =
-      if (excludeProtoApi)
-        Set("smithytranslate/definitions.proto")
-      else Set.empty[String]
-
-    val finalFiles = actual.collect {
-      case (name, contents) if !exclude(name) => (name, contents)
-    }.toMap
+    val renderedFiles = render(sources).toMap
 
     // Checking that we get the same keyset as expected
-    assertEquals(finalFiles.keySet, expected.keySet)
+    assertEquals(renderedFiles.keySet, expected.keySet)
     // Checking that all contents match
     for {
       (file, content) <- expected
     } {
-      assertEquals(finalFiles(file).trim(), content.trim())
+      assertEquals(renderedFiles(file).trim(), content.trim())
     }
-    ProtoValidator.run(actual: _*)
+    ProtoValidator.run(renderedFiles.toSeq: _*)
   }
 
 }

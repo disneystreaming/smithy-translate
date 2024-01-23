@@ -64,7 +64,7 @@ class CompilerSuite extends FunSuite {
       )
       mb.build()
     }
-    val sut = new Compiler(model)
+    val sut = new Compiler(model, allShapes = true)
     val actual = sut.compile()
     val expected = List(
       OutputFile(
@@ -147,7 +147,7 @@ class CompilerSuite extends FunSuite {
       )
       mb.build()
     }
-    val sut = new Compiler(model)
+    val sut = new Compiler(model, allShapes = true)
     val actual = sut.compile()
     val expected = List(
       OutputFile(

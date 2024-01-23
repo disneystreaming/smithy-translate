@@ -29,8 +29,10 @@ import software.amazon.smithy.model.traits.TraitDefinition
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import scala.annotation.nowarn
+import software.amazon.smithy.model.neighbor.NeighborProvider
+import software.amazon.smithy.model.neighbor.Walker
 
-class Compiler(model: Model) {
+class Compiler(model: Model, allShapes: Boolean) {
 
   // Reference:
   // 1. https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md
@@ -46,6 +48,18 @@ class Compiler(model: Model) {
     */
   object ShapeFiltering {
 
+    val allRelevantShapes: Set[Shape] = {
+      val walker = new Walker(NeighborProvider.of(model))
+      val protoEnabledShapes =
+        model.getShapesWithTrait(classOf[ProtoEnabledTrait]).asScala
+      val grpcShapes = model.getShapesWithTrait(classOf[GrpcTrait]).asScala
+      val allRoots = protoEnabledShapes ++ grpcShapes
+      val allTransitiveShapes: Set[Shape] = allRoots
+        .flatMap((shape: Shape) => walker.walkShapes(shape).asScala)
+        .toSet
+      (allRoots ++ allTransitiveShapes).toSet
+    }
+
     private def excludeInternal(shape: Shape): Boolean = {
       val excludeNs = Set("alloy.proto", "alloy", "smithytranslate")
       excludeNs.contains(shape.getId().getNamespace())
@@ -57,11 +71,14 @@ class Compiler(model: Model) {
 
     def exclude(s: Shape): Boolean =
       excludeInternal(s) || Prelude.isPreludeShape(s) || traitShapes(s)
+
+    def include(s: Shape): Boolean = allShapes || allRelevantShapes(s)
   }
 
   def compile(): List[OutputFile] = {
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
     model.toShapeSet.toList
+      .filter(ShapeFiltering.include)
       .filterNot(ShapeFiltering.exclude)
       .groupBy(_.getId().getNamespace())
       .flatMap { case (ns, shapes) =>
