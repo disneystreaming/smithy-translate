@@ -23,14 +23,14 @@ import software.amazon.smithy.model.shapes._
 import software.amazon.smithy.model.traits.DeprecatedTrait
 import software.amazon.smithy.model.traits.EnumTrait
 import software.amazon.smithy.model.traits.RequiredTrait
-import software.amazon.smithy.model.traits.SparseTrait
 import software.amazon.smithy.model.traits.UnitTypeTrait
 import software.amazon.smithy.model.traits.TraitDefinition
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
+import scala.annotation.nowarn
 
-class Compiler() {
+class Compiler(model: Model) {
 
   // Reference:
   // 1. https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md
@@ -46,18 +46,9 @@ class Compiler() {
     */
   object ShapeFiltering {
 
-    private val passthroughShapeIds: Set[ShapeId] =
-      Set(
-        "BigInteger",
-        "BigDecimal",
-        "Timestamp",
-        "UUID",
-        "Document"
-      ).map(name => ShapeId.fromParts("smithytranslate", name))
     private def excludeInternal(shape: Shape): Boolean = {
       val excludeNs = Set("alloy.proto", "alloy", "smithytranslate")
-      excludeNs.contains(shape.getId().getNamespace()) &&
-      !passthroughShapeIds(shape.getId())
+      excludeNs.contains(shape.getId().getNamespace())
     }
 
     def traitShapes(s: Shape): Boolean = {
@@ -68,7 +59,7 @@ class Compiler() {
       excludeInternal(s) || Prelude.isPreludeShape(s) || traitShapes(s)
   }
 
-  def compile(model: Model): List[OutputFile] = {
+  def compile(): List[OutputFile] = {
     val allProtocOptions = MetadataProcessor.extractProtocOptions(model)
     model.toShapeSet.toList
       .filterNot(ShapeFiltering.exclude)
@@ -76,7 +67,7 @@ class Compiler() {
       .flatMap { case (ns, shapes) =>
         val mappings = shapes.flatMap { shape =>
           shape
-            .accept(compileVisitor(model))
+            .accept(topLevelDefsVisitor)
             .map(m => Statement.TopLevelStatement(m))
         }
         if (mappings.nonEmpty) {
@@ -129,8 +120,8 @@ class Compiler() {
   private def findFieldIndex(m: MemberShape): Option[Int] =
     m.getTrait(classOf[ProtoIndexTrait]).toScala.map(_.getNumber)
 
-  private def isRequired(m: Shape): Boolean =
-    m.hasTrait(classOf[RequiredTrait])
+  private def hasProtoWrapped(m: Shape): Boolean =
+    m.hasTrait(classOf[alloy.proto.ProtoWrappedTrait])
 
   private def isProtoService(ss: ServiceShape): Boolean =
     ss.hasTrait(classOf[ProtoEnabledTrait])
@@ -171,227 +162,207 @@ class Compiler() {
     }
   }
 
-  type Mappings = List[TopLevelDef]
+  type TopLevelDefs = List[TopLevelDef]
   type UnionMappings = Map[ShapeId, TopLevelDef]
 
-  private def compileVisitor(model: Model): ShapeVisitor[Mappings] =
-    new ShapeVisitor.Default[Mappings] {
-      private def topLevelMessage(shape: Shape, ty: Type) = {
-        val name = shape.getId.getName
-        val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
-        val field =
-          Field(deprecated = isDeprecated, ty, "value", 1)
-        val message =
-          Message(name, List(MessageElement.FieldElement(field)), Nil)
-        List(TopLevelDef.MessageDef(message))
-      }
-      override def getDefault(shape: Shape): Mappings = Nil
+  private object topLevelDefsVisitor
+      extends ShapeVisitor.Default[TopLevelDefs] {
+    private def topLevelMessage(shape: Shape, ty: Type) = {
+      val name = shape.getId.getName
+      val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
+      val field =
+        Field(deprecated = isDeprecated, ty, "value", 1)
+      val message =
+        Message(name, List(MessageElement.FieldElement(field)), Nil)
+      List(TopLevelDef.MessageDef(message))
+    }
 
-      override def bigIntegerShape(shape: BigIntegerShape): Mappings = {
-        topLevelMessage(shape, Type.BigInteger)
-      }
+    private def isSimpleShape(shape: Shape): Boolean =
+      shape.getType().getCategory() == ShapeType.Category.SIMPLE
 
-      override def bigDecimalShape(shape: BigDecimalShape): Mappings = {
-        topLevelMessage(shape, Type.BigDecimal)
-      }
-      override def timestampShape(shape: TimestampShape): Mappings = {
-        topLevelMessage(shape, Type.Timestamp)
-      }
+    override def getDefault(shape: Shape): TopLevelDefs =
+      if (isSimpleShape(shape) && hasProtoWrapped(shape)) {
+        val maybeNumType = shape
+          .getTrait(classOf[ProtoNumTypeTrait])
+          .toScala
+          .map(_.getNumType())
+        val maybeType = shape.accept(typeVisitor(false, maybeNumType))
+        maybeType.toList.flatMap(topLevelMessage(shape, _))
+      } else Nil
 
-      // TODO: streaming requests and response types
-      override def serviceShape(shape: ServiceShape): Mappings =
-        // TODO: is this the best place to do the filtering? or should it be done in a preprocessing phase
-        if (isProtoService(shape)) {
-          val operations = shape.getOperations.asScala.toList
-            .map(model.expectShape(_))
+    // TODO: streaming requests and response types
+    override def serviceShape(shape: ServiceShape): TopLevelDefs =
+      // TODO: is this the best place to do the filtering? or should it be done in a preprocessing phase
+      if (isProtoService(shape)) {
+        val operations = shape.getOperations.asScala.toList
+          .map(model.expectShape(_))
 
-          val defs = operations.flatMap(_.accept(this))
-          val rpcs = operations.flatMap(_.accept(rpcVisitor))
-          val service = Service(shape.getId.getName, rpcs)
+        val defs = operations.flatMap(_.accept(this))
+        val rpcs = operations.flatMap(_.accept(rpcVisitor))
+        val service = Service(shape.getId.getName, rpcs)
 
-          List(TopLevelDef.ServiceDef(service)) ++ defs
-        } else Nil
+        List(TopLevelDef.ServiceDef(service)) ++ defs
+      } else Nil
 
-      override def booleanShape(shape: BooleanShape): Mappings = {
-        topLevelMessage(shape, Type.Bool)
-      }
-
-      override def blobShape(shape: BlobShape): Mappings = {
-        topLevelMessage(shape, Type.Bytes)
-      }
-
-      override def integerShape(shape: IntegerShape): Mappings = {
-        topLevelMessage(shape, Type.Int32)
-      }
-
-      override def longShape(shape: LongShape): Mappings = {
-        topLevelMessage(shape, Type.Int64)
-      }
-
-      override def doubleShape(shape: DoubleShape): Mappings = {
-        topLevelMessage(shape, Type.Double)
-      }
-
-      override def shortShape(shape: ShortShape): Mappings = {
-        topLevelMessage(shape, Type.Int32)
-      }
-
-      override def floatShape(shape: FloatShape): Mappings = {
-        topLevelMessage(shape, Type.Float)
-      }
-
-      override def documentShape(shape: DocumentShape): Mappings = {
-        topLevelMessage(shape, Type.Any)
-      }
-
-      override def stringShape(shape: StringShape): Mappings = {
-        val name = shape.getId.getName
-        getEnumTrait(shape).map { et =>
-          val reserved = getReservedValues(shape)
-          val elements = et
-            .getValues()
-            .asScala
-            .toList
-            .zipWithIndex
-            .map { case (ed, edFieldNumber) =>
-              val eName = ed
-                .getName()
-                .toScala
-                .getOrElse(
-                  sys.error(
-                    s"Error on shape: ${shape.getId()}: `enum` should have `name` defined."
-                  )
-                )
-
-              EnumValue(eName, edFieldNumber)
-            }
-
-          List(TopLevelDef.EnumDef(Enum(name, elements, reserved)))
-        } getOrElse {
-          topLevelMessage(shape, Type.String)
-        }
-      }
-
-      override def enumShape(shape: EnumShape): Mappings = {
-        val reserved: List[Reserved] = getReservedValues(shape)
-        val elements: List[EnumValue] =
-          shape.getAllMembers.asScala.toList.zipWithIndex
-            .map { case ((name, member), edFieldNumber) =>
-              val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
-              EnumValue(name, fieldIndex)
-            }
-        List(
-          TopLevelDef.EnumDef(
-            Enum(shape.getId.getName, elements, reserved)
-          )
-        )
-      }
-
-      override def intEnumShape(shape: IntEnumShape): Mappings = {
-        val reserved: List[Reserved] = getReservedValues(shape)
-        val elements = shape.getEnumValues.asScala.toList.map {
-          case (name, value) =>
-            EnumValue(name, value)
-        }
-        List(
-          TopLevelDef.EnumDef(
-            Enum(shape.getId.getName, elements, reserved)
-          )
-        )
-      }
-
-      private def unionShouldBeInlined(shape: UnionShape): Boolean = {
-        shape.hasTrait(classOf[alloy.proto.ProtoInlinedOneOfTrait])
-      }
-
-      override def unionShape(shape: UnionShape): Mappings = {
-        if (!unionShouldBeInlined(shape)) {
-          val element =
-            MessageElement.OneofElement(processUnion("definition", shape, 1))
-          val name = shape.getId.getName
-          val reserved = getReservedValues(shape)
-          val message = Message(name, List(element), reserved)
-          List(TopLevelDef.MessageDef(message))
-        } else {
-          List.empty
-        }
-      }
-
-      override def structureShape(shape: StructureShape): Mappings = {
-        val name = shape.getId.getName
-        val messageElements =
-          shape.members.asScala.toList
-            // using foldLeft to accumulate the field count when we fork to
-            // process a union
-            .foldLeft((List.empty[MessageElement], 0)) {
-              case ((fields, fieldCount), m) =>
-                val fieldName = m.getMemberName
-                val fieldIndex = findFieldIndex(m).getOrElse(fieldCount + 1)
-                // We assume the model is well-formed so the result should be non-null
-                val targetShape = model.getShape(m.getTarget).get
-                targetShape
-                  .asUnionShape()
-                  .toScala
-                  .filter(unionShape => unionShouldBeInlined(unionShape))
-                  .map { union =>
-                    val field = MessageElement.OneofElement(
-                      processUnion(fieldName, union, fieldIndex)
-                    )
-                    (fields :+ field, fieldCount + field.oneof.fields.size)
-                  }
-                  .getOrElse {
-                    val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
-                    val isBoxed = isRequired(m) || isRequired(targetShape)
-                    val numType = extractNumType(m)
-                    val fieldType =
-                      targetShape
-                        .accept(typeVisitor(model, isBoxed, numType))
-                        .get
-                    val field = MessageElement.FieldElement(
-                      Field(
-                        deprecated = isDeprecated,
-                        fieldType,
-                        fieldName,
-                        fieldIndex
-                      )
-                    )
-                    (fields :+ field, fieldCount + 1)
-                  }
-            }
-            ._1
-
+    @annotation.nowarn(
+      "msg=class EnumTrait in package (.*)traits is deprecated"
+    )
+    override def stringShape(shape: StringShape): TopLevelDefs = {
+      val name = shape.getId.getName
+      getEnumTrait(shape).map { (et: EnumTrait) =>
         val reserved = getReservedValues(shape)
-        val message = Message(name, messageElements, reserved)
-        List(TopLevelDef.MessageDef(message))
-      }
+        val elements = et
+          .getValues()
+          .asScala
+          .toList
+          .zipWithIndex
+          .map { case (ed, edFieldNumber) =>
+            val eName = ed
+              .getName()
+              .toScala
+              .getOrElse(
+                sys.error(
+                  s"Error on shape: ${shape.getId()}: `enum` should have `name` defined."
+                )
+              )
 
-      private def processUnion(
-          name: String,
-          shape: UnionShape,
-          indexStart: Int
-      ): Oneof = {
-        val fields = shape.members.asScala.toList.zipWithIndex.map {
-          case (m, fn) =>
-            val fieldName = m.getMemberName
-            val fieldIndex = findFieldIndex(m).getOrElse(indexStart + fn)
-            // We assume the model is well-formed so the result should be non-null
-            val targetShape = model.expectShape(m.getTarget)
-            val numType = extractNumType(m)
-            val fieldType =
-              targetShape
-                .accept(typeVisitor(model, isRequired = true, numType))
-                .get
-            val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
-            Field(
-              deprecated = isDeprecated,
-              fieldType,
-              fieldName,
-              fieldIndex
-            )
-        }
-        Oneof(name, fields)
+            EnumValue(eName, edFieldNumber)
+          }
+
+        List(TopLevelDef.EnumDef(Enum(name, elements, reserved)))
+      } getOrElse {
+        if (shape.hasTrait(classOf[ProtoWrappedTrait])) {
+          topLevelMessage(shape, Type.String)
+        } else Nil
       }
     }
+
+    override def enumShape(shape: EnumShape): TopLevelDefs = {
+      val reserved: List[Reserved] = getReservedValues(shape)
+      val elements: List[EnumValue] =
+        shape.getAllMembers.asScala.toList.zipWithIndex
+          .map { case ((name, member), edFieldNumber) =>
+            val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
+            EnumValue(name, fieldIndex)
+          }
+      List(
+        TopLevelDef.EnumDef(
+          Enum(shape.getId.getName, elements, reserved)
+        )
+      )
+    }
+
+    override def intEnumShape(shape: IntEnumShape): TopLevelDefs = {
+      val reserved: List[Reserved] = getReservedValues(shape)
+      val elements = shape.getEnumValues.asScala.toList.map {
+        case (name, value) =>
+          EnumValue(name, value)
+      }
+      List(
+        TopLevelDef.EnumDef(
+          Enum(shape.getId.getName, elements, reserved)
+        )
+      )
+    }
+
+    private def unionShouldBeInlined(shape: UnionShape): Boolean = {
+      shape.hasTrait(classOf[alloy.proto.ProtoInlinedOneOfTrait])
+    }
+
+    override def unionShape(shape: UnionShape): TopLevelDefs = {
+      if (!unionShouldBeInlined(shape)) {
+        val element =
+          MessageElement.OneofElement(processUnion("definition", shape, 1))
+        val name = shape.getId.getName
+        val reserved = getReservedValues(shape)
+        val message = Message(name, List(element), reserved)
+        List(TopLevelDef.MessageDef(message))
+      } else {
+        List.empty
+      }
+    }
+
+    override def structureShape(shape: StructureShape): TopLevelDefs = {
+      val name = shape.getId.getName
+      val messageElements =
+        shape.members.asScala.toList
+          // using foldLeft to accumulate the field count when we fork to
+          // process a union
+          .foldLeft((List.empty[MessageElement], 0)) {
+            case ((fields, fieldCount), m) =>
+              val fieldName = m.getMemberName
+              val fieldIndex = findFieldIndex(m).getOrElse(fieldCount + 1)
+              val targetShape = model.expectShape(m.getTarget)
+              targetShape
+                .asUnionShape()
+                .toScala
+                .filter(unionShape => unionShouldBeInlined(unionShape))
+                .map { union =>
+                  val field = MessageElement.OneofElement(
+                    processUnion(fieldName, union, fieldIndex)
+                  )
+                  (fields :+ field, fieldCount + field.oneof.fields.size)
+                }
+                .getOrElse {
+                  val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
+                  val fieldType =
+                    if (
+                      isSimpleShape(targetShape) && hasProtoWrapped(targetShape)
+                    ) {
+                      Type.RefType(targetShape)
+                    } else {
+                      val numType = extractNumType(m)
+                      val wrapped = hasProtoWrapped(m)
+                      targetShape
+                        .accept(typeVisitor(wrapped, numType))
+                        .get
+                    }
+                  val field = MessageElement.FieldElement(
+                    Field(
+                      deprecated = isDeprecated,
+                      fieldType,
+                      fieldName,
+                      fieldIndex
+                    )
+                  )
+                  (fields :+ field, fieldCount + 1)
+                }
+          }
+          ._1
+
+      val reserved = getReservedValues(shape)
+      val message = Message(name, messageElements, reserved)
+      List(TopLevelDef.MessageDef(message))
+    }
+
+    private def processUnion(
+        name: String,
+        shape: UnionShape,
+        indexStart: Int
+    ): Oneof = {
+      val fields = shape.members.asScala.toList.zipWithIndex.map {
+        case (m, fn) =>
+          val fieldName = m.getMemberName
+          val fieldIndex = findFieldIndex(m).getOrElse(indexStart + fn)
+          // We assume the model is well-formed so the result should be non-null
+          val targetShape = model.expectShape(m.getTarget)
+          val numType = extractNumType(m)
+          val isWrapped = hasProtoWrapped(m) || hasProtoWrapped(targetShape)
+          val fieldType =
+            targetShape
+              .accept(typeVisitor(isWrapped = isWrapped, numType))
+              .get
+          val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
+          Field(
+            deprecated = isDeprecated,
+            fieldType,
+            fieldName,
+            fieldIndex
+          )
+      }
+      Oneof(name, fields)
+    }
+  }
 
   private def getReservedValues(shape: Shape): List[Reserved] =
     shape
@@ -408,30 +379,29 @@ class Compiler() {
 
   // TODO: collisions in synthesized name
 
-  private def rpcVisitor: ShapeVisitor[Option[Rpc]] =
-    new ShapeVisitor.Default[Option[Rpc]] {
-      override def getDefault(shape: Shape): Option[Rpc] = None
-      override def operationShape(shape: OperationShape): Option[Rpc] = {
-        val maybeInputShapeId = shape.getInput()
-        val outputShapeId = shape.getOutput().get()
-        val request = maybeInputShapeId.toScala
-          .map { inputShapeId =>
-            RpcMessage(
-              Namespacing.shapeIdToFqn(inputShapeId),
-              Namespacing.namespaceToFqn(inputShapeId.getNamespace())
-            )
-          }
-          .getOrElse {
-            RpcMessage(Type.Empty.fqn, Type.Empty.fqn)
-          }
+  private object rpcVisitor extends ShapeVisitor.Default[Option[Rpc]] {
+    override def getDefault(shape: Shape): Option[Rpc] = None
+    override def operationShape(shape: OperationShape): Option[Rpc] = {
+      val maybeInputShapeId = shape.getInput()
+      val outputShapeId = shape.getOutput().get()
+      val request = maybeInputShapeId.toScala
+        .map { inputShapeId =>
+          RpcMessage(
+            Namespacing.shapeIdToFqn(inputShapeId),
+            Namespacing.namespaceToFqn(inputShapeId.getNamespace())
+          )
+        }
+        .getOrElse {
+          RpcMessage(Type.Empty.fqn, Type.Empty.fqn)
+        }
 
-        val response = RpcMessage(
-          Namespacing.shapeIdToFqn(outputShapeId),
-          Namespacing.namespaceToFqn(outputShapeId.getNamespace())
-        )
-        Some(Rpc(shape.getId.getName, false, request, false, response))
-      }
+      val response = RpcMessage(
+        Namespacing.shapeIdToFqn(outputShapeId),
+        Namespacing.namespaceToFqn(outputShapeId.getNamespace())
+      )
+      Some(Rpc(shape.getId.getName, false, request, false, response))
     }
+  }
 
   private def extractNumType(
       shape: Shape
@@ -440,12 +410,6 @@ class Compiler() {
       .getTrait(classOf[ProtoNumTypeTrait])
       .toScala
       .map { _.getNumType() }
-  }
-
-  private def isSparse(shape: Shape): Boolean = {
-    shape
-      .getTrait(classOf[SparseTrait])
-      .isPresent()
   }
 
   private def isUnit(shape: StructureShape): Boolean = {
@@ -459,210 +423,105 @@ class Compiler() {
   // https://awslabs.github.io/smithy/1.0/spec/core/model.html#simple-shapes
   // TODO: namespace in type?
   private def typeVisitor(
-      model: Model,
-      isRequired: Boolean,
+      isWrapped: Boolean,
       numType: Option[ProtoNumTypeTrait.NumType]
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
-      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some({
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Type.BigDecimal
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      })
-      def bigIntegerShape(shape: BigIntegerShape): Option[Type] = Some({
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Type.BigInteger
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      })
-      def blobShape(shape: BlobShape): Option[Type] = Some(
-        if (isRequired && Prelude.isPreludeShape(shape.getId())) {
-          Type.Bytes
-        } else if (Prelude.isPreludeShape(shape.getId())) {
-          Type.Wrappers.Bytes
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      )
-      def booleanShape(shape: BooleanShape): Option[Type] = Some(
-        if (isRequired && Prelude.isPreludeShape(shape.getId())) {
-          Type.Bool
-        } else if (Prelude.isPreludeShape(shape.getId())) {
-          Type.Wrappers.Bool
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      )
-      def byteShape(shape: ByteShape): Option[Type] =
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Some(NumberType.resolveInt(isRequired, numType))
-        } else {
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-        }
-      def documentShape(shape: DocumentShape): Option[Type] =
-        Some(Type.Any)
-      def doubleShape(shape: DoubleShape): Option[Type] =
-        if (isRequired && Prelude.isPreludeShape(shape.getId()))
-          Some(Type.Double)
-        else if (Prelude.isPreludeShape(shape.getId()))
-          Some(Type.Wrappers.Double)
-        else
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-      def floatShape(shape: FloatShape): Option[Type] =
-        if (isRequired && Prelude.isPreludeShape(shape.getId()))
-          Some(Type.Float)
-        else if (Prelude.isPreludeShape(shape.getId()))
-          Some(Type.Wrappers.Float)
-        else
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-      def integerShape(shape: IntegerShape): Option[Type] = {
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Some(NumberType.resolveInt(isRequired, numType))
-        } else {
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-        }
+      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
+        if (!isWrapped) Type.String
+        else Type.AlloyWrappers.BigDecimal
       }
+      def bigIntegerShape(shape: BigIntegerShape): Option[Type] = Some {
+        if (!isWrapped) Type.String
+        else Type.AlloyWrappers.BigInteger
+      }
+      def blobShape(shape: BlobShape): Option[Type] = Some {
+        if (!isWrapped) Type.Bytes
+        else Type.GoogleWrappers.Bytes
+      }
+      def booleanShape(shape: BooleanShape): Option[Type] = Some {
+        if (!isWrapped) Type.Bool
+        else Type.GoogleWrappers.Bool
+      }
+      def byteShape(shape: ByteShape): Option[Type] = Some {
+        if (!isWrapped) Type.Int32
+        else Type.AlloyWrappers.ByteValue
+      }
+      def documentShape(shape: DocumentShape): Option[Type] = Some {
+        if (!isWrapped) Type.AlloyTypes.Document
+        else Type.AlloyWrappers.Document
+      }
+
+      def doubleShape(shape: DoubleShape): Option[Type] = Some {
+        if (!isWrapped) Type.Double
+        else Type.GoogleWrappers.Double
+      }
+      def floatShape(shape: FloatShape): Option[Type] = Some {
+        if (!isWrapped) Type.Float
+        else Type.GoogleWrappers.Float
+      }
+      def shortShape(shape: ShortShape): Option[Type] = Some {
+        if (!isWrapped) Type.Int32
+        else Type.AlloyWrappers.ShortValue
+      }
+      def integerShape(shape: IntegerShape): Option[Type] = Some {
+        NumberType.resolveInt(isWrapped, numType)
+      }
+      def longShape(shape: LongShape): Option[Type] = Some {
+        NumberType.resolveLong(isWrapped, numType)
+      }
+
       def listShape(shape: ListShape): Option[Type] = {
-        val memberShape = model.getShape(shape.getMember().getTarget()).get
-        // to do sparse & numtype
-        memberShape
-          .accept(
-            typeVisitor(model, isRequired = !isSparse(shape), numType = None)
-          )
+        val member = shape.getMember()
+        val memberTarget = model.expectShape(shape.getMember().getTarget())
+        val isWrapped = hasProtoWrapped(member) ||
+          hasProtoWrapped(memberTarget)
+        memberTarget
+          .accept(typeVisitor(isWrapped = isWrapped, numType = None))
           .map(Type.ListType(_))
       }
-      def longShape(shape: LongShape): Option[Type] = {
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Some(NumberType.resolveLong(isRequired, numType))
-        } else {
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-        }
-      }
+
       def mapShape(shape: MapShape): Option[Type] = {
-        for {
-          valueShape <- model.getShape(shape.getValue.getTarget).toScala
-          valueType <- valueShape.accept(
-            typeVisitor(model, isRequired = !isSparse(shape), numType = None)
-          )
-        } yield Type.MapType(Right(Type.String), valueType)
+        val value = shape.getValue
+        val valueTarget = model.expectShape(value.getTarget)
+        val isWrapped = hasProtoWrapped(value) || hasProtoWrapped(valueTarget)
+        valueTarget
+          .accept(typeVisitor(isWrapped = isWrapped, numType = None))
+          .map(Type.MapType(Right(Type.String), _))
       }
+
       def memberShape(shape: MemberShape): Option[Type] = None
       def operationShape(shape: OperationShape): Option[Type] = None
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
 
-      @annotation.nowarn(
-        "msg=class SetShape in package (.*)shapes is deprecated"
-      )
-      override def setShape(shape: SetShape): Option[Type] = Some(
-        Type.MessageType(
-          Namespacing.shapeIdToFqn(shape.getId),
-          Namespacing.shapeIdToImportFqn(shape.getId())
-        )
-      )
-      def shortShape(shape: ShortShape): Option[Type] =
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Some(NumberType.resolveInt(isRequired, numType))
-        } else {
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-        }
-      // TODO: we are diverging from the spec here
-      def stringShape(shape: StringShape): Option[Type] = Some(
-        if (isRequired && Prelude.isPreludeShape(shape.getId())) {
-          Type.String
-        } else if (Prelude.isPreludeShape(shape.getId())) {
-          Type.Wrappers.String
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      )
-      override def enumShape(shape: EnumShape): Option[Type] = Some(
-        Type.EnumType(
-          Namespacing.shapeIdToFqn(shape.getId()),
-          Namespacing.shapeIdToImportFqn(shape.getId())
-        )
-      )
-      override def intEnumShape(shape: IntEnumShape): Option[Type] = Some(
-        Type.EnumType(
-          Namespacing.shapeIdToFqn(shape.getId()),
-          Namespacing.shapeIdToImportFqn(shape.getId())
-        )
-      )
-      def structureShape(shape: StructureShape): Option[Type] = {
-        if (isUnit(shape)) {
-          Some(Type.Empty)
-        } else {
-          Some(
-            Type.MessageType(
-              Namespacing.shapeIdToFqn(shape.getId),
-              Namespacing.shapeIdToImportFqn(shape.getId())
-            )
-          )
-        }
+      def stringShape(shape: StringShape): Option[Type] = Some {
+        val hasUUIDFormat = shape.hasTrait(classOf[alloy.UuidFormatTrait])
+        val hasProtoCompactUUID =
+          shape.hasTrait(classOf[alloy.proto.ProtoCompactUUIDTrait])
+        if (hasUUIDFormat && hasProtoCompactUUID) Type.AlloyTypes.CompactUUID
+        else if (!isWrapped) Type.String
+        else Type.GoogleWrappers.String
       }
-      def timestampShape(shape: TimestampShape): Option[Type] = Some(
-        if (Prelude.isPreludeShape(shape.getId())) {
-          Type.Timestamp
-        } else {
-          Type.MessageType(
-            Namespacing.shapeIdToFqn(shape.getId),
-            Namespacing.shapeIdToImportFqn(shape.getId())
-          )
-        }
-      )
+      override def enumShape(shape: EnumShape): Option[Type] =
+        Some(Type.RefType(shape))
+      override def intEnumShape(shape: IntEnumShape): Option[Type] =
+        Some(Type.RefType(shape))
+
+      def structureShape(shape: StructureShape): Option[Type] = Some {
+        if (isUnit(shape))
+          Type.Empty
+        else
+          Type.RefType(shape)
+      }
+
+      def timestampShape(shape: TimestampShape): Option[Type] = Some {
+        if (!isWrapped) Type.AlloyTypes.Timestamp
+        else Type.AlloyWrappers.Timestamp
+      }
+
       def unionShape(shape: UnionShape): Option[Type] = Some(
-        Type.MessageType(
-          Namespacing.shapeIdToFqn(shape.getId),
-          Namespacing.shapeIdToImportFqn(shape.getId())
-        )
+        Type.RefType(shape)
       )
     }
 
@@ -672,37 +531,43 @@ class Compiler() {
 
   private object NumberType {
     def resolveLong(
-        isRequired: Boolean,
+        isWrapped: Boolean,
         maybeNumType: Option[ProtoNumTypeTrait.NumType]
     ): Type = {
       import ProtoNumTypeTrait.NumType._
-      (isRequired, maybeNumType) match {
-        case (true, Some(SIGNED))       => Type.Sint64
-        case (true, Some(UNSIGNED))     => Type.Uint64
-        case (true, Some(FIXED))        => Type.Fixed64
-        case (true, Some(FIXED_SIGNED)) => Type.Sfixed64
-        case (true, Some(UNKNOWN))      => Type.Int64
-        case (true, None)               => Type.Int64
-        case (false, Some(UNSIGNED))    => Type.Wrappers.Uint64
-        case (false, Some(_))           => Type.Wrappers.Int64
-        case (false, None)              => Type.Wrappers.Int64
+      (isWrapped, maybeNumType) match {
+        case (false, Some(SIGNED))       => Type.Sint64
+        case (false, Some(UNSIGNED))     => Type.Uint64
+        case (false, Some(FIXED))        => Type.Fixed64
+        case (false, Some(FIXED_SIGNED)) => Type.Sfixed64
+        case (false, Some(UNKNOWN))      => Type.Int64
+        case (false, None)               => Type.Int64
+        case (true, Some(SIGNED))        => Type.AlloyWrappers.SInt64
+        case (true, Some(UNSIGNED))      => Type.GoogleWrappers.Uint64
+        case (true, Some(FIXED))         => Type.AlloyWrappers.Fixed64
+        case (true, Some(FIXED_SIGNED))  => Type.AlloyWrappers.SFixed64
+        case (true, Some(UNKNOWN))       => Type.GoogleWrappers.Int64
+        case (true, None)                => Type.GoogleWrappers.Int64
       }
     }
     def resolveInt(
-        isRequired: Boolean,
+        isWrapped: Boolean,
         maybeNumType: Option[ProtoNumTypeTrait.NumType]
     ): Type = {
       import ProtoNumTypeTrait.NumType._
-      (isRequired, maybeNumType) match {
-        case (true, Some(SIGNED))       => Type.Sint32
-        case (true, Some(UNSIGNED))     => Type.Uint32
-        case (true, Some(FIXED))        => Type.Fixed32
-        case (true, Some(FIXED_SIGNED)) => Type.Sfixed32
-        case (true, Some(UNKNOWN))      => Type.Int32
-        case (true, None)               => Type.Int32
-        case (false, Some(UNSIGNED))    => Type.Wrappers.Uint32
-        case (false, Some(_))           => Type.Wrappers.Int32
-        case (false, None)              => Type.Wrappers.Int32
+      (isWrapped, maybeNumType) match {
+        case (false, Some(SIGNED))       => Type.Sint32
+        case (false, Some(UNSIGNED))     => Type.Uint32
+        case (false, Some(FIXED))        => Type.Fixed32
+        case (false, Some(FIXED_SIGNED)) => Type.Sfixed32
+        case (false, Some(UNKNOWN))      => Type.Int32
+        case (false, None)               => Type.Int32
+        case (true, Some(SIGNED))        => Type.AlloyWrappers.SInt32
+        case (true, Some(UNSIGNED))      => Type.GoogleWrappers.Uint32
+        case (true, Some(FIXED))         => Type.AlloyWrappers.Fixed32
+        case (true, Some(FIXED_SIGNED))  => Type.AlloyWrappers.SFixed32
+        case (true, Some(UNKNOWN))       => Type.GoogleWrappers.Int32
+        case (true, None)                => Type.GoogleWrappers.Int32
       }
     }
   }

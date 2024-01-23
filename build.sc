@@ -301,7 +301,8 @@ trait ProtoModule
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.scalapb.compilerPlugin,
-      buildDeps.scalapb.protocCache.withDottyCompat(scalaVersion())
+      buildDeps.scalapb.protocCache.withDottyCompat(scalaVersion()),
+      buildDeps.alloy.protobuf
     )
     def scalaPBVersion = buildDeps.scalapb.version
 
@@ -326,36 +327,36 @@ trait ProtoModule
   }
 }
 
-object `proto-examples` extends BaseScala213Module with ScalaPBModule {
-  def scalaPBVersion = buildDeps.scalapb.version
+// object `proto-examples` extends BaseScala213Module with ScalaPBModule {
+//   def scalaPBVersion = buildDeps.scalapb.version
 
-  def smithyFiles = T.sources {
-    os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
-      .map(p => PathRef(p))
-  }
+//   def smithyFiles = T.sources {
+//     os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
+//       .map(p => PathRef(p))
+//   }
 
-  def cliRunOutput = millSourcePath / "protobuf"
+//   def cliRunOutput = millSourcePath / "protobuf"
 
-  def scalaPBSources = T.sources { runCli()() }
+//   def scalaPBSources = T.sources { runCli()() }
 
-  // required to include wrappers proto definitions
-  def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
+//   // required to include wrappers proto definitions
+//   def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
 
-  def runCli() = T.command {
-    os.remove.all(cliRunOutput)
-    os.makeDir.all(cliRunOutput)
-    val input = smithyFiles().toList.map(_.path)
-    val f = cli.runProtoAux()
-    f(input, cliRunOutput)
-    cliRunOutput
-  }
+//   def runCli() = T.command {
+//     os.remove.all(cliRunOutput)
+//     os.makeDir.all(cliRunOutput)
+//     val input = smithyFiles().toList.map(_.path)
+//     val f = cli.runProtoAux()
+//     f(input, cliRunOutput)
+//     cliRunOutput
+//   }
 
-  def ivyDeps = Agg(
-    buildDeps.grpc.netty,
-    buildDeps.grpc.services,
-    buildDeps.scalapb.runtimeGrpc
-  )
-}
+//   def ivyDeps = Agg(
+//     buildDeps.grpc.netty,
+//     buildDeps.grpc.services,
+//     buildDeps.scalapb.runtimeGrpc
+//   )
+// }
 
 object transitive extends Cross[TransitiveModule](scalaVersions)
 trait TransitiveModule

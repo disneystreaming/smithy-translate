@@ -17,10 +17,11 @@ package smithytranslate.cli.runners
 
 import smithytranslate.cli.opts.ProtoOpts
 import smithytranslate.cli.transformer.TransformerLookup
-import smithyproto.proto3.{Compiler, Renderer, ModelPreProcessor}
+import smithyproto.proto3.{Compiler, Renderer}
 import java.net.URLClassLoader
 
 import software.amazon.smithy.model.Model
+import software.amazon.smithy.build.TransformContext
 
 object Proto {
 
@@ -48,9 +49,9 @@ object Proto {
         }
         .assemble
         .unwrap
-    val model = ModelPreProcessor(
-      model0,
-      transformers ++ ModelPreProcessor.transformers.all(None)
+
+    val model = transformers.foldLeft(model0)((m, transfomer) =>
+      transfomer.transform(TransformContext.builder().model(m).build())
     )
 
     run(model, opts.outputPath)
@@ -60,20 +61,18 @@ object Proto {
     */
   def runForModel(
       model0: Model,
-      outputPath: os.Path,
-      allowedNamespace: Option[String]
+      outputPath: os.Path
   ): Unit = {
     val transformers = TransformerLookup.getAll()
-    val model = ModelPreProcessor(
-      model0,
-      transformers ++ ModelPreProcessor.transformers.all(allowedNamespace)
+    val model = transformers.foldLeft(model0)((m, transfomer) =>
+      transfomer.transform(TransformContext.builder().model(m).build())
     )
     run(model, outputPath)
   }
 
   private def run(model: Model, outputPath: os.Path): Unit = {
-    val proto3Backend = new Compiler()
-    val out = proto3Backend.compile(model)
+    val proto3Backend = new Compiler(model)
+    val out = proto3Backend.compile()
 
     os.walk(outputPath)
       .filter(p => os.isFile(p) && p.ext == "proto")

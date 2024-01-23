@@ -162,11 +162,10 @@ object Renderer {
       case ty @ MapType(_, valueType) =>
         s"map<${renderType(ty.foldedKeyType)}, ${renderType(valueType)}>"
       case ListType(valueType) => s"repeated ${renderType(valueType)}"
-      case MessageType(fqn, _) => fqn.render
-      case EnumType(fqn, _)    => fqn.render
+      case RefType(fqn, _)     => fqn.render
       case Any                 => Any.fqn.render
       case Empty               => Empty.fqn.render
-      case w: Wrappers         => w.fqn.render
+      case w: GoogleWrappers         => w.fqn.render
     }
   }
 

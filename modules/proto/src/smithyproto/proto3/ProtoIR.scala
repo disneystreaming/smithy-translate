@@ -15,6 +15,8 @@
 
 package smithyproto.proto3
 
+import software.amazon.smithy.model.shapes.ToShapeId
+
 object ProtoIR {
 
   final case class CompilationUnit(
@@ -90,8 +92,12 @@ object ProtoIR {
     def importFqn: Set[Fqn]
   }
   object Type {
+
     private def protobufFqn(last: String) =
       Fqn(Some(List("google", "protobuf")), last)
+
+    private def alloyFqn(last: String) =
+      Fqn(Some(List("alloy", "protobuf")), last)
 
     sealed trait PrimitiveType extends Type {
       def importFqn: Set[Fqn] = Set.empty
@@ -123,11 +129,14 @@ object ProtoIR {
     final case class ListType(valueType: Type) extends Type {
       def importFqn: Set[Fqn] = valueType.importFqn
     }
-    final case class MessageType(fqn: Fqn, _importFqn: Fqn) extends Type {
+    final case class RefType(fqn: Fqn, _importFqn: Fqn) extends Type {
       def importFqn: Set[Fqn] = Set(_importFqn)
     }
-    final case class EnumType(fqn: Fqn, _importFqn: Fqn) extends Type {
-      def importFqn: Set[Fqn] = Set(_importFqn)
+    object RefType {
+      def apply(toShapeId: ToShapeId): RefType = RefType(
+        Namespacing.shapeIdToFqn(toShapeId.toShapeId()),
+        Namespacing.shapeIdToImportFqn(toShapeId.toShapeId())
+      )
     }
     case object Any extends Type {
       def importFqn = Set(protobufFqn("any"))
@@ -138,54 +147,114 @@ object ProtoIR {
       val fqn: Fqn = protobufFqn("Empty")
     }
 
-    private val smithyTranslateImportFqn =
-      Namespacing.namespaceToFqn("smithytranslate")
+    private val alloyTypesImport =
+      Fqn(Some(List("alloy", "protobuf")), "types")
 
-    val BigInteger = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigInteger"),
-      smithyTranslateImportFqn
-    )
-    val BigDecimal = MessageType(
-      Fqn(Some(List("smithytranslate")), "BigDecimal"),
-      smithyTranslateImportFqn
-    )
-    val Timestamp = MessageType(
-      Fqn(Some(List("smithytranslate")), "Timestamp"),
-      smithyTranslateImportFqn
-    )
+    private val alloyWrappersImport =
+      Fqn(Some(List("alloy", "protobuf")), "wrappers")
+
+    object AlloyTypes {
+      val Timestamp = RefType(
+        alloyFqn("Timestamp"),
+        alloyTypesImport
+      )
+      val CompactUUID = RefType(
+        alloyFqn("CompactUUID"),
+        alloyTypesImport
+      )
+      val Document = RefType(
+        alloyFqn("Document"),
+        alloyTypesImport
+      )
+    }
+
+    object AlloyWrappers {
+      val BigInteger = RefType(
+        alloyFqn("BigIntegerValue"),
+        alloyWrappersImport
+      )
+      val BigDecimal = RefType(
+        alloyFqn("BigDecimalValue"),
+        alloyWrappersImport
+      )
+      val ShortValue = RefType(
+        alloyFqn("ShortValue"),
+        alloyWrappersImport
+      )
+      val Fixed32 = RefType(
+        alloyFqn("Fixed32Value"),
+        alloyWrappersImport
+      )
+      val SFixed32 = RefType(
+        alloyFqn("SFixed32Value"),
+        alloyWrappersImport
+      )
+      val Fixed64 = RefType(
+        alloyFqn("Fixed64Value"),
+        alloyWrappersImport
+      )
+      val SFixed64 = RefType(
+        alloyFqn("SFixed64Value"),
+        alloyWrappersImport
+      )
+      val SInt32 = RefType(
+        alloyFqn("SInt32Value"),
+        alloyWrappersImport
+      )
+      val SInt64 = RefType(
+        alloyFqn("SInt64Value"),
+        alloyWrappersImport
+      )
+      val ByteValue = RefType(
+        alloyFqn("ByteValue"),
+        alloyWrappersImport
+      )
+      val Timestamp = RefType(
+        alloyFqn("TimestampValue"),
+        alloyWrappersImport
+      )
+      val CompactUUID = RefType(
+        alloyFqn("CompactUUIDValue"),
+        alloyWrappersImport
+      )
+      val Document = RefType(
+        alloyFqn("DocumentValue"),
+        alloyWrappersImport
+      )
+    }
 
     // https://github.com/protocolbuffers/protobuf/blob/178ebc179ede26bcaa85b39db127ebf099be3ef8/src/google/protobuf/wrappers.proto
 
-    trait Wrappers extends Type {
+    trait GoogleWrappers extends Type {
       def importFqn = Set(protobufFqn("wrappers"))
       def fqn: Fqn
     }
-    object Wrappers {
-      case object Double extends Wrappers {
+    object GoogleWrappers {
+      case object Double extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("DoubleValue")
       }
-      case object Float extends Wrappers {
+      case object Float extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("FloatValue")
       }
-      case object Int64 extends Wrappers {
+      case object Int64 extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("Int64Value")
       }
-      case object Uint64 extends Wrappers {
+      case object Uint64 extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("UInt64Value")
       }
-      case object Int32 extends Wrappers {
+      case object Int32 extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("Int32Value")
       }
-      case object Uint32 extends Wrappers {
+      case object Uint32 extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("UInt32Value")
       }
-      case object Bool extends Wrappers {
+      case object Bool extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("BoolValue")
       }
-      case object String extends Wrappers {
+      case object String extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("StringValue")
       }
-      case object Bytes extends Wrappers {
+      case object Bytes extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("BytesValue")
       }
     }

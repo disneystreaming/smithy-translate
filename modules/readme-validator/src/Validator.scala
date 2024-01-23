@@ -209,20 +209,20 @@ object Validator {
       }
     }
     val ActualProto = List(getActualProto(proto))
-    val compiler = new ProtoCompiler()
     val inputModel = Model
       .assembler()
       .discoverModels()
       .addUnparsedModel(s"$namespace.smithy", actualSmithy)
       .assemble()
       .unwrap()
-
-    val result = compiler.compile(
-      ModelPreProcessor(
-        inputModel,
-        List(ModelPreProcessor.transformers.PreventEnumConflicts)
-      )
+    val preprocessedModel = ModelPreProcessor(
+      inputModel,
+      List(ModelPreProcessor.transformers.PreventEnumConflicts)
     )
+
+    val compiler = new ProtoCompiler(preprocessedModel)
+    val result = compiler.compile()
+
     val rendered = result
       .filter(_.path.contains(namespace))
       .map(r => smithyproto.proto3.Renderer.render(r.unit))

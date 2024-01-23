@@ -34,25 +34,37 @@ import scala.io.Source
 trait ProtocInvocationHelper {
   private lazy val protoc = ProtocRunner.forVersion(Version.protobufVersion)
 
-  private def loadProtoFiles(names: String*): List[(String, String)] = {
-    val dir = "/google/protobuf/"
-    val path = getClass.getResource(dir)
-    val folder = new File(path.getPath)
-    if (folder.exists && folder.isDirectory) {
-      folder.listFiles.toList
-        .collect {
-          case file if names.contains(file.getName) =>
-            dir + file.getName -> Source
-              .fromFile(file)
-              .getLines()
-              .mkString("\n")
-        }
-    } else List.empty
+  private def loadProtoFiles(paths: String*): List[(String, String)] = {
+    paths.map { p =>
+      val file = new File(getClass.getResource(p).getPath())
+      p -> Source
+        .fromFile(file)
+        .getLines()
+        .mkString("\n")
+    }.toList
+    // val dir = "/google/protobuf/"
+    // val path = getClass.getResource(dir)
+    // val folder = new File(path.getPath)
+    // if (folder.exists && folder.isDirectory) {
+    //   folder.listFiles.toList
+    //     .collect {
+    //       case file if paths.contains(file.getName) =>
+    //         dir + file.getName -> Source
+    //           .fromFile(file)
+    //           .getLines()
+    //           .mkString("\n")
+    //     }
+    // } else List.empty
   }
 
   def generateFileSet(files: Seq[(String, String)]): Seq[FileDescriptor] = {
     val tmpDir = Files.createTempDirectory("validation").toFile
-    val extraFiles = loadProtoFiles("wrappers.proto", "any.proto")
+    val extraFiles = loadProtoFiles(
+      "/google/protobuf/wrappers.proto",
+      "/google/protobuf/any.proto",
+      "/alloy/protobuf/types.proto",
+      "/alloy/protobuf/wrappers.proto"
+    )
     val allFiles = files ++ extraFiles
     val fileNames = allFiles.map { case (name, content) =>
       val names = name.split("/")

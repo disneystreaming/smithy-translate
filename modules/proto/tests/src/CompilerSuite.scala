@@ -42,7 +42,6 @@ class CompilerSuite extends FunSuite {
 
   test("compile a simple smithy model") {
     val namespace = "com.example"
-    val sut = new Compiler()
     val model = {
       val mb = Model.builder()
       mb.addShape(
@@ -50,7 +49,8 @@ class CompilerSuite extends FunSuite {
       )
       mb.build()
     }
-    val actual = sut.compile(model)
+    val sut = new Compiler(model)
+    val actual = sut.compile()
     val expected = List(
       OutputFile(
         List(
@@ -114,7 +114,6 @@ class CompilerSuite extends FunSuite {
   private def namespaceTest(namespace: String, expectedFilePath: List[String])(
       implicit loc: Location
   ): Unit = {
-    val sut = new Compiler()
     val model = {
       val mb = Model.builder()
       mb.addShape(
@@ -122,7 +121,8 @@ class CompilerSuite extends FunSuite {
       )
       mb.build()
     }
-    val actual = sut.compile(model)
+    val sut = new Compiler(model)
+    val actual = sut.compile()
     val expected = List(
       OutputFile(
         expectedFilePath,
