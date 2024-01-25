@@ -159,13 +159,13 @@ object Renderer {
       case Bool     => "bool"
       case String   => "string"
       case Bytes    => "bytes"
-      case ty @ MapType(_, valueType) =>
-        s"map<${renderType(ty.foldedKeyType)}, ${renderType(valueType)}>"
+      case MapType(keyType, valueType) =>
+        s"map<${renderType(keyType)}, ${renderType(valueType)}>"
       case ListType(valueType) => s"repeated ${renderType(valueType)}"
       case RefType(fqn, _)     => fqn.render
       case Any                 => Any.fqn.render
       case Empty               => Empty.fqn.render
-      case w: GoogleWrappers         => w.fqn.render
+      case w: GoogleWrappers   => w.fqn.render
     }
   }
 

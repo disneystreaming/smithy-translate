@@ -71,7 +71,7 @@ object Proto {
   }
 
   private def run(model: Model, outputPath: os.Path): Unit = {
-    val proto3Backend = new Compiler(model)
+    val proto3Backend = new Compiler(model, allShapes = false)
     val out = proto3Backend.compile()
 
     os.walk(outputPath)

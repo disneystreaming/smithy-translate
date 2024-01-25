@@ -31,6 +31,7 @@ import scala.jdk.OptionConverters._
 import scala.annotation.nowarn
 import software.amazon.smithy.model.neighbor.NeighborProvider
 import software.amazon.smithy.model.neighbor.Walker
+import smithytranslate.closure.IdRefVisitor
 
 class Compiler(model: Model, allShapes: Boolean) {
 
@@ -254,6 +255,24 @@ class Compiler(model: Model, allShapes: Boolean) {
       }
     }
 
+    override def listShape(shape: ListShape): TopLevelDefs = {
+      if (hasProtoWrapped(shape)) {
+        shape.getMember().accept(typeVisitor()).toList.flatMap { tpe =>
+          topLevelMessage(shape, Type.ListType(tpe))
+        }
+      } else Nil
+    }
+
+    override def mapShape(shape: MapShape): TopLevelDefs = {
+      if (hasProtoWrapped(shape)) {
+        for {
+          keyType <- shape.getKey().accept(typeVisitor()).toList
+          valueType <- shape.getValue().accept(typeVisitor()).toList
+          result <- topLevelMessage(shape, Type.MapType(keyType, valueType))
+        } yield result
+      } else Nil
+    }
+
     override def enumShape(shape: EnumShape): TopLevelDefs = {
       val reserved: List[Reserved] = getReservedValues(shape)
       val elements: List[EnumValue] =
@@ -323,9 +342,7 @@ class Compiler(model: Model, allShapes: Boolean) {
                 .getOrElse {
                   val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
                   val fieldType =
-                    if (
-                      isSimpleShape(targetShape) && hasProtoWrapped(targetShape)
-                    ) {
+                    if (hasProtoWrapped(targetShape)) {
                       Type.RefType(targetShape)
                     } else {
                       val numType = extractNumType(m)
@@ -440,8 +457,8 @@ class Compiler(model: Model, allShapes: Boolean) {
   // https://awslabs.github.io/smithy/1.0/spec/core/model.html#simple-shapes
   // TODO: namespace in type?
   private def typeVisitor(
-      isWrapped: Boolean,
-      numType: Option[ProtoNumTypeTrait.NumType]
+      isWrapped: Boolean = false,
+      numType: Option[ProtoNumTypeTrait.NumType] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
       def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
@@ -489,25 +506,31 @@ class Compiler(model: Model, allShapes: Boolean) {
       }
 
       def listShape(shape: ListShape): Option[Type] = {
-        val member = shape.getMember()
-        val memberTarget = model.expectShape(shape.getMember().getTarget())
-        val isWrapped = hasProtoWrapped(member) ||
-          hasProtoWrapped(memberTarget)
-        memberTarget
-          .accept(typeVisitor(isWrapped = isWrapped, numType = None))
-          .map(Type.ListType(_))
+        shape.getMember().accept(typeVisitor()).map(Type.ListType(_))
       }
 
       def mapShape(shape: MapShape): Option[Type] = {
-        val value = shape.getValue
-        val valueTarget = model.expectShape(value.getTarget)
-        val isWrapped = hasProtoWrapped(value) || hasProtoWrapped(valueTarget)
-        valueTarget
-          .accept(typeVisitor(isWrapped = isWrapped, numType = None))
-          .map(Type.MapType(Right(Type.String), _))
+        for {
+          key <- shape.getKey().accept(typeVisitor())
+          value <- shape.getValue().accept(typeVisitor())
+        } yield Type.MapType(key, value)
       }
 
-      def memberShape(shape: MemberShape): Option[Type] = None
+      def memberShape(shape: MemberShape): Option[Type] = {
+        val target = model.expectShape(shape.getTarget())
+        val memberHasWrapped = shape.hasTrait(classOf[ProtoWrappedTrait])
+        val targetHasWrapped = target.hasTrait(classOf[ProtoWrappedTrait])
+        val isWrapped = memberHasWrapped || targetHasWrapped
+        val numType =
+          shape
+            .getTrait(classOf[ProtoNumTypeTrait])
+            .or(() => target.getTrait(classOf[ProtoNumTypeTrait]))
+            .toScala
+            .map(_.getNumType())
+
+        target.accept(typeVisitor(isWrapped, numType))
+      }
+
       def operationShape(shape: OperationShape): Option[Type] = None
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None

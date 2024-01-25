@@ -639,6 +639,40 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
+  test("maps (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoWrapped
+                    |map StringMap {
+                    |   key: String,
+                    |   @protoWrapped
+                    |   value: Integer
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: StringMap
+                    |}
+                    |""".stripMargin
+    val expected =
+      """|syntax = "proto3";
+         |
+         |package com.example;
+         |
+         |import "google/protobuf/wrappers.proto";
+         |
+         |message StringMap {
+         |  map<string, google.protobuf.Int32Value> value = 1;
+         |}
+         |
+         |message Foo {
+         |  com.example.StringMap strings = 1;
+         |}
+         |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
   test("lists") {
     val source = """|namespace com.example
                     |
@@ -692,6 +726,38 @@ class CompilerRendererSuite extends FunSuite {
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
 
+  }
+
+  test("lists (wrapped)") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoWrapped
+                    |list StringList {
+                    |   @protoWrapped
+                    |   member: String
+                    |}
+                    |
+                    |structure Foo {
+                    |   strings: StringList
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/wrappers.proto";
+                      |
+                      |message StringList {
+                      |  repeated google.protobuf.StringValue value = 1;
+                      |}
+                      |
+                      |message Foo {
+                      |  com.example.StringList strings = 1;
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
   test("transitive structure with protoEnabled") {
@@ -870,6 +936,88 @@ class CompilerRendererSuite extends FunSuite {
                     |  YES
                     |  @protoIndex(2)
                     |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("enum with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |enum LoveProto {
+                    |  @protoIndex(0)
+                    |  YES
+                    |  @protoIndex(2)
+                    |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("enum with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |enum LoveProto {
+                    |  @protoIndex(0)
+                    |  YES
+                    |  @protoIndex(2)
+                    |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("intEnum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |intEnum LoveProto {
+                    |  YES = 0
+                    |  NO = 2
                     |}
                     |""".stripMargin
     val expected = """|syntax = "proto3";

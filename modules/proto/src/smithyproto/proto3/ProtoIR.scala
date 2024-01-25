@@ -119,12 +119,11 @@ object ProtoIR {
     case object String extends PrimitiveType
     case object Bytes extends PrimitiveType
     final case class MapType(
-        keyType: Either[Type.Int32.type, Type.String.type],
+        keyType: Type,
         valueType: Type
     ) extends Type {
-      val foldedKeyType: Type = keyType.fold(identity, identity)
       def importFqn: Set[Fqn] =
-        keyType.fold(_.importFqn, _.importFqn) ++ valueType.importFqn
+        keyType.importFqn ++ valueType.importFqn
     }
     final case class ListType(valueType: Type) extends Type {
       def importFqn: Set[Fqn] = valueType.importFqn
