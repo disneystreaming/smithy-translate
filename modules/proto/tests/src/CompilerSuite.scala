@@ -20,7 +20,6 @@ import smithyproto.proto3.ProtoIR._
 import smithyproto.proto3.ProtoIR.Statement._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.StringShape
-import alloy.proto.ProtoWrappedTrait
 import software.amazon.smithy.model.shapes.StructureShape
 import alloy.proto.ProtoEnabledTrait
 import software.amazon.smithy.model.shapes.ShapeId

@@ -22,16 +22,13 @@ import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes._
 import software.amazon.smithy.model.traits.DeprecatedTrait
 import software.amazon.smithy.model.traits.EnumTrait
-import software.amazon.smithy.model.traits.RequiredTrait
 import software.amazon.smithy.model.traits.UnitTypeTrait
 import software.amazon.smithy.model.traits.TraitDefinition
 
 import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
-import scala.annotation.nowarn
 import software.amazon.smithy.model.neighbor.NeighborProvider
 import software.amazon.smithy.model.neighbor.Walker
-import smithytranslate.closure.IdRefVisitor
 
 class Compiler(model: Model, allShapes: Boolean) {
 
@@ -482,7 +479,7 @@ class Compiler(model: Model, allShapes: Boolean) {
         else Type.AlloyWrappers.ByteValue
       }
       def documentShape(shape: DocumentShape): Option[Type] = Some {
-        if (!isWrapped) Type.AlloyTypes.Document
+        if (!isWrapped) Type.GoogleValue
         else Type.AlloyWrappers.Document
       }
 
@@ -556,7 +553,7 @@ class Compiler(model: Model, allShapes: Boolean) {
       }
 
       def timestampShape(shape: TimestampShape): Option[Type] = Some {
-        if (!isWrapped) Type.AlloyTypes.Timestamp
+        if (!isWrapped) Type.GoogleTimestamp
         else Type.AlloyWrappers.Timestamp
       }
 

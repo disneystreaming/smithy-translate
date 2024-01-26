@@ -17,7 +17,7 @@ import cats.data.NonEmptyList
 import java.nio.file.Path
 import scala.jdk.CollectionConverters._
 import scala.util.control.NoStackTrace
-import smithyproto.proto3.{Compiler => ProtoCompiler, ModelPreProcessor}
+import smithyproto.proto3.{Compiler => ProtoCompiler}
 import smithytranslate.compiler._
 import smithytranslate.compiler.openapi._
 import smithytranslate.compiler.json_schema._
@@ -191,10 +191,10 @@ object Validator {
         val ns = "foo"
         ns ->
           s"""|$$version: "2"
-            |
-            |namespace $ns
-            |
-            |$smithy""".stripMargin
+              |
+              |namespace $ns
+              |
+              |$smithy""".stripMargin
       }
     val getActualProto: String => String = { proto =>
       val lines = proto.split("\n")
@@ -215,12 +215,8 @@ object Validator {
       .addUnparsedModel(s"$namespace.smithy", actualSmithy)
       .assemble()
       .unwrap()
-    val preprocessedModel = ModelPreProcessor(
-      inputModel,
-      List(ModelPreProcessor.transformers.PreventEnumConflicts)
-    )
 
-    val compiler = new ProtoCompiler(preprocessedModel)
+    val compiler = new ProtoCompiler(inputModel, allShapes = false)
     val result = compiler.compile()
 
     val rendered = result

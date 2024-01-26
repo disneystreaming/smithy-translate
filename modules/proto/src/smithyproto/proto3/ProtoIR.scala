@@ -153,16 +153,8 @@ object ProtoIR {
       Fqn(Some(List("alloy", "protobuf")), "wrappers")
 
     object AlloyTypes {
-      val Timestamp = RefType(
-        alloyFqn("Timestamp"),
-        alloyTypesImport
-      )
       val CompactUUID = RefType(
         alloyFqn("CompactUUID"),
-        alloyTypesImport
-      )
-      val Document = RefType(
-        alloyFqn("Document"),
         alloyTypesImport
       )
     }
@@ -224,10 +216,23 @@ object ProtoIR {
 
     // https://github.com/protocolbuffers/protobuf/blob/178ebc179ede26bcaa85b39db127ebf099be3ef8/src/google/protobuf/wrappers.proto
 
-    trait GoogleWrappers extends Type {
-      def importFqn = Set(protobufFqn("wrappers"))
+    sealed trait PredefinedType extends Type {
       def fqn: Fqn
     }
+    sealed trait GoogleWrappers extends PredefinedType {
+      def importFqn = Set(protobufFqn("wrappers"))
+    }
+
+    case object GoogleValue extends PredefinedType {
+      def importFqn: Set[Fqn] = Set(protobufFqn("struct"))
+      def fqn = protobufFqn("Value")
+    }
+
+    case object GoogleTimestamp extends PredefinedType {
+      def importFqn: Set[Fqn] = Set(protobufFqn("timestamp"))
+      def fqn = protobufFqn("Timestamp")
+    }
+
     object GoogleWrappers {
       case object Double extends GoogleWrappers {
         def fqn: Fqn = protobufFqn("DoubleValue")

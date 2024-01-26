@@ -165,7 +165,7 @@ object Renderer {
       case RefType(fqn, _)     => fqn.render
       case Any                 => Any.fqn.render
       case Empty               => Empty.fqn.render
-      case w: GoogleWrappers   => w.fqn.render
+      case w: PredefinedType   => w.fqn.render
     }
   }
 
