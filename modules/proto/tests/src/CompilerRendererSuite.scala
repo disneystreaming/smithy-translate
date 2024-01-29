@@ -1099,6 +1099,36 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
+  test("conflicting enum values") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |enum MyStringEnum {
+                    |  FOO
+                    |}
+                    |
+                    |intEnum MyIntEnum {
+                    |  FOO = 0
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum MyStringEnum {
+                      |  MyStringEnum_FOO = 0;
+                      |}
+                      |
+                      |enum MyIntEnum {
+                      |  MyIntEnum_FOO = 0;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
   test("union with protoIndex") {
     val source = """|$version: "2"
                     |namespace test

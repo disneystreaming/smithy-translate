@@ -39,16 +39,15 @@ class Compiler(model: Model, allShapes: Boolean) {
 
   import ProtoIR._
 
-  /** these exclusions are performed as a last step to avoid shapes like
-    * `structure protoEnabled {}` to be rendered as proto messages.
-    *
-    * this is done here, rather than in pre-processing, because removing the
-    * shape entirely from the model would remove the trait it represents and
-    * affect the compiler behaviour
-    */
-  object ShapeFiltering {
-
-    val allRelevantShapes: Set[Shape] = {
+  private val allRelevantShapes: Set[Shape] = {
+    if (allShapes) {
+      model
+        .shapes()
+        .iterator()
+        .asScala
+        .filterNot(ShapeFiltering.exclude)
+        .toSet
+    } else {
       val walker = new Walker(NeighborProvider.of(model))
       val protoEnabledShapes =
         model.getShapesWithTrait(classOf[ProtoEnabledTrait]).asScala
@@ -59,6 +58,33 @@ class Compiler(model: Model, allShapes: Boolean) {
         .toSet
       (allRoots ++ allTransitiveShapes).toSet
     }
+  }
+
+  private val conflictingEnumValues: Set[MemberShape] = {
+    val enumMembers =
+      allRelevantShapes.collect { case m: MemberShape => m }.filter { m =>
+        val container = model.expectShape(m.getContainer())
+        container.isIntEnumShape() || container.isEnumShape()
+      }
+    def getKey(m: MemberShape) = m.getId().getNamespace() -> m.getMemberName()
+    val conflicting = enumMembers.groupBy(getKey).filter(_._2.size > 1).keySet
+    enumMembers.filter(m => conflicting(getKey(m)))
+  }
+
+  private def enumValueName(m: MemberShape): String = if (
+    conflictingEnumValues(m)
+  )
+    m.getId().getName() + "_" + m.getMemberName()
+  else m.getMemberName()
+
+  /** these exclusions are performed as a last step to avoid shapes like
+    * `structure protoEnabled {}` to be rendered as proto messages.
+    *
+    * this is done here, rather than in pre-processing, because removing the
+    * shape entirely from the model would remove the trait it represents and
+    * affect the compiler behaviour
+    */
+  object ShapeFiltering {
 
     private def excludeInternal(shape: Shape): Boolean = {
       val excludeNs = Set("alloy.proto", "alloy", "smithytranslate")
@@ -278,10 +304,10 @@ class Compiler(model: Model, allShapes: Boolean) {
       } else {
         val reserved: List[Reserved] = getReservedValues(shape)
         val elements: List[EnumValue] =
-          shape.getAllMembers.asScala.toList.zipWithIndex
-            .map { case ((name, member), edFieldNumber) =>
+          shape.members.asScala.toList.zipWithIndex
+            .map { case (member, edFieldNumber) =>
               val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
-              EnumValue(name, fieldIndex)
+              EnumValue(enumValueName(member), fieldIndex)
             }
         List(
           TopLevelDef.EnumDef(
@@ -304,7 +330,7 @@ class Compiler(model: Model, allShapes: Boolean) {
             .toScala
             .map(_.getNumber())
             .getOrElse(enumValue)
-          EnumValue(member.getMemberName(), protoIndex)
+          EnumValue(enumValueName(member), protoIndex)
         }
         List(
           TopLevelDef.EnumDef(
