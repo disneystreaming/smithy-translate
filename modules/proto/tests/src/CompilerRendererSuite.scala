@@ -931,16 +931,14 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("enum with protoIndex") {
+  test("enum without protoIndex") {
     val source = """|$version: "2"
                     |namespace test
                     |
                     |use alloy.proto#protoIndex
                     |
                     |enum LoveProto {
-                    |  @protoIndex(0)
                     |  YES
-                    |  @protoIndex(2)
                     |  NO
                     |}
                     |""".stripMargin
@@ -950,7 +948,7 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |enum LoveProto {
                       |  YES = 0;
-                      |  NO = 2;
+                      |  NO = 1;
                       |}""".stripMargin
 
     convertCheck(
@@ -987,35 +985,7 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("enum with protoIndex") {
-    val source = """|$version: "2"
-                    |namespace test
-                    |
-                    |use alloy.proto#protoIndex
-                    |
-                    |enum LoveProto {
-                    |  @protoIndex(0)
-                    |  YES
-                    |  @protoIndex(2)
-                    |  NO
-                    |}
-                    |""".stripMargin
-    val expected = """|syntax = "proto3";
-                      |
-                      |package test;
-                      |
-                      |enum LoveProto {
-                      |  YES = 0;
-                      |  NO = 2;
-                      |}""".stripMargin
-
-    convertCheck(
-      source,
-      Map("test/definitions.proto" -> expected)
-    )
-  }
-
-  test("intEnum") {
+  test("intEnum without protoIndex") {
     val source = """|$version: "2"
                     |namespace test
                     |
@@ -1033,6 +1003,94 @@ class CompilerRendererSuite extends FunSuite {
                       |enum LoveProto {
                       |  YES = 0;
                       |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("intEnum with protoIndex") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoIndex
+                    |
+                    |intEnum LoveProto {
+                    |  @protoIndex(0)
+                    |  YES = 1
+                    |  @protoIndex(2)
+                    |  NO = 3
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |enum LoveProto {
+                      |  YES = 0;
+                      |  NO = 2;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("open string enum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy#openEnum
+                    |
+                    |structure EnumWrapper {
+                    |  value: LoveProto
+                    |}
+                    |
+                    |@openEnum
+                    |enum LoveProto {
+                    |  YES
+                    |  NO
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message EnumWrapper {
+                      |  string value = 1;
+                      |}""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("open intEnum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy#openEnum
+                    |
+                    |structure EnumWrapper {
+                    |  value: LoveProto
+                    |}
+                    |
+                    |@openEnum
+                    |intEnum LoveProto {
+                    |  YES = 1
+                    |  NO = 3
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |message EnumWrapper {
+                      |  int32 value = 1;
                       |}""".stripMargin
 
     convertCheck(

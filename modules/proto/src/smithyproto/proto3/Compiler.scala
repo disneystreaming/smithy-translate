@@ -29,6 +29,8 @@ import scala.jdk.CollectionConverters._
 import scala.jdk.OptionConverters._
 import software.amazon.smithy.model.neighbor.NeighborProvider
 import software.amazon.smithy.model.neighbor.Walker
+import alloy.OpenEnumTrait
+import software.amazon.smithy.model.traits.EnumValueTrait
 
 class Compiler(model: Model, allShapes: Boolean) {
 
@@ -271,31 +273,45 @@ class Compiler(model: Model, allShapes: Boolean) {
     }
 
     override def enumShape(shape: EnumShape): TopLevelDefs = {
-      val reserved: List[Reserved] = getReservedValues(shape)
-      val elements: List[EnumValue] =
-        shape.getAllMembers.asScala.toList.zipWithIndex
-          .map { case ((name, member), edFieldNumber) =>
-            val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
-            EnumValue(name, fieldIndex)
-          }
-      List(
-        TopLevelDef.EnumDef(
-          Enum(shape.getId.getName, elements, reserved)
+      if (shape.hasTrait(classOf[OpenEnumTrait])) {
+        Nil
+      } else {
+        val reserved: List[Reserved] = getReservedValues(shape)
+        val elements: List[EnumValue] =
+          shape.getAllMembers.asScala.toList.zipWithIndex
+            .map { case ((name, member), edFieldNumber) =>
+              val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
+              EnumValue(name, fieldIndex)
+            }
+        List(
+          TopLevelDef.EnumDef(
+            Enum(shape.getId.getName, elements, reserved)
+          )
         )
-      )
+      }
     }
 
     override def intEnumShape(shape: IntEnumShape): TopLevelDefs = {
-      val reserved: List[Reserved] = getReservedValues(shape)
-      val elements = shape.getEnumValues.asScala.toList.map {
-        case (name, value) =>
-          EnumValue(name, value)
-      }
-      List(
-        TopLevelDef.EnumDef(
-          Enum(shape.getId.getName, elements, reserved)
+      if (shape.hasTrait(classOf[OpenEnumTrait])) {
+        Nil
+      } else {
+        val reserved: List[Reserved] = getReservedValues(shape)
+        val elements = shape.members.asScala.toList.map { member =>
+          val enumValue =
+            member.expectTrait(classOf[EnumValueTrait]).expectIntValue()
+          val protoIndex = member
+            .getTrait(classOf[ProtoIndexTrait])
+            .toScala
+            .map(_.getNumber())
+            .getOrElse(enumValue)
+          EnumValue(member.getMemberName(), protoIndex)
+        }
+        List(
+          TopLevelDef.EnumDef(
+            Enum(shape.getId.getName, elements, reserved)
+          )
         )
-      )
+      }
     }
 
     private def unionShouldBeInlined(shape: UnionShape): Boolean = {
@@ -540,10 +556,20 @@ class Compiler(model: Model, allShapes: Boolean) {
         else if (!isWrapped) Type.String
         else Type.GoogleWrappers.String
       }
-      override def enumShape(shape: EnumShape): Option[Type] =
-        Some(Type.RefType(shape))
-      override def intEnumShape(shape: IntEnumShape): Option[Type] =
-        Some(Type.RefType(shape))
+      override def enumShape(shape: EnumShape): Option[Type] = {
+        if (shape.hasTrait(classOf[OpenEnumTrait])) {
+          Some(Type.String)
+        } else {
+          Some(Type.RefType(shape))
+        }
+      }
+      override def intEnumShape(shape: IntEnumShape): Option[Type] = {
+        if (shape.hasTrait(classOf[OpenEnumTrait])) {
+          Some(Type.Int32)
+        } else {
+          Some(Type.RefType(shape))
+        }
+      }
 
       def structureShape(shape: StructureShape): Option[Type] = Some {
         if (isUnit(shape))
