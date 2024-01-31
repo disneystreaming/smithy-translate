@@ -27,9 +27,20 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |use alloy.proto#protoWrapped
                     |
+                    |list StringList {
+                    |  member: String
+                    |}
+                    |
+                    |map StringMap {
+                    |  key: String,
+                    |  value: String
+                    |}
+                    |
                     |union MyUnion {
                     |  name: String
                     |  id: Integer
+                    |  stringList: StringList
+                    |  stringMap: StringMap
                     |}
                     |""".stripMargin
 
@@ -37,10 +48,20 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package com.example;
                       |
+                      |message StringList {
+                      |  repeated string value = 1;
+                      |}
+                      |
+                      |message StringMap {
+                      |  map<string, string> value = 1;
+                      |}
+                      |
                       |message MyUnion {
                       |  oneof definition {
                       |    string name = 1;
                       |    int32 id = 2;
+                      |    com.example.StringList stringList = 3;
+                      |    com.example.StringMap stringMap = 4;
                       |  }
                       |}
                       |""".stripMargin
@@ -632,14 +653,21 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |structure Foo {
                     |   strings: StringMap
+                    |   @alloy.proto#protoWrapped
+                    |   wrappedStrings: StringMap
                     |}
                     |""".stripMargin
     val expected = """|syntax = "proto3";
                       |
                       |package com.example;
                       |
+                      |message StringMap {
+                      |  map<string, int32> value = 1;
+                      |}
+                      |
                       |message Foo {
                       |  map<string, int32> strings = 1;
+                      |  com.example.StringMap wrappedStrings = 2;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
@@ -715,6 +743,8 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |structure Foo {
                     |   strings: List
+                    |   @alloy.proto#protoWrapped
+                    |   wrappedStrings: List
                     |}
                     |""".stripMargin
 
@@ -726,8 +756,13 @@ class CompilerRendererSuite extends FunSuite {
                       |  string name = 1;
                       |}
                       |
+                      |message List {
+                      |  repeated com.example.ListItem value = 1;
+                      |}
+                      |
                       |message Foo {
                       |  repeated com.example.ListItem strings = 1;
+                      |  com.example.List wrappedStrings = 2;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))

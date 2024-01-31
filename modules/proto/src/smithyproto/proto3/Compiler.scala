@@ -39,7 +39,7 @@ class Compiler(model: Model, allShapes: Boolean) {
 
   import ProtoIR._
 
-  private val allRelevantShapes: Set[Shape] = {
+  private lazy val allRelevantShapes: Set[Shape] = {
     if (allShapes) {
       model
         .shapes()
@@ -60,7 +60,7 @@ class Compiler(model: Model, allShapes: Boolean) {
     }
   }
 
-  private val conflictingEnumValues: Set[MemberShape] = {
+  private lazy val conflictingEnumValues: Set[MemberShape] = {
     val enumMembers =
       allRelevantShapes.collect { case m: MemberShape => m }.filter { m =>
         val container = model.expectShape(m.getContainer())
@@ -280,8 +280,23 @@ class Compiler(model: Model, allShapes: Boolean) {
       }
     }
 
+    private def shouldWrapCollection(shape: Shape): Boolean = {
+      val hasWrapped = hasProtoWrapped(shape)
+      val membersTargetingThis =
+        model.getMemberShapes().asScala.filter(_.getTarget() == shape.getId())
+      val isTargetedByWrappedMember =
+        membersTargetingThis.exists(hasProtoWrapped(_))
+      // oneofs cannot have lists / maps fields
+      val isTargetedByUnionMember =
+        membersTargetingThis.exists(member =>
+          model.expectShape(member.getContainer()).isUnionShape
+        )
+
+      hasWrapped || isTargetedByWrappedMember || isTargetedByUnionMember
+    }
+
     override def listShape(shape: ListShape): TopLevelDefs = {
-      if (hasProtoWrapped(shape)) {
+      if (shouldWrapCollection(shape)) {
         shape.getMember().accept(typeVisitor()).toList.flatMap { tpe =>
           topLevelMessage(shape, Type.ListType(tpe))
         }
@@ -289,7 +304,7 @@ class Compiler(model: Model, allShapes: Boolean) {
     }
 
     override def mapShape(shape: MapShape): TopLevelDefs = {
-      if (hasProtoWrapped(shape)) {
+      if (shouldWrapCollection(shape)) {
         for {
           keyType <- shape.getKey().accept(typeVisitor()).toList
           valueType <- shape.getValue().accept(typeVisitor()).toList
@@ -420,7 +435,14 @@ class Compiler(model: Model, allShapes: Boolean) {
           // We assume the model is well-formed so the result should be non-null
           val targetShape = model.expectShape(m.getTarget)
           val numType = extractNumType(m)
-          val isWrapped = hasProtoWrapped(m) || hasProtoWrapped(targetShape)
+          val isWrapped = {
+            val memberHasWrapped = hasProtoWrapped(m)
+            val targetHasWrapped = hasProtoWrapped(targetShape)
+            // repeated / map fields cannot be in oneofs
+            val isList = targetShape.isListShape()
+            val isMap = targetShape.isMapShape()
+            memberHasWrapped || targetHasWrapped || isList || isMap
+          }
           val fieldType =
             targetShape
               .accept(typeVisitor(isWrapped = isWrapped, numType))
@@ -545,14 +567,17 @@ class Compiler(model: Model, allShapes: Boolean) {
       }
 
       def listShape(shape: ListShape): Option[Type] = {
-        shape.getMember().accept(typeVisitor()).map(Type.ListType(_))
+        if (isWrapped) Some(Type.RefType(shape))
+        else shape.getMember().accept(typeVisitor()).map(Type.ListType(_))
       }
 
       def mapShape(shape: MapShape): Option[Type] = {
-        for {
-          key <- shape.getKey().accept(typeVisitor())
-          value <- shape.getValue().accept(typeVisitor())
-        } yield Type.MapType(key, value)
+        if (isWrapped) Some(Type.RefType(shape))
+        else
+          for {
+            key <- shape.getKey().accept(typeVisitor())
+            value <- shape.getValue().accept(typeVisitor())
+          } yield Type.MapType(key, value)
       }
 
       def memberShape(shape: MemberShape): Option[Type] = {
