@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto
+package smithytranslate
 package proto3
+package internals
 
-object Renderer {
+private[proto3] object Renderer {
 
   import ProtoIR._
   import Text._

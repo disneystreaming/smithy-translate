@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import munit._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.validation.ValidatedResultException
-import smithyproto.validation.ProtoValidator
 
 class CompilerRendererSuite extends FunSuite {
 

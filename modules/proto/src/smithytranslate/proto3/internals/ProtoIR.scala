@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import software.amazon.smithy.model.shapes.ToShapeId
 
-object ProtoIR {
+private[internals] object ProtoIR {
 
   final case class CompilationUnit(
       packageName: Option[String],

@@ -28,6 +28,7 @@ object ScalaVersions {
 }
 
 trait BaseModule extends Module with HeaderModule {
+
   def millSourcePath: os.Path = {
     val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
     os.pwd / "modules" / originalRelativePath
@@ -111,6 +112,15 @@ trait BaseScala213Module extends BaseScalaModule with ScalafmtModule {
 }
 
 trait BaseScalaModule extends ScalaModule with BaseModule {
+
+  override def repositoriesTask = T.task {
+    super.repositoriesTask() ++ Seq(
+      coursier.maven.MavenRepository(
+        "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+      )
+    )
+  }
+
   override def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val plugins =

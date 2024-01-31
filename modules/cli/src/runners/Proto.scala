@@ -17,7 +17,7 @@ package smithytranslate.cli.runners
 
 import smithytranslate.cli.opts.ProtoOpts
 import smithytranslate.cli.transformer.TransformerLookup
-import smithyproto.proto3.{Compiler, Renderer}
+import smithytranslate.proto3.SmithyToProtoCompiler
 import java.net.URLClassLoader
 
 import software.amazon.smithy.model.Model
@@ -71,19 +71,17 @@ object Proto {
   }
 
   private def run(model: Model, outputPath: os.Path): Unit = {
-    val proto3Backend = new Compiler(model, allShapes = false)
-    val out = proto3Backend.compile()
+    val out = SmithyToProtoCompiler.compile(model)
 
     os.walk(outputPath)
       .filter(p => os.isFile(p) && p.ext == "proto")
       .foreach(os.remove)
-    out.foreach { output =>
-      val relpath = os.RelPath(output.path.toIndexedSeq, ups = 0)
-      val rendering = Renderer.render(output.unit)
+    out.foreach { case SmithyToProtoCompiler.RenderedProtoFile(path, contents) =>
+      val relpath = os.RelPath(path.toIndexedSeq, ups = 0)
       val outPath = outputPath / relpath
       os.write(
         outPath,
-        data = rendering,
+        data = contents,
         createFolders = true
       )
     }

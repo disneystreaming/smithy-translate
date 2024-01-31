@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto.validation
+package smithytranslate.proto3.internals
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import java.nio.file.Files

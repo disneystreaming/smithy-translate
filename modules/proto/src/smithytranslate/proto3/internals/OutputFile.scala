@@ -13,23 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto.validation
+package smithytranslate.proto3.internals
 
-import scalapb.compiler._
-import protocgen.CodeGenRequest
-import com.google.protobuf.compiler.PluginProtos
+import ProtoIR.CompilationUnit
 
-object ProtoValidator extends ProtocInvocationHelper {
-  def run(
-      files: (String, String)*
-  ): Unit = {
-    val fileset = generateFileSet(files)
-    val genRequest = PluginProtos.CodeGeneratorRequest.newBuilder().build()
-    val request = new CodeGenRequest("", Seq.empty, fileset, None, genRequest)
-    val validation = new ProtoValidation(
-      DescriptorImplicits.fromCodeGenRequest(new GeneratorParams, request)
-    )
-    validation.validateFiles(fileset)
-    ()
-  }
-}
+private[internals] final case class OutputFile(
+    path: List[String],
+    unit: CompilationUnit
+)

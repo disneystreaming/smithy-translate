@@ -13,24 +13,23 @@
  * limitations under the License.
  */
 
-package smithytranslate.scalapb.demo
+package smithytranslate.proto3.internals
 
-import demo.definitions.HelloGrpc
-import demo.definitions.HelloRequest
-import demo.definitions.HelloResponse
-import scala.concurrent.Future
-import com.google.protobuf.empty.Empty
+import scalapb.compiler._
+import protocgen.CodeGenRequest
+import com.google.protobuf.compiler.PluginProtos
 
-object HelloGrpcImpl extends HelloGrpc.Hello {
-
-  override def sayHello(request: HelloRequest): Future[HelloResponse] = {
-    val reply = HelloResponse(s"Hello, ${request.name}!")
-    Future.successful(reply)
+object ProtoValidator extends ProtocInvocationHelper {
+  def run(
+      files: (String, String)*
+  ): Unit = {
+    val fileset = generateFileSet(files)
+    val genRequest = PluginProtos.CodeGeneratorRequest.newBuilder().build()
+    val request = new CodeGenRequest("", Seq.empty, fileset, None, genRequest)
+    val validation = new ProtoValidation(
+      DescriptorImplicits.fromCodeGenRequest(new GeneratorParams, request)
+    )
+    validation.validateFiles(fileset)
+    ()
   }
-
-  override def greet(request: Empty): Future[HelloResponse] = {
-    val reply = HelloResponse(s"Hello, Empty!")
-    Future.successful(reply)
-  }
-
 }

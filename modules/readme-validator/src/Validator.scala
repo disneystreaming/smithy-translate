@@ -17,12 +17,12 @@ import cats.data.NonEmptyList
 import java.nio.file.Path
 import scala.jdk.CollectionConverters._
 import scala.util.control.NoStackTrace
-import smithyproto.proto3.{Compiler => ProtoCompiler}
 import smithytranslate.compiler._
 import smithytranslate.compiler.openapi._
 import smithytranslate.compiler.json_schema._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
+import smithytranslate.proto3.SmithyToProtoCompiler
 
 object Validator {
 
@@ -216,19 +216,16 @@ object Validator {
       .assemble()
       .unwrap()
 
-    val compiler = new ProtoCompiler(inputModel, allShapes = false)
-    val result = compiler.compile()
-
-    val rendered = result
+    val rendered = SmithyToProtoCompiler
+      .compile(inputModel)
       .filter(_.path.contains(namespace))
-      .map(r => smithyproto.proto3.Renderer.render(r.unit))
+      .map(_.contents)
       .sorted
-    rendered match {
-      case Nil => List(ValidationError.UnableToProduceOutput(actualSmithy))
-      case ActualProto => Nil
-      case other =>
-        List(ValidationError.ProtoConversionError(other, ActualProto))
-    }
+
+    if (rendered == ActualProto) Nil
+    else if (rendered.isEmpty)
+      List(ValidationError.UnableToProduceOutput(actualSmithy))
+    else List(ValidationError.ProtoConversionError(rendered, ActualProto))
   }
 
   def validate(

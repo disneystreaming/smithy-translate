@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import software.amazon.smithy.model.Model
 import scala.jdk.OptionConverters._
 import scala.jdk.CollectionConverters._
 
-object MetadataProcessor {
+private[internals] object MetadataProcessor {
 
   type ProtocOptions = Map[String, Map[String, String]]
 

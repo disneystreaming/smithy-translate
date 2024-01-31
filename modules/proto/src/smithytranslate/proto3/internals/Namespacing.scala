@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import software.amazon.smithy.model.shapes.ShapeId
-import smithyproto.proto3.ProtoIR.Fqn
+import ProtoIR.Fqn
 
-object Namespacing {
+private[internals] object Namespacing {
   def shapeIdToFqn(id: ShapeId): Fqn =
     Fqn(Some(namespaceToPackage(id.getNamespace)), id.getName)
 

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import munit._
-import smithyproto.proto3.ProtoIR._
-import smithyproto.proto3.ProtoIR.Statement._
+import ProtoIR._
+import Statement._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.StringShape
 import software.amazon.smithy.model.shapes.StructureShape

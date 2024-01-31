@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
 import alloy.proto._
 import smithytranslate.closure.ModelOps._
@@ -32,7 +32,7 @@ import software.amazon.smithy.model.neighbor.Walker
 import alloy.OpenEnumTrait
 import software.amazon.smithy.model.traits.EnumValueTrait
 
-class Compiler(model: Model, allShapes: Boolean) {
+private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
   // Reference:
   // 1. https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md
