@@ -1298,11 +1298,9 @@ structure Testing {
 
 Proto:
 ```proto
-import "google/protobuf/wrappers.proto";
-
 message Testing {
-  google.protobuf.StringValue myString = 1;
-  google.protobuf.Int32Value myInt = 2;
+  string myString = 1;
+  int32 myInt = 2;
 }
 ```
 
@@ -1476,8 +1474,6 @@ structure TestInput {
 
 Proto:
 ```proto
-import "google/protobuf/wrappers.proto";
-
 service FooService {
   rpc Test(foo.TestInput) returns (foo.Test200);
 }
@@ -1487,7 +1483,7 @@ message InputBody {
 }
 
 message OutputBody {
-  google.protobuf.Int32Value sNum = 1;
+  int32 sNum = 1;
 }
 
 message Test200 {

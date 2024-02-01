@@ -217,7 +217,7 @@ object Validator {
       .unwrap()
 
     val rendered = SmithyToProtoCompiler
-      .compile(inputModel)
+      .compile(inputModel, allShapes = true)
       .filter(_.path.contains(namespace))
       .map(_.contents)
       .sorted

@@ -22,7 +22,14 @@ object SmithyToProtoCompiler {
   /** Transforms a smithy model into a list of protobuf files.
     */
   def compile(smithyModel: Model): List[RenderedProtoFile] = {
-    val compiler = new internals.Compiler(smithyModel, allShapes = false)
+    compile(smithyModel, allShapes = false)
+  }
+
+  def compile(
+      smithyModel: Model,
+      allShapes: Boolean
+  ): List[RenderedProtoFile] = {
+    val compiler = new internals.Compiler(smithyModel, allShapes)
     compiler
       .compile()
       .map { compileOutput =>
