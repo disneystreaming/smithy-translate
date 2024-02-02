@@ -17,7 +17,7 @@ package smithytranslate.cli.runners
 
 import smithytranslate.cli.opts.ProtoOpts
 import smithytranslate.cli.transformer.TransformerLookup
-import smithytranslate.proto3.SmithyToProtoCompiler
+import smithytranslate.proto3.*
 import java.net.URLClassLoader
 
 import software.amazon.smithy.model.Model
@@ -76,15 +76,14 @@ object Proto {
     os.walk(outputPath)
       .filter(p => os.isFile(p) && p.ext == "proto")
       .foreach(os.remove)
-    out.foreach {
-      case SmithyToProtoCompiler.RenderedProtoFile(path, contents) =>
-        val relpath = os.RelPath(path.toIndexedSeq, ups = 0)
-        val outPath = outputPath / relpath
-        os.write(
-          outPath,
-          data = contents,
-          createFolders = true
-        )
+    out.foreach { case RenderedProtoFile(path, contents) =>
+      val relpath = os.RelPath(path.toIndexedSeq, ups = 0)
+      val outPath = outputPath / relpath
+      os.write(
+        outPath,
+        data = contents,
+        createFolders = true
+      )
     }
     println(s"Produced ${out.size} protobuf files.")
   }

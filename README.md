@@ -44,16 +44,6 @@ _Note: this library is published to work on Java 8 and above. However, you will 
 - [Protobuf](#protobuf)
   - [CLI Usage](#cli-usage-3)
   - [Capabilities and Design](#capabilities-and-design-2)
-    - [Primitives](#primitives-1)
-    - [Aggregate Types](#aggregate-types)
-      - [Structure](#structure-1)
-      - [Union](#union)
-      - [List](#list-1)
-      - [Map](#map-1)
-    - [Constraints](#constraints-1)
-      - [Enum](#enum-1)
-    - [Service Shapes](#service-shapes-1)
-      - [Basic Service](#basic-service-1)
   - [Options](#options)
     - [Stringly typed options](#stringly-typed-options)
     - [Example](#example)
@@ -153,26 +143,26 @@ Smithy.
 
 #### Primitives
 
-| OpenAPI Base Type | OpenAPI Format     | Smithy Shape               | Smithy Trait(s)               |
-|-------------------|--------------------|----------------------------|-------------------------------|
-| string            |                    | String                     |                               |
-| string            | timestamp          | Timestamp                  |                               |
-| string            | date-time          | Timestamp                  | @timestampFormat("date-time") |
-| string            | date               | String                     | alloy#dateFormat              |
-| string            | uuid               | alloy#UUID                 |                               |
-| string            | binary             | Blob                       |                               |
-| string            | byte               | Blob                       |                               |
-| string            | password           | String                     | @sensitive                    |
-| number            | float              | Float                      |                               |
-| number            | double             | Double                     |                               |
-| number            | double             | Double                     |                               |
-| number            |                    | Double                     |                               |
-| integer           | int16              | Short                      |                               |
-| integer           |                    | Integer                    |                               |
-| integer           | int32              | Integer                    |                               |
-| integer           | int64              | Long                       |                               |
-| boolean           |                    | Boolean                    |                               |
-| object            | (empty properties) | Document                   |                               |
+| OpenAPI Base Type | OpenAPI Format     | Smithy Shape | Smithy Trait(s)               |
+| ----------------- | ------------------ | ------------ | ----------------------------- |
+| string            |                    | String       |                               |
+| string            | timestamp          | Timestamp    |                               |
+| string            | date-time          | Timestamp    | @timestampFormat("date-time") |
+| string            | date               | String       | alloy#dateFormat              |
+| string            | uuid               | alloy#UUID   |                               |
+| string            | binary             | Blob         |                               |
+| string            | byte               | Blob         |                               |
+| string            | password           | String       | @sensitive                    |
+| number            | float              | Float        |                               |
+| number            | double             | Double       |                               |
+| number            | double             | Double       |                               |
+| number            |                    | Double       |                               |
+| integer           | int16              | Short        |                               |
+| integer           |                    | Integer      |                               |
+| integer           | int32              | Integer      |                               |
+| integer           | int64              | Long         |                               |
+| boolean           |                    | Boolean      |                               |
+| object            | (empty properties) | Document     |                               |
 
 #### Aggregate Shapes
 
@@ -1222,282 +1212,7 @@ Run `smithytranslate smithy-to-proto --help` for more usage information.
 
 ### Capabilities and Design
 
-#### Primitives
-
-There are more precises number scalar types in protobuf that don't exist in Smithy. For reference, see [here](https://developers.google.com/protocol-buffers/docs/proto3#scalar). You can still model those using the `@protoNumType` trait. The `@required` trait also has an effect on the final protobuf type because we use Google's wrapper types. See the following table for an exhaustive list:
-
-| Smithy type          | @protoNumType | @required | Proto                        |
-| -------------------- | ------------- | --------- | ---------------------------- |
-| bigDecimal           | N/A           | N/A       | message { string value = 1 } |
-| bigInteger           | N/A           | N/A       | message { string value = 1 } |
-| blob                 | N/A           | false     | google.protobuf.BytesValue   |
-| blob                 | N/A           | true      | bytes                        |
-| boolean              | N/A           | false     | google.protobuf.BoolValue    |
-| boolean              | N/A           | true      | bool                         |
-| double               | N/A           | false     | google.protobuf.DoubleValue  |
-| double               | N/A           | true      | double                       |
-| float                | N/A           | false     | google.protobuf.FloatValue   |
-| float                | N/A           | true      | float                        |
-| integer, byte, short | FIXED         | false     | google.protobuf.Int32Value   |
-| integer, byte, short | FIXED         | true      | fixed32                      |
-| integer, byte, short | FIXED_SIGNED  | false     | google.protobuf.Int32Value   |
-| integer, byte, short | FIXED_SIGNED  | true      | sfixed32                     |
-| integer, byte, short | N/A           | true      | google.protobuf.Int32Value   |
-| integer, byte, short | N/A           | true      | int32                        |
-| integer, byte, short | SIGNED        | false     | google.protobuf.Int32Value   |
-| integer, byte, short | SIGNED        | true      | sint32                       |
-| integer, byte, short | UNSIGNED      | false     | google.protobuf.UInt32Value  |
-| integer, byte, short | UNSIGNED      | true      | uint32                       |
-| long                 | FIXED         | false     | google.protobuf.Int64Value   |
-| long                 | FIXED         | true      | fixed64                      |
-| long                 | FIXED_SIGNED  | false     | google.protobuf.Int64Value   |
-| long                 | FIXED_SIGNED  | true      | sfixed64                     |
-| long                 | N/A           | true      | google.protobuf.Int64Value   |
-| long                 | N/A           | true      | int64                        |
-| long                 | SIGNED        | false     | google.protobuf.Int64Value   |
-| long                 | SIGNED        | true      | sint64                       |
-| long                 | UNSIGNED      | false     | google.protobuf.UInt64Value  |
-| long                 | UNSIGNED      | true      | uint64                       |
-| string               | N/A           | false     | google.protobuf.StringValue  |
-| string               | N/A           | true      | string                       |
-| timestamp            | N/A           | N/A       | message { long value = 1 }   |
-
-_Note: we can see from the table that the `@protoNumType` has no effect on non-required integer/long (except `UNSIGNED`). This is because there are no FIXED, FIXED_SIGNED or SIGNED instances in the Google's protobuf wrappers_
-
-Smithy Translate has special support for `alloy#UUID`. A custom `message` is used in place of `alloy#UUID`. This message is defined as such and it is optmized for compactness:
-
-Smithy:
-```smithy
-structure UUID {
-  @required
-  upper_bits: Long
-  @required
-  lower_bits: Long
-}
-```
-
-Proto:
-```proto
-message UUID {
-  int64 upper_bits = 1;
-  int64 lower_bits = 2;
-}
-```
-
-#### Aggregate Types
-
-##### Structure
-
-Smithy:
-```smithy
-structure Testing {
-  myString: String,
-  myInt: Integer
-}
-```
-
-Proto:
-```proto
-import "google/protobuf/wrappers.proto";
-
-message Testing {
-  google.protobuf.StringValue myString = 1;
-  google.protobuf.Int32Value myInt = 2;
-}
-```
-
-##### Union
-
-Unions in Smithy are tricky to translate to Protobuf because of the nature of `oneOf`. The default encoding will create a top-level `message` that contains a `definition` field which is the `oneOf`. For example:
-
-Smithy:
-```smithy
-structure Union {
-  @required
-  value: TestUnion
-}
-
-union TestUnion {
-    num: Integer,
-    txt: String
-}
-```
-
-Proto:
-```proto
-message Union {
-  foo.TestUnion value = 1;
-}
-
-message TestUnion {
-  oneof definition {
-    int32 num = 1;
-    string txt = 2;
-  }
-}
-```
-
-But you can also use `@protoInlinedOneOf` from `alloy` to render the `oneOf` inside of a specific message. This encoding can be harder to maintain because the `oneOf` field indices are flattened with the outer `message` field indices. On the other hand, this encoding is more compact.
-
-For example:
-
-Smithy:
-```smithy
-
-use alloy.proto#protoInlinedOneOf
-
-structure Union {
-  @required
-  value: TestUnion
-}
-
-@protoInlinedOneOf
-union TestUnion {
-    num: Integer,
-    txt: String
-}
-```
-
-Proto:
-```proto
-syntax = "proto3";
-
-package foo;
-
-message Union {
-  oneof value {
-    int32 num = 1;
-    string txt = 2;
-  }
-}
-```
-
-##### List
-
-Smithy:
-```smithy
-list StringArrayType {
-    member: String
-}
-structure StringArray {
-    value: StringArrayType
-}
-```
-
-Proto:
-```proto
-message StringArray {
-  repeated string value = 1;
-}
-```
-
-##### Map
-
-Smithy:
-```smithy
-map StringStringMapType {
-    key: String,
-    value: String
-}
-structure StringStringMap {
-  value: StringStringMapType
-}
-```
-
-Proto:
-```proto
-message StringStringMap {
-  map<string, string> value = 1;
-}
-```
-
-#### Constraints
-
-##### Enum
-
-Smithy:
-```smithy
-enum Color {
-    RED
-    GREEN
-    BLUE
-}
-```
-
-Proto:
-```proto
-enum Color {
-  RED = 0;
-  GREEN = 1;
-  BLUE = 2;
-}
-```
-
-#### Service Shapes
-
-##### Basic Service
-
-Smithy:
-```smithy
-use alloy.proto#protoEnabled
-
-@protoEnabled
-service FooService {
-    operations: [Test]
-}
-
-@http(method: "POST", uri: "/test", code: 200)
-operation Test {
-    input: TestInput,
-    output: Test200
-}
-
-structure InputBody {
-    @required
-    s: String
-}
-
-structure OutputBody {
-    sNum: Integer
-}
-
-structure Test200 {
-    @httpPayload
-    @required
-    body: OutputBody
-}
-
-structure TestInput {
-    @httpPayload
-    @required
-    body: InputBody
-}
-```
-
-Proto:
-```proto
-import "google/protobuf/wrappers.proto";
-
-service FooService {
-  rpc Test(foo.TestInput) returns (foo.Test200);
-}
-
-message InputBody {
-  string s = 1;
-}
-
-message OutputBody {
-  google.protobuf.Int32Value sNum = 1;
-}
-
-message Test200 {
-  foo.OutputBody body = 1;
-}
-
-message TestInput {
-  foo.InputBody body = 1;
-}
-```
+The design of the smithy to protobuf translation follows the semantics defined in the [alloy specification](https://github.com/disneystreaming/alloy/blob/main/docs/serialisation/protobuf.md).
 
 ### Options
 
@@ -1535,7 +1250,9 @@ metadata "proto_options" = [{
 
 namespace foo
 
-string MyString
+structure Foo {
+  value: String
+}
 ```
 
 Proto:
@@ -1547,7 +1264,7 @@ option java_package = "foo.pkg";
 
 package foo;
 
-message MyString {
+message Foo {
   string value = 1;
 }
 ```
