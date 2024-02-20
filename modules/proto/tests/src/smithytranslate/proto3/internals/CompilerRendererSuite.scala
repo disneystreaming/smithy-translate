@@ -1150,11 +1150,11 @@ class CompilerRendererSuite extends FunSuite {
                       |package test;
                       |
                       |enum MyStringEnum {
-                      |  MyStringEnum_FOO = 0;
+                      |  MYSTRINGENUM_FOO = 0;
                       |}
                       |
                       |enum MyIntEnum {
-                      |  MyIntEnum_FOO = 0;
+                      |  MYINTENUM_FOO = 0;
                       |}""".stripMargin
 
     convertCheck(

@@ -74,7 +74,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
   private def enumValueName(m: MemberShape): String = if (
     conflictingEnumValues(m)
   )
-    m.getId().getName() + "_" + m.getMemberName()
+    m.getId().getName().toUpperCase + "_" + m.getMemberName()
   else m.getMemberName()
 
   /** these exclusions are performed as a last step to avoid shapes like
