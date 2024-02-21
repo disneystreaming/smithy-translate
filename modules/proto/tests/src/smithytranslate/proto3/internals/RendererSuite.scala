@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto
-package proto3
+package smithytranslate.proto3.internals
 
 import munit.FunSuite
 
@@ -59,14 +58,14 @@ class RendererSuite extends FunSuite {
     val result = Renderer.render(unit)
     val expected =
       s"""|syntax = "proto3";
-      |
-      |package com.example;
-      |
-      |message Foo {
-      |  int32 a = 1;
-      |  repeated string b = 2;
-      |}
-      |""".stripMargin
+          |
+          |package com.example;
+          |
+          |message Foo {
+          |  int32 a = 1;
+          |  repeated string b = 2;
+          |}
+          |""".stripMargin
 
     assertEquals(result, expected)
   }
@@ -93,11 +92,11 @@ class RendererSuite extends FunSuite {
     val result = Text.renderText(Renderer.renderMessage(node))
     val expected =
       s"""|message Foo {
-      |  reserved 3, 5 to 8;
-      |  reserved "c", "d";
-      |  int32 a = 1;
-      |  repeated string b = 2;
-      |}""".stripMargin
+          |  reserved 3, 5 to 8;
+          |  reserved "c", "d";
+          |  int32 a = 1;
+          |  repeated string b = 2;
+          |}""".stripMargin
 
     assertEquals(result, expected)
   }
@@ -119,10 +118,10 @@ class RendererSuite extends FunSuite {
     val result = Text.renderText(Renderer.renderEnum(node))
     val expected =
       s"""|enum SomeEnum {
-      |  reserved 3, 5 to 8;
-      |  reserved "c", "d";
-      |  V1 = 1;
-      |}""".stripMargin
+          |  reserved 3, 5 to 8;
+          |  reserved "c", "d";
+          |  V1 = 1;
+          |}""".stripMargin
 
     assertEquals(result, expected)
   }
@@ -167,16 +166,16 @@ class RendererSuite extends FunSuite {
     val result = Renderer.render(unit)
     val expected =
       s"""|syntax = "proto3";
-      |
-      |package com.example;
-      |
-      |message Foo {
-      |  oneof foo_oneof {
-      |    int32 a = 1;
-      |    repeated string b = 2 [deprecated = true];
-      |  }
-      |}
-      |""".stripMargin
+          |
+          |package com.example;
+          |
+          |message Foo {
+          |  oneof foo_oneof {
+          |    int32 a = 1;
+          |    repeated string b = 2 [deprecated = true];
+          |  }
+          |}
+          |""".stripMargin
 
     assertEquals(result, expected)
   }
@@ -231,24 +230,24 @@ class RendererSuite extends FunSuite {
     val result = Renderer.render(unit)
     val expected =
       s"""|syntax = "proto3";
-      |
-      |package com.example;
-      |
-      |enum TopLevelEnum {
-      |  reserved "c", "d";
-      |  FALSE = 0;
-      |  TRUE = 1;
-      |}
-      |
-      |message Foo {
-      |  enum Corpus {
-      |    reserved 3, 5 to 8;
-      |    UNIVERSAL = 0;
-      |    WEB = 1;
-      |    VIDEO = 2;
-      |  }
-      |}
-      |""".stripMargin
+          |
+          |package com.example;
+          |
+          |enum TopLevelEnum {
+          |  reserved "c", "d";
+          |  FALSE = 0;
+          |  TRUE = 1;
+          |}
+          |
+          |message Foo {
+          |  enum Corpus {
+          |    reserved 3, 5 to 8;
+          |    UNIVERSAL = 0;
+          |    WEB = 1;
+          |    VIDEO = 2;
+          |  }
+          |}
+          |""".stripMargin
 
     assertEquals(result, expected)
   }

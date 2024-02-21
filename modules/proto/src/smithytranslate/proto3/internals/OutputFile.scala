@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-package smithyproto.proto3
+package smithytranslate.proto3.internals
 
-import smithyproto.proto3.ProtoIR.CompilationUnit
+import ProtoIR.CompilationUnit
 
-final case class OutputFile(path: List[String], unit: CompilationUnit)
+private[internals] final case class OutputFile(
+    path: List[String],
+    unit: CompilationUnit
+)

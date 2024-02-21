@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithyproto.validation
+package smithytranslate.proto3.internals
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import java.nio.file.Files
@@ -34,25 +34,24 @@ import scala.io.Source
 trait ProtocInvocationHelper {
   private lazy val protoc = ProtocRunner.forVersion(Version.protobufVersion)
 
-  private def loadProtoFiles(names: String*): List[(String, String)] = {
-    val dir = "/google/protobuf/"
-    val path = getClass.getResource(dir)
-    val folder = new File(path.getPath)
-    if (folder.exists && folder.isDirectory) {
-      folder.listFiles.toList
-        .collect {
-          case file if names.contains(file.getName) =>
-            dir + file.getName -> Source
-              .fromFile(file)
-              .getLines()
-              .mkString("\n")
-        }
-    } else List.empty
+  private def loadProtoFiles(directories: String*): List[(String, String)] = {
+    directories.flatMap { d =>
+      val dir = new File(getClass.getResource(d).getPath())
+      dir.listFiles().toSeq.filter(_.getName().endsWith(".proto")).map { file =>
+        (d + "/" + file.getName) -> Source
+          .fromFile(file)
+          .getLines()
+          .mkString("\n")
+      }
+    }.toList
   }
 
   def generateFileSet(files: Seq[(String, String)]): Seq[FileDescriptor] = {
     val tmpDir = Files.createTempDirectory("validation").toFile
-    val extraFiles = loadProtoFiles("wrappers.proto", "any.proto")
+    val extraFiles = loadProtoFiles(
+      "/google/protobuf/",
+      "/alloy/protobuf/"
+    )
     val allFiles = files ++ extraFiles
     val fileNames = allFiles.map { case (name, content) =>
       val names = name.split("/")

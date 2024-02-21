@@ -13,24 +13,6 @@
  * limitations under the License.
  */
 
-package smithytranslate;
+package smithytranslate.proto3
 
-import software.amazon.smithy.model.shapes.*;
-import software.amazon.smithy.model.loader.Prelude;
-import software.amazon.smithy.model.traits.RequiredTrait;
-
-final public class BigDecimal {
-  static public ShapeId target = ShapeId.fromParts(Prelude.NAMESPACE, "String");
-  static public Shape shape =
-    StructureShape
-      .builder()
-      .id("smithytranslate#BigDecimal")
-      .addMember(
-        MemberShape.builder()
-          .id("smithytranslate#BigDecimal$value")
-          .target(target)
-          .addTrait(new RequiredTrait())
-          .build()
-      )
-      .build();
-}
+case class RenderedProtoFile(path: List[String], contents: String)

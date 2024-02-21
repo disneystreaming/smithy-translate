@@ -78,3 +78,9 @@ union ApiUnion {
   @protoIndex(5)
   id: Integer
 }
+
+@protoEnabled
+structure DocumentWrapper {
+  @required
+  doc: Document
+}
