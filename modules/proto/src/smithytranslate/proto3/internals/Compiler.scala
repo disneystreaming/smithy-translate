@@ -31,6 +31,7 @@ import software.amazon.smithy.model.neighbor.NeighborProvider
 import software.amazon.smithy.model.neighbor.Walker
 import alloy.OpenEnumTrait
 import software.amazon.smithy.model.traits.EnumValueTrait
+import alloy.proto.ProtoTimestampFormatTrait
 
 private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
@@ -630,8 +631,20 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       }
 
       def timestampShape(shape: TimestampShape): Option[Type] = Some {
-        if (!isWrapped) Type.GoogleTimestamp
-        else Type.AlloyWrappers.Timestamp
+        val format =
+          shape
+            .getTrait(classOf[ProtoTimestampFormatTrait])
+            .toScala
+            .map(_.getTimestampFormat())
+            .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
+        val isEpochMillis =
+          (format == ProtoTimestampFormatTrait.TimestampFormat.EPOCH_MILLIS)
+        if (!isWrapped) {
+          if (isEpochMillis) Type.Int64 else Type.GoogleTimestamp
+        } else {
+          if (isEpochMillis) Type.GoogleWrappers.Int64
+          else Type.AlloyWrappers.Timestamp
+        }
       }
 
       def unionShape(shape: UnionShape): Option[Type] = Some(
