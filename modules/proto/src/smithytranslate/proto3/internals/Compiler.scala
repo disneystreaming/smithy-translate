@@ -520,7 +520,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
   // TODO: namespace in type?
   private def typeVisitor(
       isWrapped: Boolean = false,
-      numType: Option[ProtoNumTypeTrait.NumType] = None
+      numType: Option[ProtoNumTypeTrait.NumType] = None,
+      timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
       def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
@@ -592,8 +593,18 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .or(() => target.getTrait(classOf[ProtoNumTypeTrait]))
             .toScala
             .map(_.getNumType())
+        val timestampFormatValue = shape
+          .getTrait(classOf[ProtoTimestampFormatTrait])
+          .toScala
+          .map(_.getTimestampFormat())
 
-        target.accept(typeVisitor(isWrapped, numType))
+        target.accept(
+          typeVisitor(
+            isWrapped = isWrapped,
+            numType = numType,
+            timestampFormat = timestampFormatValue
+          )
+        )
       }
 
       def operationShape(shape: OperationShape): Option[Type] = None
@@ -636,6 +647,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .getTrait(classOf[ProtoTimestampFormatTrait])
             .toScala
             .map(_.getTimestampFormat())
+            .orElse(timestampFormat)
             .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
         val isEpochMillis =
           (format == ProtoTimestampFormatTrait.TimestampFormat.EPOCH_MILLIS)
