@@ -178,7 +178,7 @@ class CompilerRendererSuite extends FunSuite {
   test("Primitive fields") {
     val source = """|namespace com.example
                     |
-                    |use alloy#protoTimestampFormat
+                    |use alloy.proto#protoTimestampFormat
                     |
                     |structure Struct {
                     |  boolean: Boolean
@@ -231,7 +231,7 @@ class CompilerRendererSuite extends FunSuite {
     val source = """|namespace com.example
                     |
                     |use alloy.proto#protoWrapped
-                    |use alloy#protoTimestampFormat
+                    |use alloy.proto#protoTimestampFormat
                     |
                     |structure Struct {
                     |  @protoWrapped
