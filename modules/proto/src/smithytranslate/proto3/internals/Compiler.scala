@@ -401,9 +401,16 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                       Type.RefType(targetShape)
                     } else {
                       val numType = extractNumType(m)
+                      val maybeTimestampFormat = extractTimestampFormat(m)
                       val wrapped = hasProtoWrapped(m)
                       targetShape
-                        .accept(typeVisitor(wrapped, numType))
+                        .accept(
+                          typeVisitor(
+                            isWrapped = wrapped,
+                            numType = numType,
+                            timestampFormat = maybeTimestampFormat
+                          )
+                        )
                         .get
                     }
                   val field = MessageElement.FieldElement(
@@ -508,6 +515,15 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       .map { _.getNumType() }
   }
 
+  private def extractTimestampFormat(
+      shape: Shape
+  ): Option[ProtoTimestampFormatTrait.TimestampFormat] = {
+    shape
+      .getTrait(classOf[ProtoTimestampFormatTrait])
+      .toScala
+      .map(_.getTimestampFormat())
+  }
+
   private def isUnit(shape: StructureShape): Boolean = {
     shape
       .getTrait(classOf[UnitTypeTrait])
@@ -593,10 +609,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .or(() => target.getTrait(classOf[ProtoNumTypeTrait]))
             .toScala
             .map(_.getNumType())
-        val timestampFormatValue = shape
-          .getTrait(classOf[ProtoTimestampFormatTrait])
-          .toScala
-          .map(_.getTimestampFormat())
+        val timestampFormatValue = extractTimestampFormat(shape)
 
         target.accept(
           typeVisitor(
@@ -643,10 +656,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
       def timestampShape(shape: TimestampShape): Option[Type] = Some {
         val format =
-          shape
-            .getTrait(classOf[ProtoTimestampFormatTrait])
-            .toScala
-            .map(_.getTimestampFormat())
+          extractTimestampFormat(shape)
             .orElse(timestampFormat)
             .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
         val isEpochMillis =
