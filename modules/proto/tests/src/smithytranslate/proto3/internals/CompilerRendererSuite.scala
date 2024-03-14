@@ -178,6 +178,8 @@ class CompilerRendererSuite extends FunSuite {
   test("Primitive fields") {
     val source = """|namespace com.example
                     |
+                    |use alloy.proto#protoTimestampFormat
+                    |
                     |structure Struct {
                     |  boolean: Boolean
                     |  int: Integer
@@ -192,6 +194,8 @@ class CompilerRendererSuite extends FunSuite {
                     |  document: Document
                     |  string: String
                     |  timestamp: Timestamp
+                    |  @protoTimestampFormat("EPOCH_MILLIS")
+                    |  epoch: Timestamp
                     |}
                     |""".stripMargin
 
@@ -217,6 +221,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  google.protobuf.Value document = 11;
                       |  string string = 12;
                       |  google.protobuf.Timestamp timestamp = 13;
+                      |  int64 epoch = 14;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
@@ -226,6 +231,7 @@ class CompilerRendererSuite extends FunSuite {
     val source = """|namespace com.example
                     |
                     |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoTimestampFormat
                     |
                     |structure Struct {
                     |  @protoWrapped
@@ -254,6 +260,9 @@ class CompilerRendererSuite extends FunSuite {
                     |  string: String
                     |  @protoWrapped
                     |  timestamp: Timestamp
+                    |  @protoWrapped
+                    |  @protoTimestampFormat("EPOCH_MILLIS")
+                    |  epoch: Timestamp
                     |}
                     |""".stripMargin
 
@@ -279,6 +288,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  alloy.protobuf.DocumentValue document = 11;
                       |  google.protobuf.StringValue string = 12;
                       |  alloy.protobuf.TimestampValue timestamp = 13;
+                      |  google.protobuf.Int64Value epoch = 14;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))

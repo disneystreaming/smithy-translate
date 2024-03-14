@@ -31,6 +31,7 @@ import software.amazon.smithy.model.neighbor.NeighborProvider
 import software.amazon.smithy.model.neighbor.Walker
 import alloy.OpenEnumTrait
 import software.amazon.smithy.model.traits.EnumValueTrait
+import alloy.proto.ProtoTimestampFormatTrait
 
 private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
@@ -400,9 +401,16 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                       Type.RefType(targetShape)
                     } else {
                       val numType = extractNumType(m)
+                      val maybeTimestampFormat = extractTimestampFormat(m)
                       val wrapped = hasProtoWrapped(m)
                       targetShape
-                        .accept(typeVisitor(wrapped, numType))
+                        .accept(
+                          typeVisitor(
+                            isWrapped = wrapped,
+                            numType = numType,
+                            timestampFormat = maybeTimestampFormat
+                          )
+                        )
                         .get
                     }
                   val field = MessageElement.FieldElement(
@@ -507,6 +515,15 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       .map { _.getNumType() }
   }
 
+  private def extractTimestampFormat(
+      shape: Shape
+  ): Option[ProtoTimestampFormatTrait.TimestampFormat] = {
+    shape
+      .getTrait(classOf[ProtoTimestampFormatTrait])
+      .toScala
+      .map(_.getTimestampFormat())
+  }
+
   private def isUnit(shape: StructureShape): Boolean = {
     shape
       .getTrait(classOf[UnitTypeTrait])
@@ -519,7 +536,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
   // TODO: namespace in type?
   private def typeVisitor(
       isWrapped: Boolean = false,
-      numType: Option[ProtoNumTypeTrait.NumType] = None
+      numType: Option[ProtoNumTypeTrait.NumType] = None,
+      timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
       def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
@@ -591,8 +609,15 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .or(() => target.getTrait(classOf[ProtoNumTypeTrait]))
             .toScala
             .map(_.getNumType())
+        val timestampFormatValue = extractTimestampFormat(shape)
 
-        target.accept(typeVisitor(isWrapped, numType))
+        target.accept(
+          typeVisitor(
+            isWrapped = isWrapped,
+            numType = numType,
+            timestampFormat = timestampFormatValue
+          )
+        )
       }
 
       def operationShape(shape: OperationShape): Option[Type] = None
@@ -630,8 +655,18 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       }
 
       def timestampShape(shape: TimestampShape): Option[Type] = Some {
-        if (!isWrapped) Type.GoogleTimestamp
-        else Type.AlloyWrappers.Timestamp
+        val format =
+          extractTimestampFormat(shape)
+            .orElse(timestampFormat)
+            .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
+        val isEpochMillis =
+          (format == ProtoTimestampFormatTrait.TimestampFormat.EPOCH_MILLIS)
+        if (!isWrapped) {
+          if (isEpochMillis) Type.Int64 else Type.GoogleTimestamp
+        } else {
+          if (isEpochMillis) Type.GoogleWrappers.Int64
+          else Type.AlloyWrappers.Timestamp
+        }
       }
 
       def unionShape(shape: UnionShape): Option[Type] = Some(
