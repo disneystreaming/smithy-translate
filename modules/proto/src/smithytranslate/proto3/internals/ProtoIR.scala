@@ -157,6 +157,10 @@ private[internals] object ProtoIR {
         alloyFqn("CompactUUID"),
         alloyTypesImport
       )
+      val EpochMillisTimestamp = RefType(
+        alloyFqn("EpochMillisTimestamp"),
+        alloyTypesImport
+      )
     }
 
     object AlloyWrappers {
@@ -202,6 +206,10 @@ private[internals] object ProtoIR {
       )
       val Timestamp = RefType(
         alloyFqn("TimestampValue"),
+        alloyWrappersImport
+      )
+      val EpochMillisTimestamp = RefType(
+        alloyFqn("EpochMillisTimestampValue"),
         alloyWrappersImport
       )
       val CompactUUID = RefType(

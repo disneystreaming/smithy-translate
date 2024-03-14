@@ -207,6 +207,8 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |import "google/protobuf/timestamp.proto";
                       |
+                      |import "alloy/protobuf/types.proto";
+                      |
                       |message Struct {
                       |  bool boolean = 1;
                       |  int32 int = 2;
@@ -221,7 +223,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  google.protobuf.Value document = 11;
                       |  string string = 12;
                       |  google.protobuf.Timestamp timestamp = 13;
-                      |  int64 epoch = 14;
+                      |  alloy.protobuf.EpochMillisTimestamp epoch = 14;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
@@ -288,7 +290,7 @@ class CompilerRendererSuite extends FunSuite {
                       |  alloy.protobuf.DocumentValue document = 11;
                       |  google.protobuf.StringValue string = 12;
                       |  alloy.protobuf.TimestampValue timestamp = 13;
-                      |  google.protobuf.Int64Value epoch = 14;
+                      |  alloy.protobuf.EpochMillisTimestampValue epoch = 14;
                       |}
                       |""".stripMargin
     convertCheck(source, Map("com/example/example.proto" -> expected))
