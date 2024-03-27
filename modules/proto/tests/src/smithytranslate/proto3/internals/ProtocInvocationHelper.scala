@@ -36,21 +36,37 @@ trait ProtocInvocationHelper {
 
   private def loadProtoFiles(directories: String*): List[(String, String)] = {
     directories.flatMap { d =>
-      val dir = new File(getClass.getResource(d).getPath())
-      dir.listFiles().toSeq.filter(_.getName().endsWith(".proto")).map { file =>
-        (d + "/" + file.getName) -> Source
-          .fromFile(file)
-          .getLines()
-          .mkString("\n")
-      }
+      val maybeDir: Option[File] =
+        getClass()
+          .getClassLoader()
+          .getResources(d)
+          .asScala
+          .collectFirst {
+            // do not include resources from external jars
+            // here we are targeting the resources that come from
+            // our local build
+            case url if !url.getProtocol.startsWith("jar") =>
+              new File(url.getPath())
+          }
+
+      maybeDir.toList
+        .flatMap(
+          _.listFiles().toSeq.filter(_.getName().endsWith(".proto")).map {
+            file =>
+              (d + "/" + file.getName) -> Source
+                .fromFile(file)
+                .getLines()
+                .mkString("\n")
+          }
+        )
     }.toList
   }
 
   def generateFileSet(files: Seq[(String, String)]): Seq[FileDescriptor] = {
     val tmpDir = Files.createTempDirectory("validation").toFile
     val extraFiles = loadProtoFiles(
-      "/google/protobuf/",
-      "/alloy/protobuf/"
+      "google/protobuf",
+      "alloy/protobuf"
     )
     val allFiles = files ++ extraFiles
     val fileNames = allFiles.map { case (name, content) =>
