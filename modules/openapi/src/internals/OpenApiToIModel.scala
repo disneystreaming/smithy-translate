@@ -252,6 +252,15 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         val code = output.code
         code >= 200 && code < 300
     }.toList match {
+      case output :: Nil if output.code == 204 =>
+        F.pure(
+          Some(
+            (204 -> DefId(
+              Namespace(List("smithy", "api")),
+              Name.stdLib("Unit")
+            ))
+          )
+        )
       case output :: Nil =>
         val code = output.code
         recordRefOrMessage(output.refOrMessage, None)
