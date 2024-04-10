@@ -109,11 +109,11 @@ trait BasePublishModule extends BaseModule with CiReleaseModule {
   }
 }
 
-trait BaseScala213Module extends BaseScalaModule with ScalafmtModule {
+trait BaseScala213Module extends BaseScalaModule {
   override def scalaVersion = T.input(ScalaVersions.scala213)
 }
 
-trait BaseScalaModule extends ScalaModule with BaseModule {
+trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
 
   override def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
@@ -135,7 +135,7 @@ trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
 
 trait BaseJavaModule extends BaseModule with JavaModule {}
 
-trait BaseMunitTests extends TestModule.Munit {
+trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
   def ivyDeps =
     Agg(
       ivy"org.scalameta::munit::${buildDeps.munitVersion}",

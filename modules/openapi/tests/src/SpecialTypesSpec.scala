@@ -19,28 +19,28 @@ final class SpecialTypesSpec extends munit.FunSuite {
 
   test("UUID") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        u:
-                     |          type: string
-                     |          format: uuid
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        u:
+                           |          type: string
+                           |          format: uuid
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use alloy#UUID
-                      |
-                      |structure Object {
-                      | u: UUID
-                      |}
-                      |""".stripMargin
+                            |
+                            |use alloy#UUID
+                            |
+                            |structure Object {
+                            | u: UUID
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

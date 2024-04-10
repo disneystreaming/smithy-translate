@@ -18,251 +18,251 @@ final class MapSpec extends munit.FunSuite {
 
   test("maps") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - external docs") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: string
-                     |      externalDocs:
-                     |        description: Example
-                     |        url: https://www.example.com
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: string
+                           |      externalDocs:
+                           |        description: Example
+                           |        url: https://www.example.com
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@externalDocumentation(
-                      |  "Example": "https://www.example.com"
-                      |)
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@externalDocumentation(
+                            |  "Example": "https://www.example.com"
+                            |)
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - description") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      description: Test description
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      description: Test description
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@documentation("Test description")
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@documentation("Test description")
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - nested") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: object
-                     |        additionalProperties:
-                     |          type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: object
+                           |        additionalProperties:
+                           |          type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |map StringStringMapItem {
-                      |    key: String,
-                      |    value: String,
-                      |}
-                      |
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: StringStringMapItem
-                      |}
-                      |""".stripMargin
+                            |
+                            |map StringStringMapItem {
+                            |    key: String,
+                            |    value: String,
+                            |}
+                            |
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: StringStringMapItem
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - double nested") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: object
-                     |        additionalProperties:
-                     |          type: object
-                     |          additionalProperties:
-                     |            type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: object
+                           |        additionalProperties:
+                           |          type: object
+                           |          additionalProperties:
+                           |            type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |map StringStringMapItemItem {
-                      |    key: String,
-                      |    value: String,
-                      |}
-                      |
-                      |map StringStringMapItem {
-                      |    key: String,
-                      |    value: StringStringMapItemItem,
-                      |}
-                      |
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: StringStringMapItem
-                      |}
-                      |""".stripMargin
+                            |
+                            |map StringStringMapItemItem {
+                            |    key: String,
+                            |    value: String,
+                            |}
+                            |
+                            |map StringStringMapItem {
+                            |    key: String,
+                            |    value: StringStringMapItemItem,
+                            |}
+                            |
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: StringStringMapItem
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - structure member") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStructMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: object
-                     |        properties:
-                     |          test:
-                     |            type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStructMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: object
+                           |        properties:
+                           |          test:
+                           |            type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure StringStructMapItem {
-                      |    test: String
-                      |}
-                      |
-                      |map StringStructMap {
-                      |    key: String,
-                      |    value: StringStructMapItem
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure StringStructMapItem {
+                            |    test: String
+                            |}
+                            |
+                            |map StringStructMap {
+                            |    key: String,
+                            |    value: StringStructMapItem
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - structure member reference") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Test:
-                     |      type: object
-                     |      properties:
-                     |        one:
-                     |          type: integer
-                     |    StringStructMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        $ref: '#/components/schemas/Test'
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Test:
+                           |      type: object
+                           |      properties:
+                           |        one:
+                           |          type: integer
+                           |    StringStructMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        $ref: '#/components/schemas/Test'
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Test {
-                      |    one: Integer
-                      |}
-                      |
-                      |map StringStructMap {
-                      |    key: String,
-                      |    value: Test
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Test {
+                            |    one: Integer
+                            |}
+                            |
+                            |map StringStructMap {
+                            |    key: String,
+                            |    value: Test
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("maps - list member") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringStringMap:
-                     |      type: object
-                     |      additionalProperties:
-                     |        type: array
-                     |        items:
-                     |          type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringStringMap:
+                           |      type: object
+                           |      additionalProperties:
+                           |        type: array
+                           |        items:
+                           |          type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |list StringStringMapItem {
-                      |    member: String
-                      |}
-                      |
-                      |map StringStringMap {
-                      |    key: String,
-                      |    value: StringStringMapItem
-                      |}
-                      |""".stripMargin
+                            |
+                            |list StringStringMapItem {
+                            |    member: String
+                            |}
+                            |
+                            |map StringStringMap {
+                            |    key: String,
+                            |    value: StringStringMapItem
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

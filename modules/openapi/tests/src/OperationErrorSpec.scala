@@ -19,195 +19,6 @@ final class OperationErrorSpec extends munit.FunSuite {
 
   test("operation - error response") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |        '404':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  message:
-                     |                    type: string
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |""".stripMargin
-
-    val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |    errors: [TestOperationId404]
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |@error("client")
-                      |@httpError(404)
-                      |structure TestOperationId404 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: Body,
-                      |}
-                      |
-                      |structure Body {
-                      |    message: String
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: Object,
-                      |}
-                      |""".stripMargin
-
-    TestUtils.runConversionTest(openapiString, expectedString)
-  }
-
-  test("operation - multiple error responses") {
-    val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |        '404':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  message:
-                     |                    type: string
-                     |        '500':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  message:
-                     |                    type: string
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |""".stripMargin
-
-    val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |    errors: [TestOperationId404, TestOperationId500]
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |@error("client")
-                      |@httpError(404)
-                      |structure TestOperationId404 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: TestOperationId404Body,
-                      |}
-                      |
-                      |structure TestOperationId404Body {
-                      |    message: String
-                      |}
-                      |
-                      |@error("server")
-                      |@httpError(500)
-                      |structure TestOperationId500 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: TestOperationId500Body,
-                      |}
-                      |
-                      |structure TestOperationId500Body {
-                      |    message: String
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: Object,
-                      |}
-                      |""".stripMargin
-
-    TestUtils.runConversionTest(openapiString, expectedString)
-  }
-
-  test("operation - error response schema ref") {
-    val openapiString = """|openapi: '3.0.3'
                            |info:
                            |  title: test
                            |  version: '1.0'
@@ -217,31 +28,21 @@ final class OperationErrorSpec extends munit.FunSuite {
                            |      operationId: testOperationId
                            |      responses:
                            |        '200':
-                           |          description: test
-                           |          content: {}
-                           |        '401':
-                           |          $ref: '#/components/responses/AResponse'
-                           |        '402':
-                           |          description: test
                            |          content:
                            |            application/json:
                            |              schema:
-                           |                $ref: '#/components/schemas/AResponse2'
+                           |                $ref: '#/components/schemas/Object'
+                           |        '404':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  message:
+                           |                    type: string
                            |components:
-                           |  responses:
-                           |    AResponse:
-                           |      description: test
-                           |      content:
-                           |        application/json:
-                           |          schema:
-                           |            type: object
-                           |            properties:
-                           |              s:
-                           |                type: string
-                           |            required:
-                           |              - s
                            |  schemas:
-                           |    AResponse2:
+                           |    Object:
                            |      type: object
                            |      properties:
                            |        s:
@@ -249,6 +50,206 @@ final class OperationErrorSpec extends munit.FunSuite {
                            |      required:
                            |        - s
                            |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |    errors: [TestOperationId404]
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |@error("client")
+                            |@httpError(404)
+                            |structure TestOperationId404 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: Body,
+                            |}
+                            |
+                            |structure Body {
+                            |    message: String
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: Object,
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("operation - multiple error responses") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                $ref: '#/components/schemas/Object'
+                           |        '404':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  message:
+                           |                    type: string
+                           |        '500':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  message:
+                           |                    type: string
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |      required:
+                           |        - s
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |    errors: [TestOperationId404, TestOperationId500]
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |@error("client")
+                            |@httpError(404)
+                            |structure TestOperationId404 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: TestOperationId404Body,
+                            |}
+                            |
+                            |structure TestOperationId404Body {
+                            |    message: String
+                            |}
+                            |
+                            |@error("server")
+                            |@httpError(500)
+                            |structure TestOperationId500 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: TestOperationId500Body,
+                            |}
+                            |
+                            |structure TestOperationId500Body {
+                            |    message: String
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: Object,
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("operation - error response schema ref") {
+    val openapiString =
+      """|openapi: '3.0.3'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths:
+         |  /test:
+         |    get:
+         |      operationId: testOperationId
+         |      responses:
+         |        '200':
+         |          description: test
+         |          content: {}
+         |        '401':
+         |          $ref: '#/components/responses/AResponse'
+         |        '402':
+         |          description: test
+         |          content:
+         |            application/json:
+         |              schema:
+         |                $ref: '#/components/schemas/AResponse2'
+         |components:
+         |  responses:
+         |    AResponse:
+         |      description: test
+         |      content:
+         |        application/json:
+         |          schema:
+         |            type: object
+         |            properties:
+         |              s:
+         |                type: string
+         |            required:
+         |              - s
+         |  schemas:
+         |    AResponse2:
+         |      type: object
+         |      properties:
+         |        s:
+         |          type: string
+         |      required:
+         |        - s
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

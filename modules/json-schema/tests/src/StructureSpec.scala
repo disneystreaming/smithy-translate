@@ -18,25 +18,26 @@ package smithytranslate.compiler.json_schema
 final class StructureSpec extends munit.FunSuite {
 
   test("structures") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "id": {
-                           |      "type": "string",
-                           |      "format": "uuid"
-                           |    },
-                           |    "firstName": {
-                           |      "type": "string"
-                           |    },
-                           |    "lastName": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "id": {
+         |      "type": "string",
+         |      "format": "uuid"
+         |    },
+         |    "firstName": {
+         |      "type": "string"
+         |    },
+         |    "lastName": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -53,14 +54,15 @@ final class StructureSpec extends munit.FunSuite {
   }
 
   test("structures - constant") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Constant",
-                           |  "type": "object",
-                           |  "additionalProperties": false
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Constant",
+         |  "type": "object",
+         |  "additionalProperties": false
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -73,23 +75,24 @@ final class StructureSpec extends munit.FunSuite {
   }
 
   test("structures - nested") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "something": {
-                           |      "type": "object",
-                           |      "properties": {
-                           |        "one": {
-                           |          "type": "string"
-                           |        }
-                           |      }
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "something": {
+         |      "type": "object",
+         |      "properties": {
+         |        "one": {
+         |          "type": "string"
+         |        }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -106,36 +109,37 @@ final class StructureSpec extends munit.FunSuite {
   }
 
   test("structures - retain property member casing") {
-    val openapiString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Object",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "number_one": {
-                           |      "type": "string"
-                           |    },
-                           |    "numberTwo": {
-                           |      "type": "string"
-                           |    },
-                           |    "NumberThree": {
-                           |      "type": "string"
-                           |    },
-                           |    "NUMBER_FOUR": {
-                           |      "type": "string"
-                           |    },
-                           |    "nUMbeR_FiVE": {
-                           |      "type": "string"
-                           |    },
-                           |    "12_twelve": {
-                           |      "type": "string"
-                           |    },
-                           |    "X-something": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val openapiString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Object",
+         |  "type": "object",
+         |  "properties": {
+         |    "number_one": {
+         |      "type": "string"
+         |    },
+         |    "numberTwo": {
+         |      "type": "string"
+         |    },
+         |    "NumberThree": {
+         |      "type": "string"
+         |    },
+         |    "NUMBER_FOUR": {
+         |      "type": "string"
+         |    },
+         |    "nUMbeR_FiVE": {
+         |      "type": "string"
+         |    },
+         |    "12_twelve": {
+         |      "type": "string"
+         |    },
+         |    "X-something": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -156,16 +160,17 @@ final class StructureSpec extends munit.FunSuite {
   }
 
   test("structures - document field") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Something",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "anything": {}
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Something",
+         |  "type": "object",
+         |  "properties": {
+         |    "anything": {}
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

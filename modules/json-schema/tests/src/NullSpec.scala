@@ -18,18 +18,19 @@ package smithytranslate.compiler.json_schema
 final class NullSpec extends munit.FunSuite {
 
   test("null as a structure field") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "foo": {
-                           |      "type": "null"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "foo": {
+         |      "type": "null"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -44,24 +45,25 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as a default") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "foo": {
-                           |	    "default": null,
-                           |	    "oneOf": [{
-                           |		    "type": "string"
-                           |	    },
-                           |      {
-                           |		    "type": "null"
-                           |	    }]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "foo": {
+         |	    "default": null,
+         |	    "oneOf": [{
+         |		    "type": "string"
+         |	    },
+         |      {
+         |		    "type": "null"
+         |	    }]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -78,24 +80,25 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as a default on member with nullable target") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "foo": {
-                           |      "$ref": "#/$defs/nullableString"
-                           |    }
-                           |  },
-                           |  "$defs": {
-                           |    "nullableString": {
-                           |      "default": null,
-                           |      "type": ["string", "null"]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "foo": {
+         |      "$ref": "#/$defs/nullableString"
+         |    }
+         |  },
+         |  "$defs": {
+         |    "nullableString": {
+         |      "default": null,
+         |      "type": ["string", "null"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -113,23 +116,24 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as a reference") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "bar": {
-                           |      "$ref": "#/$defs/bar"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "bar": {
-                           |      "type": "null"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "bar": {
+         |      "$ref": "#/$defs/bar"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "bar": {
+         |      "type": "null"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -147,18 +151,19 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as an alternative") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "bar": {
-                           |      "type": ["string", "null"]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "bar": {
+         |      "type": ["string", "null"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -174,23 +179,24 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as an alternative - reference") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "bar": {
-                           |      "$ref": "#/$defs/bar"
-                           |    }
-                           |  },
-                           |  "$defs": {
-                           |    "bar": {
-                           |      "type": ["string", "null"]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "bar": {
+         |      "$ref": "#/$defs/bar"
+         |    }
+         |  },
+         |  "$defs": {
+         |    "bar": {
+         |      "type": ["string", "null"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -208,25 +214,26 @@ final class NullSpec extends munit.FunSuite {
   }
 
   test("null as an alternative to a nested definition") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": ["object", "null"],
-                           |  "properties": {
-                           |    "foo": {
-                           |      "type": "string"
-                           |    },
-                           |    "bar": {
-                           |      "type": ["string", "null"]
-                           |    }
-                           |  },
-                           |  "required": [
-                           |    "foo",
-                           |    "bar"
-                           |  ]
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": ["object", "null"],
+         |  "properties": {
+         |    "foo": {
+         |      "type": "string"
+         |    },
+         |    "bar": {
+         |      "type": ["string", "null"]
+         |    }
+         |  },
+         |  "required": [
+         |    "foo",
+         |    "bar"
+         |  ]
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

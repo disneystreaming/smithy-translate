@@ -18,53 +18,55 @@ package smithytranslate.compiler.openapi
 final class ParameterSpec extends munit.FunSuite {
 
   test("parameter - referenced") {
-    val openapiString = """|openapi: "3.0.3"
-                           |info:
-                           |  version: 1.0.0
-                           |  title: Content Provider Activation API
-                           |paths:
-                           |  '/content-providers/{contentProvider}/activation-token':
-                           |    parameters:
-                           |      - $ref: '#/components/parameters/contentProvider'
-                           |    get:
-                           |      operationId: generateActivationToken
-                           |
-                           |      responses:
-                           |        '200':
-                           |          content: {}
-                           |components:
-                           |  parameters:
-                           |    contentProvider:
-                           |      name: contentProvider
-                           |      in: path
-                           |      schema:
-                           |        type: string
-                           |      required: true
-                           |""".stripMargin
+    val openapiString =
+      """|openapi: "3.0.3"
+         |info:
+         |  version: 1.0.0
+         |  title: Content Provider Activation API
+         |paths:
+         |  '/content-providers/{contentProvider}/activation-token':
+         |    parameters:
+         |      - $ref: '#/components/parameters/contentProvider'
+         |    get:
+         |      operationId: generateActivationToken
+         |
+         |      responses:
+         |        '200':
+         |          content: {}
+         |components:
+         |  parameters:
+         |    contentProvider:
+         |      name: contentProvider
+         |      in: path
+         |      schema:
+         |        type: string
+         |      required: true
+         |""".stripMargin
 
-    val expectedString = """|namespace foo
-                            |
-                            |service FooService {
-                            |    operations: [
-                            |        GenerateActivationToken,
-                            |    ],
-                            |}
-                            |
-                            |@http(
-                            |    method: "GET",
-                            |    uri: "/content-providers/{contentProvider}/activation-token",
-                            |    code: 200,
-                            |)
-                            |operation GenerateActivationToken {
-                            |    input: GenerateActivationTokenInput,
-                            |    output: Unit,
-                            |}
-                            |
-                            |structure GenerateActivationTokenInput {
-                            |    @httpLabel
-                            |    @required
-                            |    contentProvider: String,
-                            |}""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |service FooService {
+         |    operations: [
+         |        GenerateActivationToken,
+         |    ],
+         |}
+         |
+         |@http(
+         |    method: "GET",
+         |    uri: "/content-providers/{contentProvider}/activation-token",
+         |    code: 200,
+         |)
+         |operation GenerateActivationToken {
+         |    input: GenerateActivationTokenInput,
+         |    output: Unit,
+         |}
+         |
+         |structure GenerateActivationTokenInput {
+         |    @httpLabel
+         |    @required
+         |    contentProvider: String,
+         |}""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
@@ -122,97 +124,101 @@ final class ParameterSpec extends munit.FunSuite {
   }
 
   test("parameter - snake case path param") {
-    val openapiString = """|openapi: "3.0.3"
-                           |info:
-                           |  version: 1.0.0
-                           |  title: Content Provider Activation API
-                           |paths:
-                           |  '/content-providers/{content_provider}/activation-token':
-                           |    parameters:
-                           |      - name: content_provider
-                           |        in: path
-                           |        schema:
-                           |          type: string
-                           |        required: true
-                           |    get:
-                           |      operationId: generateActivationToken
-                           |
-                           |      responses:
-                           |        '200':
-                           |          content: {}
-                           |""".stripMargin
+    val openapiString =
+      """|openapi: "3.0.3"
+         |info:
+         |  version: 1.0.0
+         |  title: Content Provider Activation API
+         |paths:
+         |  '/content-providers/{content_provider}/activation-token':
+         |    parameters:
+         |      - name: content_provider
+         |        in: path
+         |        schema:
+         |          type: string
+         |        required: true
+         |    get:
+         |      operationId: generateActivationToken
+         |
+         |      responses:
+         |        '200':
+         |          content: {}
+         |""".stripMargin
 
-    val expectedString = """|namespace foo
-                            |
-                            |service FooService {
-                            |    operations: [
-                            |        GenerateActivationToken,
-                            |    ],
-                            |}
-                            |
-                            |@http(
-                            |    method: "GET",
-                            |    uri: "/content-providers/{content_provider}/activation-token",
-                            |    code: 200,
-                            |)
-                            |operation GenerateActivationToken {
-                            |    input: GenerateActivationTokenInput,
-                            |    output: Unit,
-                            |}
-                            |
-                            |structure GenerateActivationTokenInput {
-                            |    @httpLabel
-                            |    @required
-                            |    content_provider: String,
-                            |}""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |service FooService {
+         |    operations: [
+         |        GenerateActivationToken,
+         |    ],
+         |}
+         |
+         |@http(
+         |    method: "GET",
+         |    uri: "/content-providers/{content_provider}/activation-token",
+         |    code: 200,
+         |)
+         |operation GenerateActivationToken {
+         |    input: GenerateActivationTokenInput,
+         |    output: Unit,
+         |}
+         |
+         |structure GenerateActivationTokenInput {
+         |    @httpLabel
+         |    @required
+         |    content_provider: String,
+         |}""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("parameter - inlined") {
-    val openapiString = """|openapi: "3.0.3"
-                           |info:
-                           |  version: 1.0.0
-                           |  title: Content Provider Activation API
-                           |paths:
-                           |  '/content-providers/{contentProvider}/activation-token':
-                           |    parameters:
-                           |      - name: contentProvider
-                           |        in: path
-                           |        schema:
-                           |          type: string
-                           |        required: true
-                           |    get:
-                           |      operationId: generateActivationToken
-                           |
-                           |      responses:
-                           |        '200':
-                           |          content: {}
-                           |""".stripMargin
+    val openapiString =
+      """|openapi: "3.0.3"
+         |info:
+         |  version: 1.0.0
+         |  title: Content Provider Activation API
+         |paths:
+         |  '/content-providers/{contentProvider}/activation-token':
+         |    parameters:
+         |      - name: contentProvider
+         |        in: path
+         |        schema:
+         |          type: string
+         |        required: true
+         |    get:
+         |      operationId: generateActivationToken
+         |
+         |      responses:
+         |        '200':
+         |          content: {}
+         |""".stripMargin
 
-    val expectedString = """|namespace foo
-                            |
-                            |service FooService {
-                            |    operations: [
-                            |        GenerateActivationToken,
-                            |    ],
-                            |}
-                            |
-                            |@http(
-                            |    method: "GET",
-                            |    uri: "/content-providers/{contentProvider}/activation-token",
-                            |    code: 200,
-                            |)
-                            |operation GenerateActivationToken {
-                            |    input: GenerateActivationTokenInput,
-                            |    output: Unit,
-                            |}
-                            |
-                            |structure GenerateActivationTokenInput {
-                            |    @httpLabel
-                            |    @required
-                            |    contentProvider: String,
-                            |}""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |service FooService {
+         |    operations: [
+         |        GenerateActivationToken,
+         |    ],
+         |}
+         |
+         |@http(
+         |    method: "GET",
+         |    uri: "/content-providers/{contentProvider}/activation-token",
+         |    code: 200,
+         |)
+         |operation GenerateActivationToken {
+         |    input: GenerateActivationTokenInput,
+         |    output: Unit,
+         |}
+         |
+         |structure GenerateActivationTokenInput {
+         |    @httpLabel
+         |    @required
+         |    contentProvider: String,
+         |}""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
