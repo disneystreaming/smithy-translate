@@ -23,82 +23,83 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
 
   test("operation - multiple success responses") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |        '202':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                $ref: '#/components/schemas/Object'
+                           |        '202':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                $ref: '#/components/schemas/Object'
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |      required:
+                           |        - s
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: Object,
-                      |}
-                      |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: Object,
+                            |}
+                            |""".stripMargin
 
-    val expectedError = """|namespace error
-                           |
-                           |use smithytranslate#errorMessage
-                           |use foo#Object
-                           |use smithytranslate#contentType
-                           |
-                           |@errorMessage("Multiple success responses are not supported. Found status code 202 when 200 was already recorded")
-                           |structure TestOperationId202 {
-                           |    @httpPayload
-                           |    @required
-                           |    @contentType("application/json")
-                           |    body: Object,
-                           |}
-                           |""".stripMargin
+    val expectedError =
+      """|namespace error
+         |
+         |use smithytranslate#errorMessage
+         |use foo#Object
+         |use smithytranslate#contentType
+         |
+         |@errorMessage("Multiple success responses are not supported. Found status code 202 when 200 was already recorded")
+         |structure TestOperationId202 {
+         |    @httpPayload
+         |    @required
+         |    @contentType("application/json")
+         |    body: Object,
+         |}
+         |""".stripMargin
 
     val input = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo.yaml"),
@@ -122,83 +123,83 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
 
   test("operation - multiple success responses with references") {
     val openapiString = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths:
-                   |  /test:
-                   |    get:
-                   |      operationId: testOperationId
-                   |      responses:
-                   |        '200':
-                   |          $ref: '#/components/responses/okay'
-                   |        '202':
-                   |          $ref: '#/components/responses/alsoOkay'
-                   |components:
-                   |  responses:
-                   |    okay:
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              s:
-                   |                type: string
-                   |            required:
-                   |              - s
-                   |    alsoOkay:
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              i:
-                   |                type: integer
-                   |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '200':
+                           |          $ref: '#/components/responses/okay'
+                           |        '202':
+                           |          $ref: '#/components/responses/alsoOkay'
+                           |components:
+                           |  responses:
+                           |    okay:
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              s:
+                           |                type: string
+                           |            required:
+                           |              - s
+                           |    alsoOkay:
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              i:
+                           |                type: integer
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                    |
-                    |use smithytranslate#contentType
-                    |
-                    |service FooService {
-                    |    operations: [
-                    |        TestOperationId
-                    |    ]
-                    |}
-                    |
-                    |@http(
-                    |    method: "GET",
-                    |    uri: "/test",
-                    |    code: 200,
-                    |)
-                    |operation TestOperationId {
-                    |    input: Unit,
-                    |    output: Okay,
-                    |}
-                    |
-                    |structure Okay {
-                    |    @httpPayload
-                    |    @required
-                    |    @contentType("application/json")
-                    |    body: OkayBody,
-                    |}
-                    |
-                    |structure OkayBody {
-                    |    @required
-                    |    s: String,
-                    |}
-                    |
-                    |structure AlsoOkay {
-                    |    @httpPayload
-                    |    @required
-                    |    @contentType("application/json")
-                    |    body: AlsoOkayBody,
-                    |}
-                    |
-                    |structure AlsoOkayBody {
-                    |    i: Integer,
-                    |}
-                    |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: Okay,
+                            |}
+                            |
+                            |structure Okay {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: OkayBody,
+                            |}
+                            |
+                            |structure OkayBody {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |structure AlsoOkay {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: AlsoOkayBody,
+                            |}
+                            |
+                            |structure AlsoOkayBody {
+                            |    i: Integer,
+                            |}
+                            |""".stripMargin
 
     val input = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo.yaml"),

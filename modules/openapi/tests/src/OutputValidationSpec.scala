@@ -26,20 +26,20 @@ final class OutputValidationSpec extends munit.FunSuite {
 
   test("Output should be validated when specified") {
     val spec = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths:
-                   |  /{test}:
-                   |    get:
-                   |      operationId: test
-                   |      responses:
-                   |        '200':
-                   |          content:
-                   |            application/json:
-                   |              schema:
-                   |                type: object
-                   |""".stripMargin
+                  |info:
+                  |  title: test
+                  |  version: '1.0'
+                  |paths:
+                  |  /{test}:
+                  |    get:
+                  |      operationId: test
+                  |      responses:
+                  |        '200':
+                  |          content:
+                  |            application/json:
+                  |              schema:
+                  |                type: object
+                  |""".stripMargin
 
     val input = OpenApiCompilerInput.UnparsedSpecs(
       List(

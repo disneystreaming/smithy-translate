@@ -19,41 +19,41 @@ final class TagsSpec extends munit.FunSuite {
 
   test("tags") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      tags:
-                     |        - foo
-                     |        - bar
-                     |      operationId: test
-                     |      responses:
-                     |        '200':
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      tags:
+                           |        - foo
+                           |        - bar
+                           |      operationId: test
+                           |      responses:
+                           |        '200':
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        Test
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |@tags([
-                      |    "foo",
-                      |    "bar"
-                      |])
-                      |operation Test {}
-                      |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        Test
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |@tags([
+                            |    "foo",
+                            |    "bar"
+                            |])
+                            |operation Test {}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

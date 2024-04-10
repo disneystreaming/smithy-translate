@@ -18,18 +18,19 @@ package smithytranslate.compiler.json_schema
 final class MapSpec extends munit.FunSuite {
 
   test("maps") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "TestMap",
-                           |  "type": "object",
-                           |  "patternProperties": {
-                           |    ".*": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "TestMap",
+         |  "type": "object",
+         |  "patternProperties": {
+         |    ".*": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -43,16 +44,17 @@ final class MapSpec extends munit.FunSuite {
   }
 
   test("additionalProperties") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "TestMap",
-                           |  "type": "object",
-                           |  "additionalProperties": {
-                           |    "type": "string"
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "TestMap",
+         |  "type": "object",
+         |  "additionalProperties": {
+         |    "type": "string"
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

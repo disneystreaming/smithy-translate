@@ -19,156 +19,156 @@ final class SetSpec extends munit.FunSuite {
 
   test("sets") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringSet:
-                     |      type: array
-                     |      items:
-                     |        type: string
-                     |      uniqueItems: true
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringSet:
+                           |      type: array
+                           |      items:
+                           |        type: string
+                           |      uniqueItems: true
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@uniqueItems
-                      |list StringSet {
-                      |    member: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@uniqueItems
+                            |list StringSet {
+                            |    member: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("sets - description") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringSet:
-                     |      description: Test
-                     |      type: array
-                     |      items:
-                     |        type: string
-                     |      uniqueItems: true
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringSet:
+                           |      description: Test
+                           |      type: array
+                           |      items:
+                           |        type: string
+                           |      uniqueItems: true
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@documentation("Test")
-                      |@uniqueItems
-                      |list StringSet {
-                      |    member: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@documentation("Test")
+                            |@uniqueItems
+                            |list StringSet {
+                            |    member: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("sets - nested") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringSet:
-                     |      type: array
-                     |      items:
-                     |        type: array
-                     |        items:
-                     |          type: string
-                     |        uniqueItems: true
-                     |      uniqueItems: true
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringSet:
+                           |      type: array
+                           |      items:
+                           |        type: array
+                           |        items:
+                           |          type: string
+                           |        uniqueItems: true
+                           |      uniqueItems: true
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@uniqueItems
-                      |list StringSet {
-                      |    member: StringSetItem
-                      |}
-                      |
-                      |@uniqueItems
-                      |list StringSetItem {
-                      |    member: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@uniqueItems
+                            |list StringSet {
+                            |    member: StringSetItem
+                            |}
+                            |
+                            |@uniqueItems
+                            |list StringSetItem {
+                            |    member: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("sets - structure member") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    StringSet:
-                     |      type: array
-                     |      items:
-                     |        type: object
-                     |        properties:
-                     |          test:
-                     |            type: string
-                     |      uniqueItems: true
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    StringSet:
+                           |      type: array
+                           |      items:
+                           |        type: object
+                           |        properties:
+                           |          test:
+                           |            type: string
+                           |      uniqueItems: true
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@uniqueItems
-                      |list StringSet {
-                      |    member: StringSetItem
-                      |}
-                      |
-                      |structure StringSetItem {
-                      |    test: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@uniqueItems
+                            |list StringSet {
+                            |    member: StringSetItem
+                            |}
+                            |
+                            |structure StringSetItem {
+                            |    test: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("sets - structure member ref") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Test:
-                     |      type: object
-                     |      properties:
-                     |        test:
-                     |          type: string
-                     |    StringSet:
-                     |      type: array
-                     |      items:
-                     |        $ref: '#/components/schemas/Test'
-                     |      uniqueItems: true
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Test:
+                           |      type: object
+                           |      properties:
+                           |        test:
+                           |          type: string
+                           |    StringSet:
+                           |      type: array
+                           |      items:
+                           |        $ref: '#/components/schemas/Test'
+                           |      uniqueItems: true
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Test {
-                      |    test: String
-                      |}
-                      |
-                      |@uniqueItems
-                      |list StringSet {
-                      |    member: Test
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Test {
+                            |    test: String
+                            |}
+                            |
+                            |@uniqueItems
+                            |list StringSet {
+                            |    member: Test
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

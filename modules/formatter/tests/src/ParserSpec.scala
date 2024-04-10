@@ -61,18 +61,20 @@ final class ParserSpec extends munit.FunSuite {
 
   test("complex metadata") {
     val result =
-      IdlParser.idlParser.parseAll("""|$version: "2.0"
-                                      |
-                                      |metadata somePieceOfData = { name: "examples.hello", entryPoints: true }
-                                      |metadata other = { name: "examples.hello" }
-                                      |metadata noComma = { name: "examples.hello" entryPoints: true }
-                                      |metadata noComma = {
-                                      |name: "examples.hello"
-                                      |entryPoints: true
-                                      |}
-                                      |
-                                      |namespace examples.hello
-                                      |""".stripMargin)
+      IdlParser.idlParser.parseAll(
+        """|$version: "2.0"
+           |
+           |metadata somePieceOfData = { name: "examples.hello", entryPoints: true }
+           |metadata other = { name: "examples.hello" }
+           |metadata noComma = { name: "examples.hello" entryPoints: true }
+           |metadata noComma = {
+           |name: "examples.hello"
+           |entryPoints: true
+           |}
+           |
+           |namespace examples.hello
+           |""".stripMargin
+      )
     assertEitherIsRight(result)
   }
 
@@ -390,11 +392,11 @@ operation GetFilmography {
     test(s"operation with $name can be parsed") {
       val result = IdlParser.idlParser.parseAll(
         s"""|$$version: "2.0"
-           |
-           |namespace test
-           |
-           |$op
-           |""".stripMargin
+            |
+            |namespace test
+            |
+            |$op
+            |""".stripMargin
       )
       assertEitherIsRight(result)
     }

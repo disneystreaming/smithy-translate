@@ -19,42 +19,42 @@ final class DocumentSpec extends munit.FunSuite {
 
   test("document") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyDoc:
-                     |      type: object
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyDoc:
+                           |      type: object
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |document MyDoc
-                      |""".stripMargin
+                            |
+                            |document MyDoc
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("document - description") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyDoc:
-                     |      description: Test
-                     |      type: object
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyDoc:
+                           |      description: Test
+                           |      type: object
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@documentation("Test")
-                      |document MyDoc
-                      |""".stripMargin
+                            |
+                            |@documentation("Test")
+                            |document MyDoc
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

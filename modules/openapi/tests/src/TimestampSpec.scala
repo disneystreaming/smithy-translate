@@ -18,94 +18,94 @@ package smithytranslate.compiler.openapi
 final class TimestampSpec extends munit.FunSuite {
   test("date-time") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyTimestamp:
-                     |      type: string
-                     |      format: date-time
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyTimestamp:
+                           |      type: string
+                           |      format: date-time
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@timestampFormat("date-time")
-                      |timestamp MyTimestamp
-                      |""".stripMargin
+                            |
+                            |@timestampFormat("date-time")
+                            |timestamp MyTimestamp
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("date-time in struct") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyObj:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: '#/components/schemas/MyTimestamp'
-                     |    MyTimestamp:
-                     |      type: string
-                     |      format: date-time
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyObj:
+                           |      type: object
+                           |      properties:
+                           |        t:
+                           |          $ref: '#/components/schemas/MyTimestamp'
+                           |    MyTimestamp:
+                           |      type: string
+                           |      format: date-time
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure MyObj {
-                      |  t: MyTimestamp
-                      |}
-                      |
-                      |@timestampFormat("date-time")
-                      |timestamp MyTimestamp
-                      |""".stripMargin
+                            |
+                            |structure MyObj {
+                            |  t: MyTimestamp
+                            |}
+                            |
+                            |@timestampFormat("date-time")
+                            |timestamp MyTimestamp
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("simple date") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyDate:
-                     |      type: string
-                     |      format: date
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyDate:
+                           |      type: string
+                           |      format: date
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use alloy#dateFormat
-                      |
-                      |@dateFormat
-                      |string MyDate
-                      |""".stripMargin
+                            |
+                            |use alloy#dateFormat
+                            |
+                            |@dateFormat
+                            |string MyDate
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("date-time with example") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyTimestamp:
-                     |      type: string
-                     |      format: date-time
-                     |      example: '2017-07-21T17:32:28Z'
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyTimestamp:
+                           |      type: string
+                           |      format: date-time
+                           |      example: '2017-07-21T17:32:28Z'
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

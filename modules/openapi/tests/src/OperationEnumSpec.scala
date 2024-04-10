@@ -19,47 +19,47 @@ final class OperationEnumSpec extends munit.FunSuite {
 
   test("operation - request and response with enum") {
     val openapiString = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths:
-                   |  /test:
-                   |    post:
-                   |      operationId: testOperationId
-                   |      requestBody:
-                   |        $ref: '#/components/requestBodies/generic'
-                   |      responses:
-                   |        '200':
-                   |          $ref: '#/components/responses/okay'
-                   |components:
-                   |  requestBodies:
-                   |    generic:
-                   |      required: true
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              myProperty:
-                   |                type: string
-                   |                enum:
-                   |                  - one
-                   |                  - two
-                   |              also:
-                   |                type: integer
-                   |  responses:
-                   |    okay:
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              test:
-                   |                type: string
-                   |                enum:
-                   |                  - foo
-                   |                  - bar
-                   |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      requestBody:
+                           |        $ref: '#/components/requestBodies/generic'
+                           |      responses:
+                           |        '200':
+                           |          $ref: '#/components/responses/okay'
+                           |components:
+                           |  requestBodies:
+                           |    generic:
+                           |      required: true
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              myProperty:
+                           |                type: string
+                           |                enum:
+                           |                  - one
+                           |                  - two
+                           |              also:
+                           |                type: integer
+                           |  responses:
+                           |    okay:
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              test:
+                           |                type: string
+                           |                enum:
+                           |                  - foo
+                           |                  - bar
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -115,56 +115,56 @@ final class OperationEnumSpec extends munit.FunSuite {
                             |    bar
                             |}
                             |
-                    |""".stripMargin
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - request and response with required enum field") {
     val openapiString = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths:
-                   |  /test:
-                   |    post:
-                   |      operationId: testOperationId
-                   |      requestBody:
-                   |        $ref: '#/components/requestBodies/generic'
-                   |      responses:
-                   |        '200':
-                   |          $ref: '#/components/responses/okay'
-                   |components:
-                   |  requestBodies:
-                   |    generic:
-                   |      required: true
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              myProperty:
-                   |                type: string
-                   |                enum:
-                   |                  - one
-                   |                  - two
-                   |              also:
-                   |                type: integer
-                   |            required:
-                   |              - myProperty
-                   |  responses:
-                   |    okay:
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              test:
-                   |                type: string
-                   |                enum:
-                   |                  - foo
-                   |                  - bar
-                   |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      requestBody:
+                           |        $ref: '#/components/requestBodies/generic'
+                           |      responses:
+                           |        '200':
+                           |          $ref: '#/components/responses/okay'
+                           |components:
+                           |  requestBodies:
+                           |    generic:
+                           |      required: true
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              myProperty:
+                           |                type: string
+                           |                enum:
+                           |                  - one
+                           |                  - two
+                           |              also:
+                           |                type: integer
+                           |            required:
+                           |              - myProperty
+                           |  responses:
+                           |    okay:
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              test:
+                           |                type: string
+                           |                enum:
+                           |                  - foo
+                           |                  - bar
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -220,7 +220,7 @@ final class OperationEnumSpec extends munit.FunSuite {
                             |    foo
                             |    bar
                             |}
-                    |""".stripMargin
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

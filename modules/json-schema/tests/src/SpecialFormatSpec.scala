@@ -18,19 +18,20 @@ package smithytranslate.compiler.json_schema
 final class SpecialFormatSpec extends munit.FunSuite {
 
   test("uuid format") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "id": {
-                           |      "type": "string",
-                           |      "format": "uuid"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "id": {
+         |      "type": "string",
+         |      "format": "uuid"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -45,24 +46,25 @@ final class SpecialFormatSpec extends munit.FunSuite {
   }
 
   test("uuid format - ref") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "id": {
-                           |      "$ref": "#/$defs/id"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "id": {
-                           |      "type": "string",
-                           |      "format": "uuid"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "id": {
+         |      "$ref": "#/$defs/id"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "id": {
+         |      "type": "string",
+         |      "format": "uuid"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -80,19 +82,20 @@ final class SpecialFormatSpec extends munit.FunSuite {
   }
 
   test("date format") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "id": {
-                           |      "type": "string",
-                           |      "format": "date"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "id": {
+         |      "type": "string",
+         |      "format": "date"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -108,19 +111,20 @@ final class SpecialFormatSpec extends munit.FunSuite {
   }
 
   test("date-time format") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "id": {
-                           |      "type": "string",
-                           |      "format": "date-time"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "id": {
+         |      "type": "string",
+         |      "format": "date-time"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

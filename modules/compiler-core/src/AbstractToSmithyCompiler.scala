@@ -28,7 +28,8 @@ import software.amazon.smithy.model.validation.Severity
 import software.amazon.smithy.model.validation.ValidatedResult
 import software.amazon.smithy.build.TransformContext
 
-/** Holds common logic that serves for the conversion of openapi/json-schema to smithy
+/** Holds common logic that serves for the conversion of openapi/json-schema to
+  * smithy
   */
 abstract class AbstractToSmithyCompiler[Input] protected[compiler] () {
 
@@ -97,7 +98,9 @@ abstract class AbstractToSmithyCompiler[Input] protected[compiler] () {
   private def validate(model: SmithyModel): ValidatedResult[SmithyModel] =
     SmithyModel.assembler().discoverModels().addModel(model).assemble()
 
-  private def transform(opts: ToSmithyCompilerOptions)(model: SmithyModel): SmithyModel =
+  private def transform(
+      opts: ToSmithyCompilerOptions
+  )(model: SmithyModel): SmithyModel =
     opts.transformers.foldLeft(model)((m, t) =>
       t.transform(TransformContext.builder().model(m).build())
     )

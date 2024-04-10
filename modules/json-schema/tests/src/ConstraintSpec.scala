@@ -18,20 +18,21 @@ package smithytranslate.compiler.json_schema
 final class ConstraintSpec extends munit.FunSuite {
 
   test("min max : integer") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "number": {
-                           |      "type": "integer",
-                           |      "minimum": -9223372036854775808,
-                           |      "maximum": 9223372036854775807
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": -9223372036854775808,
+         |      "maximum": 9223372036854775807
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
