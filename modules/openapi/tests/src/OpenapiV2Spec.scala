@@ -18,67 +18,67 @@ final class OpenapiV2Spec extends munit.FunSuite {
 
   test("operation - simple response") {
     val openapiV2String = """|swagger: '2.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |consumes:
-                     |  - application/json; charset=utf-8
-                     |produces:
-                     |  - application/json; charset=utf-8
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |           schema:
-                     |             $ref: '#/definitions/Object'
-                     |definitions:
-                     |  Object:
-                     |    type: object
-                     |    properties:
-                     |      s:
-                     |        type: string
-                     |    required:
-                     |      - s
-                     |""".stripMargin
+                             |info:
+                             |  title: test
+                             |  version: '1.0'
+                             |consumes:
+                             |  - application/json; charset=utf-8
+                             |produces:
+                             |  - application/json; charset=utf-8
+                             |paths:
+                             |  /test:
+                             |    get:
+                             |      operationId: testOperationId
+                             |      responses:
+                             |        '200':
+                             |           schema:
+                             |             $ref: '#/definitions/Object'
+                             |definitions:
+                             |  Object:
+                             |    type: object
+                             |    properties:
+                             |      s:
+                             |        type: string
+                             |    required:
+                             |      - s
+                             |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use alloy.openapi#openapiExtensions
-                      |use smithytranslate#contentType
-                      |
-                      |@openapiExtensions(
-                      |  "x-original-swagger-version": "2.0."
-                      |)
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json; charset=utf-8")
-                      |    body: Object,
-                      |}
-                      |""".stripMargin
+                            |
+                            |use alloy.openapi#openapiExtensions
+                            |use smithytranslate#contentType
+                            |
+                            |@openapiExtensions(
+                            |  "x-original-swagger-version": "2.0."
+                            |)
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json; charset=utf-8")
+                            |    body: Object,
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiV2String, expectedString)
   }

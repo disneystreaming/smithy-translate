@@ -18,314 +18,315 @@ final class StructureSpec extends munit.FunSuite {
 
   test("structures") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |        i:
-                     |          type: integer
-                     |          format: int32
-                     |        sht:
-                     |          type: integer
-                     |          format: int16
-                     |        b:
-                     |          type: boolean
-                     |        l:
-                     |          type: integer
-                     |          format: int64
-                     |          minimum: 100
-                     |        t:
-                     |          type: string
-                     |          format: date-time
-                     |        d:
-                     |          type: object
-                     |      required:
-                     |        - s
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |        i:
+                           |          type: integer
+                           |          format: int32
+                           |        sht:
+                           |          type: integer
+                           |          format: int16
+                           |        b:
+                           |          type: boolean
+                           |        l:
+                           |          type: integer
+                           |          format: int64
+                           |          minimum: 100
+                           |        t:
+                           |          type: string
+                           |          format: date-time
+                           |        d:
+                           |          type: object
+                           |      required:
+                           |        - s
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      | @required
-                      | s: String,
-                      | i: Integer,
-                      | sht: Short,
-                      | b: Boolean,
-                      | @range(min: 100)
-                      | l: Long,
-                      | @timestampFormat("date-time")
-                      | t: Timestamp,
-                      | d: Document
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            | @required
+                            | s: String,
+                            | i: Integer,
+                            | sht: Short,
+                            | b: Boolean,
+                            | @range(min: 100)
+                            | l: Long,
+                            | @timestampFormat("date-time")
+                            | t: Timestamp,
+                            | d: Document
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - inline uuid example") {
-    val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        u:
-                     |          format: uuid
-                     |          type: string
-                     |          example: 630fe836-9220-11e7-abc4-cec278b6b50a
-                     |""".stripMargin
+    val openapiString =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Object:
+         |      type: object
+         |      properties:
+         |        u:
+         |          format: uuid
+         |          type: string
+         |          example: 630fe836-9220-11e7-abc4-cec278b6b50a
+         |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use alloy#dataExamples
-                      |use alloy#UUID
-                      |
-                      |structure Object {
-                      | @dataExamples([
-                      |   {
-                      |       json: "630fe836-9220-11e7-abc4-cec278b6b50a"
-                      |   }
-                      | ])
-                      | u: UUID
-                      |}
-                      |""".stripMargin
+                            |
+                            |use alloy#dataExamples
+                            |use alloy#UUID
+                            |
+                            |structure Object {
+                            | @dataExamples([
+                            |   {
+                            |       json: "630fe836-9220-11e7-abc4-cec278b6b50a"
+                            |   }
+                            | ])
+                            | u: UUID
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - description") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      description: Test
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      description: Test
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@documentation("Test")
-                      |structure Object {
-                      | s: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@documentation("Test")
+                            |structure Object {
+                            | s: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - double nested") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        bar:
-                     |          type: object
-                     |          properties:
-                     |            baz:
-                     |              type: object
-                     |              properties:
-                     |                str:
-                     |                  type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        bar:
+                           |          type: object
+                           |          properties:
+                           |            baz:
+                           |              type: object
+                           |              properties:
+                           |                str:
+                           |                  type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      |    bar: Bar
-                      |}
-                      |
-                      |structure Bar {
-                      |    baz: Baz
-                      |}
-                      |
-                      |structure Baz {
-                      |    str: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            |    bar: Bar
+                            |}
+                            |
+                            |structure Bar {
+                            |    baz: Baz
+                            |}
+                            |
+                            |structure Baz {
+                            |    str: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - nested") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        bar:
-                     |          type: object
-                     |          properties:
-                     |            str:
-                     |              type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        bar:
+                           |          type: object
+                           |          properties:
+                           |            str:
+                           |              type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      |    bar: Bar
-                      |}
-                      |
-                      |structure Bar {
-                      |    str: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            |    bar: Bar
+                            |}
+                            |
+                            |structure Bar {
+                            |    str: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - nested reference") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Test:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: '#/components/schemas/Test'
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Test:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        t:
+                           |          $ref: '#/components/schemas/Test'
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      |    t: Test,
-                      |}
-                      |
-                      |structure Test {
-                      |    s: String,
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            |    t: Test,
+                            |}
+                            |
+                            |structure Test {
+                            |    s: String,
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - list member") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        test:
-                     |          type: array
-                     |          items:
-                     |            type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        test:
+                           |          type: array
+                           |          items:
+                           |            type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      | test: Test
-                      |}
-                      |
-                      |list Test {
-                      |  member: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            | test: Test
+                            |}
+                            |
+                            |list Test {
+                            |  member: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - map member") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        test:
-                     |          type: object
-                     |          additionalProperties:
-                     |            type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        test:
+                           |          type: object
+                           |          additionalProperties:
+                           |            type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      | test: Test
-                      |}
-                      |
-                      |map Test {
-                      |  key: String,
-                      |  value: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            | test: Test
+                            |}
+                            |
+                            |map Test {
+                            |  key: String,
+                            |  value: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("reference hinted newtype from struct") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    MyObj:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          $ref: '#/components/schemas/MyString'
-                     |    MyString:
-                     |      type: string
-                     |      format: password
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyObj:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          $ref: '#/components/schemas/MyString'
+                           |    MyString:
+                           |      type: string
+                           |      format: password
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure MyObj {
-                      |  s: MyString
-                      |}
-                      |
-                      |@sensitive
-                      |string MyString
-                      |""".stripMargin
+                            |
+                            |structure MyObj {
+                            |  s: MyString
+                            |}
+                            |
+                            |@sensitive
+                            |string MyString
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
@@ -425,63 +426,63 @@ final class StructureSpec extends munit.FunSuite {
 
   test("structures - property name sanitization") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        version3.1:
-                     |          type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        version3.1:
+                           |          type: string
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |structure Object {
-                      | @jsonName("version3.1")
-                      | version31: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |structure Object {
+                            | @jsonName("version3.1")
+                            | version31: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("structures - external docs") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      externalDocs:
-                     |        description: Example 2
-                     |        url: https://www.example.com/2
-                     |      properties:
-                     |        version:
-                     |          type: string
-                     |          externalDocs:
-                     |            description: Example
-                     |            url: https://www.example.com
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      externalDocs:
+                           |        description: Example 2
+                           |        url: https://www.example.com/2
+                           |      properties:
+                           |        version:
+                           |          type: string
+                           |          externalDocs:
+                           |            description: Example
+                           |            url: https://www.example.com
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |@externalDocumentation(
-                      |  "Example 2": "https://www.example.com/2"
-                      | )
-                      |structure Object {
-                      | @externalDocumentation(
-                      |  "Example": "https://www.example.com"
-                      | )
-                      | version: String
-                      |}
-                      |""".stripMargin
+                            |
+                            |@externalDocumentation(
+                            |  "Example 2": "https://www.example.com/2"
+                            | )
+                            |structure Object {
+                            | @externalDocumentation(
+                            |  "Example": "https://www.example.com"
+                            | )
+                            | version: String
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

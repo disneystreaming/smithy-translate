@@ -18,17 +18,18 @@ package smithytranslate.compiler.json_schema
 final class SetSpec extends munit.FunSuite {
 
   test("simple sets") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "StringList",
-                           |  "type": "array",
-                           |  "uniqueItems": true,
-                           |  "items": {
-                           |    "type": "string"
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "StringList",
+         |  "type": "array",
+         |  "uniqueItems": true,
+         |  "items": {
+         |    "type": "string"
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -42,20 +43,21 @@ final class SetSpec extends munit.FunSuite {
   }
 
   test("sets with constraints and extensions") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "StringList",
-                           |  "type": "array",
-                           |  "uniqueItems": true,
-                           |  "minItems": 1,
-                           |  "maxItems": 5,
-                           |  "x-foo":"bar",
-                           |  "items": {
-                           |    "type": "string"
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "StringList",
+         |  "type": "array",
+         |  "uniqueItems": true,
+         |  "minItems": 1,
+         |  "maxItems": 5,
+         |  "x-foo":"bar",
+         |  "items": {
+         |    "type": "string"
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

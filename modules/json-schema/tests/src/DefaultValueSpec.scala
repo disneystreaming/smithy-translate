@@ -18,19 +18,20 @@ package smithytranslate.compiler.json_schema
 final class DefaultValueSpec extends munit.FunSuite {
 
   test("default value - string") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "type": "string",
-                           |      "default": "Testing this out."
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "type": "string",
+         |      "default": "Testing this out."
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -44,19 +45,20 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value - int") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "type": "integer",
-                           |      "default": 2022
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "type": "integer",
+         |      "default": 2022
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -70,19 +72,20 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value - double") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "type": "number",
-                           |      "default": 2022.17
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "type": "number",
+         |      "default": 2022.17
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -96,22 +99,23 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value - list") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "type": "array",
-                           |      "items": {
-                           |        "type": "string"
-                           |      },
-                           |      "default": []
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "type": "array",
+         |      "items": {
+         |        "type": "string"
+         |      },
+         |      "default": []
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -129,24 +133,25 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value - string reference") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "$ref": "#/$defs/name"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "name": {
-                           |      "type": "string",
-                           |      "default": "Testing this out."
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "$ref": "#/$defs/name"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "name": {
+         |      "type": "string",
+         |      "default": "Testing this out."
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -161,27 +166,28 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value - list reference") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "$ref": "#/$defs/OneList"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "OneList": {
-                           |      "type": "array",
-                           |      "items": {
-                           |        "type": "string"
-                           |      },
-                           |      "default": []
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "$ref": "#/$defs/OneList"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "OneList": {
+         |      "type": "array",
+         |      "items": {
+         |        "type": "string"
+         |      },
+         |      "default": []
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -199,20 +205,21 @@ final class DefaultValueSpec extends munit.FunSuite {
   }
 
   test("default value conflicts with required") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "required": ["firstName1"],
-                           |  "properties": {
-                           |    "firstName1": {
-                           |      "type": "string",
-                           |      "default": "Testing this out."
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "required": ["firstName1"],
+         |  "properties": {
+         |    "firstName1": {
+         |      "type": "string",
+         |      "default": "Testing this out."
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

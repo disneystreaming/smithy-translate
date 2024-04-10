@@ -18,44 +18,45 @@ package smithytranslate.compiler.json_schema
 final class AllOfSpec extends munit.FunSuite {
 
   test("unions - allOf two structures") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type" : "object",
-                           |  "properties": {
-                           |    "example": {
-                           |      "allOf" : [
-                           |       {
-                           |        "type" : "object",
-                           |        "properties" : {
-                           |            "firstName" : {
-                           |                "type" : "string"
-                           |            },
-                           |            "lastName" : {
-                           |                "type" : "string"
-                           |            },
-                           |            "sport" : {
-                           |                "type" : "string"
-                           |            }
-                           |          }
-                           |      },
-                           |      {
-                           |        "type" : "object",
-                           |        "properties" : {
-                           |            "vehicle" : {
-                           |                "type" : "string"
-                           |            },
-                           |            "price" : {
-                           |                "type" : "integer"
-                           |            }
-                           |          }
-                           |        }
-                           |      ]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties": {
+         |    "example": {
+         |      "allOf" : [
+         |       {
+         |        "type" : "object",
+         |        "properties" : {
+         |            "firstName" : {
+         |                "type" : "string"
+         |            },
+         |            "lastName" : {
+         |                "type" : "string"
+         |            },
+         |            "sport" : {
+         |                "type" : "string"
+         |            }
+         |          }
+         |      },
+         |      {
+         |        "type" : "object",
+         |        "properties" : {
+         |            "vehicle" : {
+         |                "type" : "string"
+         |            },
+         |            "price" : {
+         |                "type" : "integer"
+         |            }
+         |          }
+         |        }
+         |      ]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -76,49 +77,50 @@ final class AllOfSpec extends munit.FunSuite {
   }
 
   test("unions - allOf reference") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type" : "object",
-                           |  "properties": {
-                           |    "example": {
-                           |      "allOf" : [
-                           |       {
-                           |        "type" : "object",
-                           |        "properties" : {
-                           |            "firstName" : {
-                           |                "type" : "string"
-                           |            },
-                           |            "lastName" : {
-                           |                "type" : "string"
-                           |            },
-                           |            "sport" : {
-                           |                "type" : "string"
-                           |            }
-                           |          }
-                           |       },
-                           |       {
-                           |        "$ref": "#/$defs/two"
-                           |       }
-                           |      ]
-                           |    }
-                           |  },
-                           |  "$defs": {
-                           |    "two": {
-                           |      "type" : "object",
-                           |      "properties" : {
-                           |         "vehicle" : {
-                           |            "type" : "string"
-                           |         },
-                           |         "price" : {
-                           |            "type" : "integer"
-                           |         }
-                           |      }
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties": {
+         |    "example": {
+         |      "allOf" : [
+         |       {
+         |        "type" : "object",
+         |        "properties" : {
+         |            "firstName" : {
+         |                "type" : "string"
+         |            },
+         |            "lastName" : {
+         |                "type" : "string"
+         |            },
+         |            "sport" : {
+         |                "type" : "string"
+         |            }
+         |          }
+         |       },
+         |       {
+         |        "$ref": "#/$defs/two"
+         |       }
+         |      ]
+         |    }
+         |  },
+         |  "$defs": {
+         |    "two": {
+         |      "type" : "object",
+         |      "properties" : {
+         |         "vehicle" : {
+         |            "type" : "string"
+         |         },
+         |         "price" : {
+         |            "type" : "integer"
+         |         }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

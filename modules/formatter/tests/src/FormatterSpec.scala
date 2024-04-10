@@ -752,17 +752,17 @@ final class FormatterSpec extends munit.FunSuite {
 
   test("format test - support node object in service/resource") {
     val src = """|$version: "2.0"
-                |
-                |namespace test
-                |
-                |resource SubscriberResource {
-                |    read: GetSubscriber
-                |}
-                |service Service {
-                |  version: "2"
-                |}
-                |service Service { }
-                |""".stripMargin
+                 |
+                 |namespace test
+                 |
+                 |resource SubscriberResource {
+                 |    read: GetSubscriber
+                 |}
+                 |service Service {
+                 |  version: "2"
+                 |}
+                 |service Service { }
+                 |""".stripMargin
     val expected = """|$version: "2.0"
                       |
                       |namespace test
@@ -1101,34 +1101,37 @@ final class FormatterSpec extends munit.FunSuite {
   }
 
   test("#132 long map entry") {
-    val src = """|$version: "2"
-                 |
-                 |namespace thingy
-                 |
-                 |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit", "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
-                 |string MyString
-                 |""".stripMargin
-    val expected = """|$version: "2"
-                      |
-                      |namespace thingy
-                      |
-                      |@externalDocumentation(
-                      |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit",
-                      |    "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
-                      |)
-                      |string MyString
-                      |""".stripMargin
+    val src =
+      """|$version: "2"
+         |
+         |namespace thingy
+         |
+         |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit", "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
+         |string MyString
+         |""".stripMargin
+    val expected =
+      """|$version: "2"
+         |
+         |namespace thingy
+         |
+         |@externalDocumentation(
+         |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit",
+         |    "Guidelines": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
+         |)
+         |string MyString
+         |""".stripMargin
     formatTest(src, expected)
   }
 
   test("#132 many short map entry") {
-    val src = """|$version: "2"
-                 |
-                 |namespace thingy
-                 |
-                 |@externalDocumentation("v1": "lorem", "v2": "/ipsum", "v3": "/dolor", "v4": "/sit/amet", "v5": "/consectetur/adipiscing/elit")
-                 |string MyString
-                 |""".stripMargin
+    val src =
+      """|$version: "2"
+         |
+         |namespace thingy
+         |
+         |@externalDocumentation("v1": "lorem", "v2": "/ipsum", "v3": "/dolor", "v4": "/sit/amet", "v5": "/consectetur/adipiscing/elit")
+         |string MyString
+         |""".stripMargin
     val expected = """|$version: "2"
                       |
                       |namespace thingy
@@ -1171,22 +1174,24 @@ final class FormatterSpec extends munit.FunSuite {
   }
 
   test("#132 long single kvp") {
-    val src = """|$version: "2"
-                 |
-                 |namespace thingy
-                 |
-                 |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
-                 |string MyString
-                 |""".stripMargin
-    val expected = """|$version: "2"
-                      |
-                      |namespace thingy
-                      |
-                      |@externalDocumentation(
-                      |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
-                      |)
-                      |string MyString
-                      |""".stripMargin
+    val src =
+      """|$version: "2"
+         |
+         |namespace thingy
+         |
+         |@externalDocumentation("Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit")
+         |string MyString
+         |""".stripMargin
+    val expected =
+      """|$version: "2"
+         |
+         |namespace thingy
+         |
+         |@externalDocumentation(
+         |    "Glossary": "https://example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit/example.com/lorem/ipsum/dolor/sit/amet/consectetur/adipiscing/elit"
+         |)
+         |string MyString
+         |""".stripMargin
     formatTest(src, expected)
   }
 }

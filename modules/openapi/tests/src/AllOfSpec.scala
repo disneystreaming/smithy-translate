@@ -308,41 +308,43 @@ final class AllOfSpec extends munit.FunSuite {
   }
 
   test("allOf - multiple parents") {
-    val openapiString = """|openapi: '3.0.'
-                              |info:
-                              |  title: test
-                              |  version: '1.0'
-                              |paths: {}
-                              |components:
-                              |  schemas:
-                              |    NumberParentOne:
-                              |      allOf:
-                              |        - $ref: '#/components/schemas/NumberParentOneParent'
-                              |    NumberParentOneParent:
-                              |      type: object
-                              |      properties:
-                              |        num:
-                              |          type: integer
-                              |      required:
-                              |        - num
-                              |    Number:
-                              |      allOf:
-                              |        - $ref: '#/components/schemas/NumberParentOne'
-                              |""".stripMargin
+    val openapiString =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    NumberParentOne:
+         |      allOf:
+         |        - $ref: '#/components/schemas/NumberParentOneParent'
+         |    NumberParentOneParent:
+         |      type: object
+         |      properties:
+         |        num:
+         |          type: integer
+         |      required:
+         |        - num
+         |    Number:
+         |      allOf:
+         |        - $ref: '#/components/schemas/NumberParentOne'
+         |""".stripMargin
 
-    val expectedString = """|namespace foo
-                            |
-                            |structure Number with [NumberParentOne] {}
-                            |
-                            |@mixin
-                            |structure NumberParentOne with [NumberParentOneParent] {}
-                            |
-                            |@mixin
-                            |structure NumberParentOneParent {
-                            |    @required
-                            |    num: Integer,
-                            |}
-                            |""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |structure Number with [NumberParentOne] {}
+         |
+         |@mixin
+         |structure NumberParentOne with [NumberParentOneParent] {}
+         |
+         |@mixin
+         |structure NumberParentOneParent {
+         |    @required
+         |    num: Integer,
+         |}
+         |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

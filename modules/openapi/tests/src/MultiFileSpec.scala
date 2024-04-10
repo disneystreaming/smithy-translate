@@ -26,45 +26,45 @@ final class MultiFileSpec extends munit.FunSuite {
    */
   test("multiple files - same directory") {
     val fooYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        l:
-                     |          type: integer
-                     |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Object:
+                    |      type: object
+                    |      properties:
+                    |        l:
+                    |          type: integer
+                    |""".stripMargin
     val barYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedFoo = """|namespace foo
-                      |
-                      |structure Object {
-                      |    l: Integer,
-                      |}
-                      |""".stripMargin
+                         |
+                         |structure Object {
+                         |    l: Integer,
+                         |}
+                         |""".stripMargin
 
     val expectedBar = """|namespace bar
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
+                         |
+                         |structure Test {
+                         |    s: String,
+                         |}
+                         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo.yaml"),
@@ -87,45 +87,45 @@ final class MultiFileSpec extends munit.FunSuite {
    */
   test("multiple files - child directory") {
     val barYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        l:
-                     |          type: integer
-                     |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Object:
+                    |      type: object
+                    |      properties:
+                    |        l:
+                    |          type: integer
+                    |""".stripMargin
     val binYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedBar = """|namespace foo.bar
-                      |
-                      |structure Object {
-                      |    l: Integer,
-                      |}
-                      |""".stripMargin
+                         |
+                         |structure Object {
+                         |    l: Integer,
+                         |}
+                         |""".stripMargin
 
     val expectedBin = """|namespace foo.baz.bin
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
+                         |
+                         |structure Test {
+                         |    s: String,
+                         |}
+                         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo", "bar.yaml"),
@@ -148,47 +148,47 @@ final class MultiFileSpec extends munit.FunSuite {
    */
   test("multiple files - import from child directory") {
     val barYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: './baz/bin.yaml#/components/schemas/Test'
-                     |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Object:
+                    |      type: object
+                    |      properties:
+                    |        t:
+                    |          $ref: './baz/bin.yaml#/components/schemas/Test'
+                    |""".stripMargin
     val binYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedBar = """|namespace foo.bar
-                      |
-                      |use foo.baz.bin#Test
-                      |
-                      |structure Object {
-                      |    t: Test,
-                      |}
-                      |""".stripMargin
+                         |
+                         |use foo.baz.bin#Test
+                         |
+                         |structure Object {
+                         |    t: Test,
+                         |}
+                         |""".stripMargin
 
     val expectedBin = """|namespace foo.baz.bin
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
+                         |
+                         |structure Test {
+                         |    s: String,
+                         |}
+                         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo", "bar.yaml"),
@@ -210,48 +210,49 @@ final class MultiFileSpec extends munit.FunSuite {
    * \| | |-- bin.yaml
    */
   test("multiple files - import from child directory - file scheme") {
-    val barYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: 'file://foo/baz/bin.yaml#/components/schemas/Test'
-                     |""".stripMargin
+    val barYml =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Object:
+         |      type: object
+         |      properties:
+         |        t:
+         |          $ref: 'file://foo/baz/bin.yaml#/components/schemas/Test'
+         |""".stripMargin
     val binYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedBar = """|namespace foo.bar
-                      |
-                      |use foo.baz.bin#Test
-                      |
-                      |structure Object {
-                      |    t: Test,
-                      |}
-                      |""".stripMargin
+                         |
+                         |use foo.baz.bin#Test
+                         |
+                         |structure Object {
+                         |    t: Test,
+                         |}
+                         |""".stripMargin
 
     val expectedBin = """|namespace foo.baz.bin
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
+                         |
+                         |structure Test {
+                         |    s: String,
+                         |}
+                         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo", "bar.yaml"),
@@ -274,47 +275,47 @@ final class MultiFileSpec extends munit.FunSuite {
    */
   test("multiple files - import from parent directory") {
     val binYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: '../bar.yaml#/components/schemas/Test'
-                     |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Object:
+                    |      type: object
+                    |      properties:
+                    |        t:
+                    |          $ref: '../bar.yaml#/components/schemas/Test'
+                    |""".stripMargin
     val barYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedBin = """|namespace foo.baz.bin
-                      |
-                      |use foo.bar#Test
-                      |
-                      |structure Object {
-                      |    t: Test,
-                      |}
-                      |""".stripMargin
+                         |
+                         |use foo.bar#Test
+                         |
+                         |structure Object {
+                         |    t: Test,
+                         |}
+                         |""".stripMargin
 
     val expectedBar = """|namespace foo.bar
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
+                         |
+                         |structure Test {
+                         |    s: String,
+                         |}
+                         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo", "bar.yaml"),
@@ -337,55 +338,56 @@ final class MultiFileSpec extends munit.FunSuite {
    */
   test("multiple files - import from too far up") {
     val binYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        t:
-                     |          $ref: '../../../bar.yaml#/components/schemas/Test'
-                     |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Object:
+                    |      type: object
+                    |      properties:
+                    |        t:
+                    |          $ref: '../../../bar.yaml#/components/schemas/Test'
+                    |""".stripMargin
     val barYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedBar = """|namespace foo.baz.bin
-                      |
-                      |use error#T
-                      |
-                      |structure Object {
-                      |    t: T,
-                      |}
-                      |""".stripMargin
+                         |
+                         |use error#T
+                         |
+                         |structure Object {
+                         |    t: T,
+                         |}
+                         |""".stripMargin
 
     val expectedBin = """|namespace foo.bar
-                             |
-                             |structure Test {
-                             |    s: String,
-                             |}
-                             |""".stripMargin
-
-    val expectedError = """|namespace error
                          |
-                         |use smithytranslate#errorMessage
-                         |
-                         |@errorMessage("Ref ../../../bar.yaml#/components/schemas/Test goes too far up")
-                         |structure T {}
+                         |structure Test {
+                         |    s: String,
+                         |}
                          |""".stripMargin
+
+    val expectedError =
+      """|namespace error
+         |
+         |use smithytranslate#errorMessage
+         |
+         |@errorMessage("Ref ../../../bar.yaml#/components/schemas/Test goes too far up")
+         |structure T {}
+         |""".stripMargin
 
     val inOne = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo", "bar.yaml"),
@@ -417,32 +419,33 @@ final class MultiFileSpec extends munit.FunSuite {
    * \|-- bar.yaml
    */
   test("multiple files - property ref") {
-    val fooYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        l:
-                     |          $ref: bar.yaml#/components/schemas/Test/properties/s
-                     |""".stripMargin
+    val fooYml =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Object:
+         |      type: object
+         |      properties:
+         |        l:
+         |          $ref: bar.yaml#/components/schemas/Test/properties/s
+         |""".stripMargin
     val barYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedFoo = """|namespace foo
                          |
@@ -476,37 +479,38 @@ final class MultiFileSpec extends munit.FunSuite {
    * \|-- bar.yaml
    */
   test("multiple files - property ref object type") {
-    val fooYml = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        l:
-                     |          $ref: bar.yaml#/components/schemas/Test/properties/s
-                     |""".stripMargin
+    val fooYml =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Object:
+         |      type: object
+         |      properties:
+         |        l:
+         |          $ref: bar.yaml#/components/schemas/Test/properties/s
+         |""".stripMargin
     val barYml = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths: {}
-                   |components:
-                   |  schemas:
-                   |    Test:
-                   |      type: object
-                   |      properties:
-                   |        s:
-                   |          $ref: '#/components/schemas/Bar'
-                   |    Bar:
-                   |      type: object
-                   |      properties:
-                   |        b:
-                   |          type: string
-                   |""".stripMargin
+                    |info:
+                    |  title: test
+                    |  version: '1.0'
+                    |paths: {}
+                    |components:
+                    |  schemas:
+                    |    Test:
+                    |      type: object
+                    |      properties:
+                    |        s:
+                    |          $ref: '#/components/schemas/Bar'
+                    |    Bar:
+                    |      type: object
+                    |      properties:
+                    |        b:
+                    |          type: string
+                    |""".stripMargin
 
     val expectedFoo = """|namespace foo
                          |

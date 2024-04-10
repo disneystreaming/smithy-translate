@@ -20,18 +20,19 @@ import smithytranslate.compiler.SmithyVersion
 final class EnumSpec extends munit.FunSuite {
 
   test("enums") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "TestIt",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "someValue": {
-                           |      "enum": ["ONE", "TWO", "THREE"]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "TestIt",
+         |  "type": "object",
+         |  "properties": {
+         |    "someValue": {
+         |      "enum": ["ONE", "TWO", "THREE"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -61,19 +62,20 @@ final class EnumSpec extends munit.FunSuite {
   }
 
   test("enums - string type") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "TestIt",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "someValue": {
-                           |      "type": "string",
-                           |      "enum": ["ONE", "TWO", "THREE"]
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "TestIt",
+         |  "type": "object",
+         |  "properties": {
+         |    "someValue": {
+         |      "type": "string",
+         |      "enum": ["ONE", "TWO", "THREE"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

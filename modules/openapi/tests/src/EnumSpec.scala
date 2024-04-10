@@ -17,24 +17,23 @@ package smithytranslate.compiler.openapi
 
 import smithytranslate.compiler.SmithyVersion
 
-
 final class EnumSpec extends munit.FunSuite {
 
   test("enum") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Color:
-                     |      type: string
-                     |      enum:
-                     |        - red
-                     |        - green
-                     |        - blue
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Color:
+                           |      type: string
+                           |      enum:
+                           |        - red
+                           |        - green
+                           |        - blue
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -50,19 +49,19 @@ final class EnumSpec extends munit.FunSuite {
 
   test("enum - number starting name") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Numbers:
-                     |      type: string
-                     |      enum:
-                     |        - 3three
-                     |        - four
-                     |        - 5five
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Numbers:
+                           |      type: string
+                           |      enum:
+                           |        - 3three
+                           |        - four
+                           |        - 5five
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -78,19 +77,19 @@ final class EnumSpec extends munit.FunSuite {
 
   test("enum - v1") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Color:
-                     |      type: string
-                     |      enum:
-                     |        - red
-                     |        - green
-                     |        - blue
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Color:
+                           |      type: string
+                           |      enum:
+                           |        - red
+                           |        - green
+                           |        - blue
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -145,20 +144,20 @@ final class EnumSpec extends munit.FunSuite {
 
   test("enum - description") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths: {}
-                     |components:
-                     |  schemas:
-                     |    Color:
-                     |      description: Test
-                     |      type: string
-                     |      enum:
-                     |        - red
-                     |        - green
-                     |        - blue
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Color:
+                           |      description: Test
+                           |      type: string
+                           |      enum:
+                           |        - red
+                           |        - green
+                           |        - blue
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |@documentation("Test")

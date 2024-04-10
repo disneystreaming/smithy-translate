@@ -18,26 +18,27 @@ package smithytranslate.compiler.json_schema
 final class RefSpec extends munit.FunSuite {
 
   test("structures referencing unconstrained primitives") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "$ref": "#/$defs/name"
-                           |    },
-                           |    "lastName": {
-                           |      "$ref": "#/$defs/name"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "name": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "$ref": "#/$defs/name"
+         |    },
+         |    "lastName": {
+         |      "$ref": "#/$defs/name"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "name": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -53,27 +54,28 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("structures referencing primitives") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "$ref": "#/$defs/name"
-                           |    },
-                           |    "lastName": {
-                           |      "$ref": "#/$defs/name"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "name": {
-                           |      "type": "string",
-                           |      "minLength": 1
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "$ref": "#/$defs/name"
+         |    },
+         |    "lastName": {
+         |      "$ref": "#/$defs/name"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "name": {
+         |      "type": "string",
+         |      "minLength": 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -90,28 +92,29 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("structures referencing other structures") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "bar": {
-                           |      "$ref": "#/$defs/bar"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "bar": {
-                           |      "type": "object",
-                           |      "properties": {
-                           |        "baz": {
-                           |          "type": "string"
-                           |        }
-                           |      }
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "bar": {
+         |      "$ref": "#/$defs/bar"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "bar": {
+         |      "type": "object",
+         |      "properties": {
+         |        "baz": {
+         |          "type": "string"
+         |        }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -128,36 +131,37 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("structures referencing other structures inside defs") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Foo",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "bar": {
-                           |      "$ref": "#/$defs/bar"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "bar": {
-                           |      "type": "object",
-                           |      "properties": {
-                           |        "one": {
-                           |          "$ref": "#/$defs/one"
-                           |        }
-                           |      }
-                           |    },
-                           |    "one": {
-                           |      "type": "object",
-                           |      "properties": {
-                           |        "one": {
-                           |          "type": "string"
-                           |        }
-                           |      }
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Foo",
+         |  "type": "object",
+         |  "properties": {
+         |    "bar": {
+         |      "$ref": "#/$defs/bar"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "bar": {
+         |      "type": "object",
+         |      "properties": {
+         |        "one": {
+         |          "$ref": "#/$defs/one"
+         |        }
+         |      }
+         |    },
+         |    "one": {
+         |      "type": "object",
+         |      "properties": {
+         |        "one": {
+         |          "type": "string"
+         |        }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -178,27 +182,28 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("nested refs") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "$ref": "#/$defs/one"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "one": {
-                           |      "$ref": "#/$defs/two"
-                           |    },
-                           |    "two": {
-                           |      "type": "string",
-                           |      "minLength": 1
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "$ref": "#/$defs/one"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "one": {
+         |      "$ref": "#/$defs/two"
+         |    },
+         |    "two": {
+         |      "type": "string",
+         |      "minLength": 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -214,29 +219,30 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("nested refs - list type") {
-    val jsonSchString = """|{
-                           |  "$id": "test.json",
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Test",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "one": {
-                           |      "$ref": "#/$defs/one"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "one": {
-                           |      "$ref": "#/$defs/idList"
-                           |    },
-                           |    "idList": {
-                           |      "type": ["array", "null"],
-                           |      "items": {
-                           |        "type": "string"
-                           |      }
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "one": {
+         |      "$ref": "#/$defs/one"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "one": {
+         |      "$ref": "#/$defs/idList"
+         |    },
+         |    "idList": {
+         |      "type": ["array", "null"],
+         |      "items": {
+         |        "type": "string"
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -256,25 +262,26 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("schema with no id") {
-    val jsonSchString = """|{
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "$ref": "#/$defs/name"
-                           |    },
-                           |    "lastName": {
-                           |      "$ref": "#/$defs/name"
-                           |    }
-                           |  },
-                           |  "$defs":{
-                           |    "name": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "$ref": "#/$defs/name"
+         |    },
+         |    "lastName": {
+         |      "$ref": "#/$defs/name"
+         |    }
+         |  },
+         |  "$defs":{
+         |    "name": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -290,25 +297,26 @@ final class RefSpec extends munit.FunSuite {
   }
 
   test("schema with definitions rather than $defs") {
-    val jsonSchString = """|{
-                           |  "$schema": "http://json-schema.org/draft-07/schema#",
-                           |  "title": "Person",
-                           |  "type": "object",
-                           |  "properties": {
-                           |    "firstName": {
-                           |      "$ref": "#/definitions/name"
-                           |    },
-                           |    "lastName": {
-                           |      "$ref": "#/definitions/name"
-                           |    }
-                           |  },
-                           |  "definitions":{
-                           |    "name": {
-                           |      "type": "string"
-                           |    }
-                           |  }
-                           |}
-                           |""".stripMargin
+    val jsonSchString =
+      """|{
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Person",
+         |  "type": "object",
+         |  "properties": {
+         |    "firstName": {
+         |      "$ref": "#/definitions/name"
+         |    },
+         |    "lastName": {
+         |      "$ref": "#/definitions/name"
+         |    }
+         |  },
+         |  "definitions":{
+         |    "name": {
+         |      "type": "string"
+         |    }
+         |  }
+         |}
+         |""".stripMargin
 
     val expectedString = """|namespace foo
                             |

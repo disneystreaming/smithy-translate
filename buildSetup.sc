@@ -135,7 +135,7 @@ trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
 
 trait BaseJavaModule extends BaseModule with JavaModule {}
 
-trait BaseMunitTests extends TestModule.Munit {
+trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
   def ivyDeps =
     Agg(
       ivy"org.scalameta::munit::${buildDeps.munitVersion}",

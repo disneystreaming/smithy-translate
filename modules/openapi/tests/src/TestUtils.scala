@@ -119,8 +119,8 @@ object TestUtils {
         case TestUtils.ExpectedOutput.StringOutput(str) =>
           val name = i.filePath.mkString_("/") + ".smithy"
           val spec = s"""|$$version: "${i.smithyVersion}"
-                     |
-                     |${str}""".stripMargin
+                         |
+                         |${str}""".stripMargin
           assembler.addUnparsedModel(name, spec)
         case TestUtils.ExpectedOutput.ModelOutput(model) =>
           assembler.addModel(model)

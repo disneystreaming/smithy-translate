@@ -19,278 +19,281 @@ final class OperationContentTypesSpec extends munit.FunSuite {
 
   test("operation - application/octet-stream") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    post:
-                     |      operationId: testOperationId
-                     |      requestBody:
-                     |        required: true
-                     |        content:
-                     |          application/octet-stream:
-                     |            schema:
-                     |              type: string
-                     |              format: binary
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/octet-stream:
-                     |              schema:
-                     |                type: string
-                     |                format: binary
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      requestBody:
+                           |        required: true
+                           |        content:
+                           |          application/octet-stream:
+                           |            schema:
+                           |              type: string
+                           |              format: binary
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/octet-stream:
+                           |              schema:
+                           |                type: string
+                           |                format: binary
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "POST",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: TestOperationIdInput,
-                      |    output: TestOperationId200,
-                      |}
-                      |
-                      |structure TestOperationIdInput {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/octet-stream")
-                      |    body: Blob
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/octet-stream")
-                      |    body: Blob
-                      |}
-                      |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "POST",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: TestOperationIdInput,
+                            |    output: TestOperationId200,
+                            |}
+                            |
+                            |structure TestOperationIdInput {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/octet-stream")
+                            |    body: Blob
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/octet-stream")
+                            |    body: Blob
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - custom application/json") {
-    val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    post:
-                     |      operationId: testOperationId
-                     |      requestBody:
-                     |        required: true
-                     |        content:
-                     |          application/test-service+json; version=2:
-                     |            schema:
-                     |              $ref: '#/components/schemas/ObjectIn'
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/test-service+json; version=2:
-                     |              schema:
-                     |                $ref: '#/components/schemas/ObjectOut'
-                     |components:
-                     |  schemas:
-                     |    ObjectIn:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |    ObjectOut:
-                     |      type: object
-                     |      properties:
-                     |        sNum:
-                     |          type: integer
-                     |""".stripMargin
+    val openapiString =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths:
+         |  /test:
+         |    post:
+         |      operationId: testOperationId
+         |      requestBody:
+         |        required: true
+         |        content:
+         |          application/test-service+json; version=2:
+         |            schema:
+         |              $ref: '#/components/schemas/ObjectIn'
+         |      responses:
+         |        '200':
+         |          content:
+         |            application/test-service+json; version=2:
+         |              schema:
+         |                $ref: '#/components/schemas/ObjectOut'
+         |components:
+         |  schemas:
+         |    ObjectIn:
+         |      type: object
+         |      properties:
+         |        s:
+         |          type: string
+         |      required:
+         |        - s
+         |    ObjectOut:
+         |      type: object
+         |      properties:
+         |        sNum:
+         |          type: integer
+         |""".stripMargin
 
-    val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "POST",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: TestOperationIdInput,
-                      |    output: TestOperationId200,
-                      |}
-                      |
-                      |structure ObjectIn {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |structure ObjectOut {
-                      |    sNum: Integer,
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/test-service+json; version=2")
-                      |    body: ObjectOut,
-                      |}
-                      |
-                      |structure TestOperationIdInput {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/test-service+json; version=2")
-                      |    body: ObjectIn,
-                      |}
-                      |""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |use smithytranslate#contentType
+         |
+         |service FooService {
+         |    operations: [
+         |        TestOperationId
+         |    ]
+         |}
+         |
+         |@http(
+         |    method: "POST",
+         |    uri: "/test",
+         |    code: 200,
+         |)
+         |operation TestOperationId {
+         |    input: TestOperationIdInput,
+         |    output: TestOperationId200,
+         |}
+         |
+         |structure ObjectIn {
+         |    @required
+         |    s: String,
+         |}
+         |
+         |structure ObjectOut {
+         |    sNum: Integer,
+         |}
+         |
+         |structure TestOperationId200 {
+         |    @httpPayload
+         |    @required
+         |    @contentType("application/test-service+json; version=2")
+         |    body: ObjectOut,
+         |}
+         |
+         |structure TestOperationIdInput {
+         |    @httpPayload
+         |    @required
+         |    @contentType("application/test-service+json; version=2")
+         |    body: ObjectIn,
+         |}
+         |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - multiple content types") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    post:
-                     |      operationId: testOperationId
-                     |      requestBody:
-                     |        required: true
-                     |        content:
-                     |          application/octet-stream:
-                     |            schema:
-                     |              type: string
-                     |              format: binary
-                     |          application/json:
-                     |            schema:
-                     |              type: object
-                     |              properties:
-                     |                s:
-                     |                  type: string
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/octet-stream:
-                     |              schema:
-                     |                type: string
-                     |                format: binary
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  s:
-                     |                    type: string
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      requestBody:
+                           |        required: true
+                           |        content:
+                           |          application/octet-stream:
+                           |            schema:
+                           |              type: string
+                           |              format: binary
+                           |          application/json:
+                           |            schema:
+                           |              type: object
+                           |              properties:
+                           |                s:
+                           |                  type: string
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/octet-stream:
+                           |              schema:
+                           |                type: string
+                           |                format: binary
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  s:
+                           |                    type: string
+                           |""".stripMargin
 
-    val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentTypeDiscriminated
-                      |use smithytranslate#contentType
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "POST",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: TestOperationIdInput,
-                      |    output: TestOperationId200,
-                      |}
-                      |
-                      |structure TestOperationIdInput {
-                      |    @httpPayload
-                      |    @required
-                      |    body: TestOperationIdInputBody
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    body: TestOperationId200Body
-                      |}
-                      |
-                      |@contentTypeDiscriminated
-                      |union TestOperationId200Body {
-                      |    @contentType("application/octet-stream")
-                      |    applicationOctetStream: Blob,
-                      |    @contentType("application/json")
-                      |    applicationJson: TestOperationId200BodyApplicationJson
-                      |}
-                      |
-                      |structure TestOperationId200BodyApplicationJson {
-                      |    s: String
-                      |}
-                      |
-                      |@contentTypeDiscriminated
-                      |union TestOperationIdInputBody {
-                      |  @contentType("application/octet-stream")
-                      |  applicationOctetStream: Blob,
-                      |  @contentType("application/json")
-                      |  applicationJson: TestOperationIdInputBodyApplicationJson
-                      |}
-                      |
-                      |structure TestOperationIdInputBodyApplicationJson {
-                      |  s: String
-                      |}
-                      |""".stripMargin
+    val expectedString =
+      """|namespace foo
+         |
+         |use smithytranslate#contentTypeDiscriminated
+         |use smithytranslate#contentType
+         |
+         |service FooService {
+         |    operations: [
+         |        TestOperationId
+         |    ]
+         |}
+         |
+         |@http(
+         |    method: "POST",
+         |    uri: "/test",
+         |    code: 200,
+         |)
+         |operation TestOperationId {
+         |    input: TestOperationIdInput,
+         |    output: TestOperationId200,
+         |}
+         |
+         |structure TestOperationIdInput {
+         |    @httpPayload
+         |    @required
+         |    body: TestOperationIdInputBody
+         |}
+         |
+         |structure TestOperationId200 {
+         |    @httpPayload
+         |    @required
+         |    body: TestOperationId200Body
+         |}
+         |
+         |@contentTypeDiscriminated
+         |union TestOperationId200Body {
+         |    @contentType("application/octet-stream")
+         |    applicationOctetStream: Blob,
+         |    @contentType("application/json")
+         |    applicationJson: TestOperationId200BodyApplicationJson
+         |}
+         |
+         |structure TestOperationId200BodyApplicationJson {
+         |    s: String
+         |}
+         |
+         |@contentTypeDiscriminated
+         |union TestOperationIdInputBody {
+         |  @contentType("application/octet-stream")
+         |  applicationOctetStream: Blob,
+         |  @contentType("application/json")
+         |  applicationJson: TestOperationIdInputBodyApplicationJson
+         |}
+         |
+         |structure TestOperationIdInputBodyApplicationJson {
+         |  s: String
+         |}
+         |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - multiple content types with same target shape") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /employees:
-                     |    get:
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/json:
-                     |             schema:
-                     |               $ref: '#/components/schemas/Employee'
-                     |            application/xml:
-                     |             schema:
-                     |               $ref: '#/components/schemas/Employee'
-                     |components:
-                     |  schemas:
-                     |    Employee:
-                     |      type: object
-                     |      properties:
-                     |        id:
-                     |          type: integer
-                     |        name:
-                     |          type: string
-                     |        fullTime:
-                     |          type: boolean
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /employees:
+                           |    get:
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/json:
+                           |             schema:
+                           |               $ref: '#/components/schemas/Employee'
+                           |            application/xml:
+                           |             schema:
+                           |               $ref: '#/components/schemas/Employee'
+                           |components:
+                           |  schemas:
+                           |    Employee:
+                           |      type: object
+                           |      properties:
+                           |        id:
+                           |          type: integer
+                           |        name:
+                           |          type: string
+                           |        fullTime:
+                           |          type: boolean
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -339,49 +342,49 @@ final class OperationContentTypesSpec extends munit.FunSuite {
 
   test("operation - request and response with multiple content types") {
     val openapiString = """|openapi: '3.0.'
-                   |info:
-                   |  title: test
-                   |  version: '1.0'
-                   |paths:
-                   |  /test:
-                   |    post:
-                   |      operationId: testOperationId
-                   |      requestBody:
-                   |        $ref: '#/components/requestBodies/generic'
-                   |      responses:
-                   |        '200':
-                   |          $ref: '#/components/responses/okay'
-                   |components:
-                   |  requestBodies:
-                   |    generic:
-                   |      required: true
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              myProperty:
-                   |                type: string
-                   |              also:
-                   |                type: integer
-                   |        application/octet-stream:
-                   |          schema:
-                   |            type: string
-                   |            format: binary
-                   |  responses:
-                   |    okay:
-                   |      content:
-                   |        application/json:
-                   |          schema:
-                   |            type: object
-                   |            properties:
-                   |              test:
-                   |                type: string
-                   |        application/octet-stream:
-                   |          schema:
-                   |            type: string
-                   |            format: binary
-                   |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      requestBody:
+                           |        $ref: '#/components/requestBodies/generic'
+                           |      responses:
+                           |        '200':
+                           |          $ref: '#/components/responses/okay'
+                           |components:
+                           |  requestBodies:
+                           |    generic:
+                           |      required: true
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              myProperty:
+                           |                type: string
+                           |              also:
+                           |                type: integer
+                           |        application/octet-stream:
+                           |          schema:
+                           |            type: string
+                           |            format: binary
+                           |  responses:
+                           |    okay:
+                           |      content:
+                           |        application/json:
+                           |          schema:
+                           |            type: object
+                           |            properties:
+                           |              test:
+                           |                type: string
+                           |        application/octet-stream:
+                           |          schema:
+                           |            type: string
+                           |            format: binary
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
@@ -440,210 +443,210 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                             |    @required
                             |    body: Generic,
                             |}
-                    |""".stripMargin
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - multiple content types in error response") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |        '404':
-                     |          content:
-                     |            application/octet-stream:
-                     |              schema:
-                     |                type: string
-                     |                format: binary
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  message:
-                     |                    type: string
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/json:
+                           |              schema:
+                           |                $ref: '#/components/schemas/Object'
+                           |        '404':
+                           |          content:
+                           |            application/octet-stream:
+                           |              schema:
+                           |                type: string
+                           |                format: binary
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  message:
+                           |                    type: string
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |      required:
+                           |        - s
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |use smithytranslate#contentTypeDiscriminated
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |    errors: [TestOperationId404]
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |@error("client")
-                      |@httpError(404)
-                      |structure TestOperationId404 {
-                      |    @httpPayload
-                      |    @required
-                      |    body: Body,
-                      |}
-                      |
-                      |@contentTypeDiscriminated
-                      |union Body {
-                      |    @contentType("application/octet-stream")
-                      |    applicationOctetStream: Blob,
-                      |    @contentType("application/json")
-                      |    applicationJson: ApplicationJson,
-                      |}
-                      |
-                      |structure ApplicationJson {
-                      |    message: String
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    @contentType("application/json")
-                      |    body: Object,
-                      |}
-                      |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |use smithytranslate#contentTypeDiscriminated
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |    errors: [TestOperationId404]
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |@error("client")
+                            |@httpError(404)
+                            |structure TestOperationId404 {
+                            |    @httpPayload
+                            |    @required
+                            |    body: Body,
+                            |}
+                            |
+                            |@contentTypeDiscriminated
+                            |union Body {
+                            |    @contentType("application/octet-stream")
+                            |    applicationOctetStream: Blob,
+                            |    @contentType("application/json")
+                            |    applicationJson: ApplicationJson,
+                            |}
+                            |
+                            |structure ApplicationJson {
+                            |    message: String
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    @contentType("application/json")
+                            |    body: Object,
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - multiple content types in success and error response") {
     val openapiString = """|openapi: '3.0.'
-                     |info:
-                     |  title: test
-                     |  version: '1.0'
-                     |paths:
-                     |  /test:
-                     |    get:
-                     |      operationId: testOperationId
-                     |      responses:
-                     |        '200':
-                     |          content:
-                     |            application/octet-stream:
-                     |              schema:
-                     |                type: string
-                     |                format: binary
-                     |            application/json:
-                     |              schema:
-                     |                $ref: '#/components/schemas/Object'
-                     |        '404':
-                     |          content:
-                     |            application/octet-stream:
-                     |              schema:
-                     |                type: string
-                     |                format: binary
-                     |            application/json:
-                     |              schema:
-                     |                type: object
-                     |                properties:
-                     |                  message:
-                     |                    type: string
-                     |components:
-                     |  schemas:
-                     |    Object:
-                     |      type: object
-                     |      properties:
-                     |        s:
-                     |          type: string
-                     |      required:
-                     |        - s
-                     |""".stripMargin
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths:
+                           |  /test:
+                           |    get:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '200':
+                           |          content:
+                           |            application/octet-stream:
+                           |              schema:
+                           |                type: string
+                           |                format: binary
+                           |            application/json:
+                           |              schema:
+                           |                $ref: '#/components/schemas/Object'
+                           |        '404':
+                           |          content:
+                           |            application/octet-stream:
+                           |              schema:
+                           |                type: string
+                           |                format: binary
+                           |            application/json:
+                           |              schema:
+                           |                type: object
+                           |                properties:
+                           |                  message:
+                           |                    type: string
+                           |components:
+                           |  schemas:
+                           |    Object:
+                           |      type: object
+                           |      properties:
+                           |        s:
+                           |          type: string
+                           |      required:
+                           |        - s
+                           |""".stripMargin
 
     val expectedString = """|namespace foo
-                      |
-                      |use smithytranslate#contentType
-                      |use smithytranslate#contentTypeDiscriminated
-                      |
-                      |service FooService {
-                      |    operations: [
-                      |        TestOperationId
-                      |    ]
-                      |}
-                      |
-                      |@http(
-                      |    method: "GET",
-                      |    uri: "/test",
-                      |    code: 200,
-                      |)
-                      |operation TestOperationId {
-                      |    input: Unit,
-                      |    output: TestOperationId200,
-                      |    errors: [TestOperationId404]
-                      |}
-                      |
-                      |structure Object {
-                      |    @required
-                      |    s: String,
-                      |}
-                      |
-                      |@error("client")
-                      |@httpError(404)
-                      |structure TestOperationId404 {
-                      |    @httpPayload
-                      |    @required
-                      |    body: TestOperationId404Body,
-                      |}
-                      |
-                      |@contentTypeDiscriminated
-                      |union TestOperationId404Body {
-                      |    @contentType("application/octet-stream")
-                      |    applicationOctetStream: Blob,
-                      |    @contentType("application/json")
-                      |    applicationJson: ApplicationJson,
-                      |}
-                      |
-                      |structure ApplicationJson {
-                      |    message: String
-                      |}
-                      |
-                      |structure TestOperationId200 {
-                      |    @httpPayload
-                      |    @required
-                      |    body: TestOperationId200Body,
-                      |}
-                      |
-                      |@contentTypeDiscriminated
-                      |union TestOperationId200Body {
-                      |   @contentType("application/octet-stream")
-                      |  applicationOctetStream: Blob,
-                      |  @contentType("application/json")
-                      |  applicationJson: Object
-                      |}
-                      |""".stripMargin
+                            |
+                            |use smithytranslate#contentType
+                            |use smithytranslate#contentTypeDiscriminated
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "GET",
+                            |    uri: "/test",
+                            |    code: 200,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: TestOperationId200,
+                            |    errors: [TestOperationId404]
+                            |}
+                            |
+                            |structure Object {
+                            |    @required
+                            |    s: String,
+                            |}
+                            |
+                            |@error("client")
+                            |@httpError(404)
+                            |structure TestOperationId404 {
+                            |    @httpPayload
+                            |    @required
+                            |    body: TestOperationId404Body,
+                            |}
+                            |
+                            |@contentTypeDiscriminated
+                            |union TestOperationId404Body {
+                            |    @contentType("application/octet-stream")
+                            |    applicationOctetStream: Blob,
+                            |    @contentType("application/json")
+                            |    applicationJson: ApplicationJson,
+                            |}
+                            |
+                            |structure ApplicationJson {
+                            |    message: String
+                            |}
+                            |
+                            |structure TestOperationId200 {
+                            |    @httpPayload
+                            |    @required
+                            |    body: TestOperationId200Body,
+                            |}
+                            |
+                            |@contentTypeDiscriminated
+                            |union TestOperationId200Body {
+                            |   @contentType("application/octet-stream")
+                            |  applicationOctetStream: Blob,
+                            |  @contentType("application/json")
+                            |  applicationJson: Object
+                            |}
+                            |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
