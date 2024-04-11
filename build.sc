@@ -80,6 +80,7 @@ trait OpenApiModule
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
+      buildDeps.smithy.diff,
       buildDeps.scalaJavaCompat
     )
   }
