@@ -16,20 +16,10 @@
 package smithytranslate.compiler.openapi
 
 import software.amazon.smithy.model.Model
-import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
-import scala.jdk.CollectionConverters._
 import munit.Assertions
-import software.amazon.smithy.build.transforms.FilterSuppressions
-import software.amazon.smithy.build.TransformContext
 import cats.syntax.all._
 import munit.Location
 import cats.data.NonEmptyList
-import software.amazon.smithy.model.node._
-import software.amazon.smithy.model.transform.ModelTransformer
-import software.amazon.smithy.model.shapes.Shape
-import software.amazon.smithy.model.traits.Trait
-import software.amazon.smithy.model.traits.BoxTrait
-import scala.compat.java8.FunctionConverters._
 import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyResult
 import smithytranslate.compiler.ToSmithyCompilerOptions
