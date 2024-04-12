@@ -60,11 +60,14 @@ private[compiler] object EmptyStructureToUnitTransformer
     d match {
       case s: Structure =>
         (s.localFields.isEmpty && s.parents.isEmpty && s.hints.isEmpty) || {
-          def isHttpPayload =
+          val isHttpPayload =
             s.localFields.length == 1 && s.localFields.head.hints
               .contains(Hint.Body)
-          def isHttpPayloadEmpty = defs
-            .get(s.localFields.head.tpe)
+          val isHttpPayloadEmpty = s.localFields.headOption
+            .flatMap(f =>
+              defs
+                .get(f.tpe)
+            )
             .exists(isEmptyStructure(defs, _))
           isHttpPayload && isHttpPayloadEmpty
         }
