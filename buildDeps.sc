@@ -28,6 +28,7 @@ object smithy {
   val smithyVersion = "1.41.1"
   val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
   val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
+  val diff = ivy"software.amazon.smithy:smithy-diff:$smithyVersion"
 }
 object cats {
   val mtl = ivy"org.typelevel::cats-mtl:1.4.0"

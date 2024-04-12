@@ -331,8 +331,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         }
       }
       .map { fields =>
-        if (fields.isEmpty) None
-        else Structure(defId, fields, Vector.empty, message.hints).some
+        Structure(defId, fields, Vector.empty, message.hints).some
       }
       .flatMap(_.traverse(recordDef).map(_.as(defId)))
   }

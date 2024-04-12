@@ -542,6 +542,45 @@ final class OperationSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("operation - response reference 204") {
+    val openapiString = """|openapi: 3.0.0
+                           |info:
+                           |  title: Sample API
+                           |paths:
+                           |  /users:
+                           |    post:
+                           |      operationId: testOperationId
+                           |      responses:
+                           |        '204':
+                           |          $ref: '#/components/responses/NoContent'
+                           |components:
+                           |  responses:
+                           |    NoContent:
+                           |      description: no content
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |service FooService {
+                            |    operations: [
+                            |        TestOperationId
+                            |    ]
+                            |}
+                            |
+                            |@http(
+                            |    method: "POST",
+                            |    uri: "/users",
+                            |    code: 204,
+                            |)
+                            |operation TestOperationId {
+                            |    input: Unit,
+                            |    output: Unit,
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("operation - request reference") {
     val openapiString = """|openapi: '3.0.'
                            |info:
