@@ -67,6 +67,36 @@ class CompilerRendererSuite extends FunSuite {
     convertCheck(source, Map("com/example/example.proto" -> expected))
   }
 
+  test("top level - union with timestamp formats") {
+    val source = """|namespace com.example
+                    |
+                    |use alloy.proto#protoTimestampFormat
+                    |
+                    |union MyUnion {
+                    |  one: Timestamp
+                    |  @protoTimestampFormat("EPOCH_MILLIS")
+                    |  two: Timestamp
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package com.example;
+                      |
+                      |import "google/protobuf/timestamp.proto";
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyUnion {
+                      |  oneof definition {
+                      |    google.protobuf.Timestamp one = 1;
+                      |    alloy.protobuf.EpochMillisTimestamp two = 2;
+                      |  }
+                      |}
+                      |""".stripMargin
+    convertCheck(source, Map("com/example/example.proto" -> expected))
+  }
+
   test("@protoInlinedOneOf union - used within only one data structure") {
     val source = """|namespace com.example
                     |
