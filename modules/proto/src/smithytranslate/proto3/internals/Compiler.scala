@@ -452,9 +452,16 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             val isMap = targetShape.isMapShape()
             memberHasWrapped || targetHasWrapped || isList || isMap
           }
+          val maybeTimestampFormat = extractTimestampFormat(m)
           val fieldType =
             targetShape
-              .accept(typeVisitor(isWrapped = isWrapped, numType))
+              .accept(
+                typeVisitor(
+                  isWrapped = isWrapped,
+                  numType,
+                  maybeTimestampFormat
+                )
+              )
               .get
           val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
           Field(
