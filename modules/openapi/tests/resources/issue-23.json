@@ -15,7 +15,7 @@
     }
   ],
   "paths": {
-    "/Testers/{id}": {
+    "/Testers/{id_}": {
       "get": {
         "tags": ["Testers"],
         "summary": "Testers_GetTest",
