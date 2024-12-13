@@ -139,7 +139,7 @@ object cli
 object formatter extends BaseModule { outer =>
 
   val deps = Agg(
-    ivy"org.typelevel::cats-parse::1.0.0",
+    ivy"org.typelevel::cats-parse::1.1.0",
     buildDeps.collectionsCompat
   )
 
