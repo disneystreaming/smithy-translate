@@ -214,6 +214,31 @@ class ClosureSpec extends munit.FunSuite {
   }
 
   test(
+    "disabling validation should not change output on a valid model"
+  ) {
+
+    val model = inLineModel(foospec)
+      .toBuilder()
+      .build()
+    val resultValidated =
+      model
+        .transitiveClosure(
+          List(ShapeId.from("foo#Bar")),
+          captureTraits = true,
+          validateModel = true
+        )
+    val resultNotValidated =
+      model
+        .transitiveClosure(
+          List(ShapeId.from("foo#Bar")),
+          captureTraits = true,
+          validateModel = false
+        )
+
+    assertEquals(resultNotValidated, resultValidated)
+  }
+
+  test(
     "should handle specs with cycles caused by recursive definitions"
   ) {
     val model = inLineModel(recursiveSpec)
