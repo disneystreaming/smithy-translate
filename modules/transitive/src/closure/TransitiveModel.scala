@@ -115,30 +115,23 @@ object TransitiveModel {
       validateModel: Boolean,
       captureMetadata: Boolean
   ): Model = {
-    if (validateModel) {
-      val assembler = Model.assembler()
-      assembler
-        .addShapes(
-          shapes: _*
-        )
-      if (captureMetadata) {
-        initialModel.getMetadata().forEach { case (k, v) =>
-          val _ = assembler.putMetadata(k, v)
-        }
+    val assembler = Model.assembler()
+    assembler
+      .addShapes(
+        shapes: _*
+      )
+    if (captureMetadata) {
+      initialModel.getMetadata().forEach { case (k, v) =>
+        val _ = assembler.putMetadata(k, v)
       }
-
-      assembler
-        .assemble()
-        .unwrap()
-    } else {
-      Model
-        .builder()
-        .addShapes(shapes: _*)
-        .metadata(
-          if (captureMetadata) initialModel.getMetadata()
-          else java.util.Collections.emptyMap()
-        )
-        .build()
     }
+
+    if (!validateModel) {
+      assembler.disableValidation()
+    }
+
+    assembler
+      .assemble()
+      .unwrap()
   }
 }
