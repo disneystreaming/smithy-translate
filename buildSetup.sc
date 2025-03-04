@@ -1,13 +1,12 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
-import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.3`
 import $file.buildDeps
 
 import header._
-import io.kipp.mill.ci.release.CiReleaseModule
-import io.kipp.mill.ci.release.SonatypeHost
+import $file.plugins.ci.CiReleaseModules
+import CiReleaseModules.{CiReleaseModule, SonatypeHost, ReleaseModule, Discover}
 import mill._
 import mill.scalajslib.api.ModuleKind
 import mill.scalajslib.ScalaJSModule
@@ -18,6 +17,23 @@ import mill.contrib.buildinfo.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
 
 import scala.Ordering.Implicits._
+import mill.eval.Evaluator
+
+object InternalReleaseModule extends Module {
+
+  /** This is a replacement for the mill.scalalib.PublishModule/publishAll task
+    * that should basically work identically _but_ without requiring the user to
+    * pass in anything. It also sets up your gpg stuff and grabs the necessary
+    * env variables to publish to sonatype for you.
+    */
+  def publishAll(ev: Evaluator): Command[Unit] = {
+    ReleaseModule.publishAll(ev)
+  }
+
+  import Discover._
+  lazy val millDiscover: mill.define.Discover[this.type] =
+    mill.define.Discover[this.type]
+}
 
 object ScalaVersions {
   val scala212 = "2.12.18"
