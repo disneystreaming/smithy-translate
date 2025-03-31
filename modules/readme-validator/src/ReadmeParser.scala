@@ -86,8 +86,11 @@ object ReadmeParser {
     val exampleParser =
       section.rep <* lf.rep0 // possible empty new lines at end of file
     exampleParser
+      .map(_.toList)
+      // Some documentation files have 0 examples
+      .orElse(anyChar.rep0.as(List.empty))
       .parseAll(input)
-      .bimap(failedParsing, in => ParserResult(in.toList))
+      .bimap(failedParsing, in => ParserResult(in))
   }
 
   private def failedParsing(err: Parser.Error): Nothing =

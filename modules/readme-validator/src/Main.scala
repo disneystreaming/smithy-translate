@@ -15,11 +15,8 @@
 
 object Main {
 
-  def main(args: Array[String]): Unit = args.toList match {
-    case inputPath :: Nil => runValidation(os.Path(inputPath))
-    case other =>
-      System.err.println(s"Expected one argument, found ${other.size}")
-  }
+  def main(args: Array[String]): Unit =
+    args.toList.foreach(inputPath => runValidation(os.Path(inputPath)))
 
   private def runValidation(inputPath: os.Path): Unit = {
     val input = os.read(inputPath)
