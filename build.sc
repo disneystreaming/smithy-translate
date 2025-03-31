@@ -298,7 +298,7 @@ object `readme-validator` extends BaseScala213Module {
   }
 }
 
-object docs extends BaseJavaModule with BasePublishModule {
+object docs extends BasePublishModule {
 
   override def publishArtifactName = "smithytranslate-docs"
 
