@@ -276,10 +276,7 @@ object traits extends BaseJavaModule with BasePublishModule {
   }
 
   object tests extends Cross[TestsModule](scalaVersions)
-  trait TestsModule
-      extends CrossScalaModule
-      with JavaModuleTests
-      with BaseMunitTests
+  trait TestsModule extends CrossScalaModule with JavaTests with BaseMunitTests
 }
 
 object `readme-validator` extends BaseScala213Module {
@@ -291,16 +288,27 @@ object `readme-validator` extends BaseScala213Module {
     buildDeps.lihaoyi.oslib
   )
 
-  def readmeFile = T.sources { os.pwd / "README.md" }
-
   def validate() = T.command {
-    val args = Seq(readmeFile().head.path.toString)
+    val args = docs.docFiles().map(_.path.toString)
     mill.util.Jvm.runSubprocess(
       finalMainClass(),
       runClasspath().map(_.path),
       mainArgs = args
     )
   }
+}
+
+object docs extends BasePublishModule {
+
+  override def publishArtifactName = "smithytranslate-docs"
+
+  def docFiles =
+    T.sources(os.walk(millSourcePath).map(mill.api.PathRef(_)))
+
+  override def resources = T.sources {
+    docFiles()
+  }
+
 }
 
 object proto extends Cross[ProtoModule](scalaVersions)
