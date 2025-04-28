@@ -85,7 +85,7 @@ private[compiler] object GetExtensions {
       Node.fromNodes(a.elements().asScala.toList.map(jacksonToSmithy).asJava)
     case o: jackson.ObjectNode =>
       Node.objectNode {
-        o.fields()
+        o.properties()
           .asScala
           .map { entry =>
             (Node.from(entry.getKey), jacksonToSmithy(entry.getValue))
