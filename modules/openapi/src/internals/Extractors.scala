@@ -109,6 +109,61 @@ private[openapi] object CasePrimitive {
 
     // S:
     //   type: string
+    //   format: local-time
+    // case (_: StringSchema) & Format("local-time") =>  Some(PLocalTime)
+
+    // S:
+    //   type: string
+    //   format: local-date
+    case (_: StringSchema) & Format("local-date") => Some(PLocalDate)
+
+    // S:
+    //   type: string
+    //   format: local-date-time
+    case (_: StringSchema) & Format("local-date-time") => Some(PLocalDateTime)
+
+    // S:
+    //   type: string
+    //   format: offset-date-time
+    case (_: StringSchema) & Format("offset-date-time") => Some(PDateTime)
+
+    // S:
+    //   type: string
+    //   format: offset-time
+    case (_: StringSchema) & Format("offset-time") => Some(POffsetTime)
+
+    // S:
+    //   type: string
+    //   format: zone-id
+    case (_: StringSchema) & Format("zone-id") => Some(PZoneId)
+
+    // S:
+    //   type: string
+    //   format: zone-offset
+    case (_: StringSchema) & Format("zone-offset") => Some(PZoneOffset)
+
+    // S:
+    //   type: string
+    //   format: zoned-date-time
+    case (_: StringSchema) & Format("zoned-date-time") => Some(PZonedDateTime)
+
+    // I:
+    //   type: integer
+    //   format: year
+    // case (_: IntegerSchema) & Format("year") => Some(PYear)
+
+    // S:
+    //   type: string
+    //   format: year-month
+    case (_: StringSchema) & Format("year-month") => Some(PYearMonth)
+
+    // S:
+    //   type: string
+    //   format: month-day
+    case (_: StringSchema) & Format("month-day") => Some(PMonthDay)
+
+    // S:
+    //   type: string
     //   format: password
     case (_: PasswordSchema) => Some(PString)
 

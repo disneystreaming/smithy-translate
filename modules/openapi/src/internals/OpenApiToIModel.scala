@@ -451,6 +451,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
 
       // Primitive types
       case CasePrimitive(prim) =>
+        println(s"unfolding primitive $prim")
         val (hints, errors) = {
           val minL = Option(local.schema.getMinLength()).map(_.toLong)
           val maxL = Option(local.schema.getMaxLength()).map(_.toLong)
@@ -566,6 +567,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       //   properties:
       //     <at least one property>
       case CaseObject(s) =>
+        println(s"unfolding object $s")
         val properties =
           Option(s.getProperties()).map(_.asScala.toVector).toVector.flatten
         val required =

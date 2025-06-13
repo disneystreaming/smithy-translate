@@ -15,7 +15,7 @@
 
 package smithytranslate.compiler.openapi
 
-final class TimestampSpec extends munit.FunSuite {
+final class TimeTypesSpec extends munit.FunSuite {
   test("date-time") {
     val openapiString = """|openapi: '3.0.'
                            |info:
@@ -154,4 +154,84 @@ final class TimestampSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
+
+  test("local-time".only) {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyLocalTime:
+                           |      type: string
+                           |      format: local-time
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use alloy#localTimeFormat
+                            |
+                            |@localTimeFormat
+                            |string MyLocalTime
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("local-time in struct".only) {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyObj:
+                           |      type: object
+                           |      properties:
+                           |        t:
+                           |          type: string
+                           |          format: local-time
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |use alloy#LocalTime
+                            |
+                            |structure MyObj {
+                            |  t: LocalTime
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  // test("local-time in struct".only) {
+  //   val openapiString = """|openapi: '3.0.'
+  //                          |info:
+  //                          |  title: test
+  //                          |  version: '1.0'
+  //                          |paths: {}
+  //                          |components:
+  //                          |  schemas:
+  //                          |    MyObj:
+  //                          |      type: object
+  //                          |      properties:
+  //                          |        t:
+  //                          |          type: integer
+  //                          |          format: year
+  //                          |""".stripMargin
+  //
+  //   val expectedString = """|namespace foo
+  //                           |
+  //                           |use alloy#Year
+  //                           |
+  //                           |structure MyObj {
+  //                           |  t: Year
+  //                           |}
+  //                           |""".stripMargin
+  //
+  //   TestUtils.runConversionTest(openapiString, expectedString)
+  // }
 }

@@ -80,9 +80,16 @@ private[compiler] final class PatternFolder[F[
       case PBytes     => std("Blob")
       case PFreeForm  => std("Document")
       case PUUID      => alloy("UUID")
+      // case PYear      => alloy("Year")
       case PDate      => std("String", Hint.Timestamp(TimestampFormat.SimpleDate))
       case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
       case PTimestamp => std("Timestamp")
+      // case PLocalDate => std("String", Hint.)
+      case PLocalTime =>  std("String", Hint.Timestamp(TimestampFormat.LocalTime))
+      // case PLocalDateTime 
+      // case POffsetTime 
+      // case PZoneId 
+      // case PZoneOffset
     }
     // format: on
 
@@ -90,12 +97,17 @@ private[compiler] final class PatternFolder[F[
     * as we go
     */
   def fold(layer: OpenApiPattern[DefId]): F[DefId] = {
+    println(s"In PatternFolder.fold $layer")
     layer.context.errors.traverse(recordError) *>
       (layer match {
         case OpenApiPrimitive(context, primitive) =>
           val ntId = id(context)
           val (target, hints) = idFromPrimitive(primitive)
           val nt = Newtype(ntId, target, context.hints ++ hints)
+          println(s"""processing primitive $primitive
+            | $ntId => $nt 
+            | context => $context
+            """.stripMargin)
           recordDef(nt).as(ntId)
 
         case OpenApiRef(context, target) =>
@@ -157,6 +169,10 @@ private[compiler] final class PatternFolder[F[
 
         case OpenApiObject(context, items) =>
           val shapeId = id(context)
+          println(s"""processing object
+            | context => $context
+            | items => $items
+          """.stripMargin)
           items
             .map { case ((name, required), tpe) =>
               val fieldId = MemberId(shapeId, Segment.Derived(CIString(name)))

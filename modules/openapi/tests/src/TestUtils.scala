@@ -105,20 +105,24 @@ object TestUtils {
       .discoverModels()
 
     inputs.foreach { i =>
+      // println(i.smithySpec)
       i.smithySpec match {
         case TestUtils.ExpectedOutput.StringOutput(str) =>
+          // println(s"in first case $str")
           val name = i.filePath.mkString_("/") + ".smithy"
           val spec = s"""|$$version: "${i.smithyVersion}"
                          |
                          |${str}""".stripMargin
           assembler.addUnparsedModel(name, spec)
         case TestUtils.ExpectedOutput.ModelOutput(model) =>
+          // println(s"in second case")
           assembler.addModel(model)
       }
       i.errorSmithySpec.foreach(
         assembler.addUnparsedModel("error.smithy", _)
       )
     }
+
     val expected = ModelWrapper(
       assembler
         .assemble()

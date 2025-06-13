@@ -22,6 +22,7 @@ import alloy.DataExamplesTrait
 import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
+import alloy.LocalTimeFormatTrait
 import cats.syntax.all._
 import smithytranslate.ContentTypeDiscriminatedTrait
 import smithytranslate.ContentTypeTrait
@@ -29,8 +30,7 @@ import smithytranslate.ErrorMessageTrait
 import smithytranslate.NullFormatTrait
 import smithytranslate.compiler.internals.Hint.Header
 import smithytranslate.compiler.internals.Hint.QueryParam
-import smithytranslate.compiler.internals.TimestampFormat.DateTime
-import smithytranslate.compiler.internals.TimestampFormat.SimpleDate
+import smithytranslate.compiler.internals.TimestampFormat._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.pattern.UriPattern
@@ -422,9 +422,11 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       val objNode = Node.objectNode(nodeMap)
       List(new OpenApiExtensionsTrait(objNode))
     case Hint.Timestamp(format) =>
+      println("matching on timestamp format")
       format match {
         case DateTime   => List(new TimestampFormatTrait("date-time"))
         case SimpleDate => List(new DateFormatTrait())
+        case LocalTime => List(new LocalTimeFormatTrait())
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())
