@@ -23,6 +23,7 @@ import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
 import alloy.LocalTimeFormatTrait
+import alloy.LocalDateTimeFormatTrait
 import cats.syntax.all._
 import smithytranslate.ContentTypeDiscriminatedTrait
 import smithytranslate.ContentTypeTrait
@@ -422,10 +423,10 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       val objNode = Node.objectNode(nodeMap)
       List(new OpenApiExtensionsTrait(objNode))
     case Hint.Timestamp(format) =>
-      println("matching on timestamp format")
       format match {
         case DateTime   => List(new TimestampFormatTrait("date-time"))
         case SimpleDate => List(new DateFormatTrait())
+        case LocalDate => List(new DateFormatTrait())
         case LocalTime => List(new LocalTimeFormatTrait())
       }
     case Hint.Tags(values) =>

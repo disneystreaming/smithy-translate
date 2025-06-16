@@ -109,13 +109,13 @@ private[openapi] object CasePrimitive {
 
     // S:
     //   type: string
-    //   format: local-time
-    // case (_: StringSchema) & Format("local-time") =>  Some(PLocalTime)
+    //   format: local-date
+    case (_: StringSchema) & Format("local-date") => Some(PLocalDate)
 
     // S:
     //   type: string
-    //   format: local-date
-    case (_: StringSchema) & Format("local-date") => Some(PLocalDate)
+    //   format: local-time
+    case (_: StringSchema) & Format("local-time") =>  Some(PLocalTime)
 
     // S:
     //   type: string

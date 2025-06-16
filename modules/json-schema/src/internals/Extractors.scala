@@ -26,6 +26,7 @@ import smithytranslate.compiler.internals.GetExtensions
 import scala.jdk.CollectionConverters._
 import cats.syntax.all._
 import scala.collection.compat._
+import smithytranslate.compiler.internals.TimestampFormat.LocalDate
 
 private[json_schema] object Extractors {
 
@@ -110,6 +111,18 @@ private[json_schema] object Extractors {
         //  format: date-time
         case (_: StringSchema) & Format("date-time") =>
           Some(List.empty -> PDateTime)
+
+        // S:
+        //  type: string
+        //  format: local-date
+        case (_: StringSchema) & Format("local-date") =>
+          Some(List.empty -> PLocalDate)
+
+        // S:
+        //  type: string
+        //  format: local-date
+        case (_: StringSchema) & Format("local-time") =>
+          Some(List.empty -> PLocalTime)
 
         // S:
         //  type: string

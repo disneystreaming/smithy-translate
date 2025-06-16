@@ -29,6 +29,8 @@ private[compiler] object LoadSchema extends (JSONObject => Schema) {
       .addFormatValidator(new EmptyValidator("uuid"))
       .addFormatValidator(new EmptyValidator("date"))
       .addFormatValidator(new EmptyValidator("date-time"))
+      .addFormatValidator(new EmptyValidator("local-date"))
+      .addFormatValidator(new EmptyValidator("local-time"))
       .useDefaults(true)
       .schemaJson(sch)
       .build()

@@ -16,7 +16,7 @@
 package smithytranslate.compiler.openapi
 
 final class TimeTypesSpec extends munit.FunSuite {
-  test("date-time") {
+  test("top-level/newtypes definitions") {
     val openapiString = """|openapi: '3.0.'
                            |info:
                            |  title: test
@@ -27,18 +27,30 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |    MyTimestamp:
                            |      type: string
                            |      format: date-time
+                           |    MyLocalDate:
+                           |      type: string
+                           |      format: local-date
+                           |    MyLocalTime:
+                           |      type: string
+                           |      format: local-time
                            |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
                             |@timestampFormat("date-time")
                             |timestamp MyTimestamp
+                            |
+                            |@alloy#dateFormat
+                            |string MyLocalDate
+                            |
+                            |@alloy#localTimeFormat
+                            |string MyLocalTime
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
-  test("date-time in struct") {
+  test("time types in struct") {
     val openapiString = """|openapi: '3.0.'
                            |info:
                            |  title: test
@@ -49,21 +61,38 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |    MyObj:
                            |      type: object
                            |      properties:
-                           |        t:
+                           |        a:
                            |          $ref: '#/components/schemas/MyTimestamp'
+                           |        b:
+                           |          $ref: '#/components/schemas/MyLocalDate'
+                           |        localDate:
+                           |          type: string
+                           |          format: local-date
+                           |        localTime:
+                           |          type: string
+                           |          format: local-time
                            |    MyTimestamp:
                            |      type: string
                            |      format: date-time
+                           |    MyLocalDate:
+                           |      type: string
+                           |      format: local-date
                            |""".stripMargin
 
     val expectedString = """|namespace foo
                             |
                             |structure MyObj {
-                            |  t: MyTimestamp
+                            |  a: MyTimestamp
+                            |  b: MyLocalDate
+                            |  localDate: alloy#LocalDate
+                            |  localTime: alloy#LocalTime
                             |}
                             |
                             |@timestampFormat("date-time")
                             |timestamp MyTimestamp
+                            |
+                            |@alloy#dateFormat
+                            |string MyLocalDate
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
@@ -154,84 +183,4 @@ final class TimeTypesSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }
-
-  test("local-time".only) {
-    val openapiString = """|openapi: '3.0.'
-                           |info:
-                           |  title: test
-                           |  version: '1.0'
-                           |paths: {}
-                           |components:
-                           |  schemas:
-                           |    MyLocalTime:
-                           |      type: string
-                           |      format: local-time
-                           |""".stripMargin
-
-    val expectedString = """|namespace foo
-                            |
-                            |use alloy#localTimeFormat
-                            |
-                            |@localTimeFormat
-                            |string MyLocalTime
-                            |""".stripMargin
-
-    TestUtils.runConversionTest(openapiString, expectedString)
-  }
-
-  test("local-time in struct".only) {
-    val openapiString = """|openapi: '3.0.'
-                           |info:
-                           |  title: test
-                           |  version: '1.0'
-                           |paths: {}
-                           |components:
-                           |  schemas:
-                           |    MyObj:
-                           |      type: object
-                           |      properties:
-                           |        t:
-                           |          type: string
-                           |          format: local-time
-                           |""".stripMargin
-
-    val expectedString = """|namespace foo
-                            |
-                            |use alloy#LocalTime
-                            |
-                            |structure MyObj {
-                            |  t: LocalTime
-                            |}
-                            |""".stripMargin
-
-    TestUtils.runConversionTest(openapiString, expectedString)
-  }
-
-  // test("local-time in struct".only) {
-  //   val openapiString = """|openapi: '3.0.'
-  //                          |info:
-  //                          |  title: test
-  //                          |  version: '1.0'
-  //                          |paths: {}
-  //                          |components:
-  //                          |  schemas:
-  //                          |    MyObj:
-  //                          |      type: object
-  //                          |      properties:
-  //                          |        t:
-  //                          |          type: integer
-  //                          |          format: year
-  //                          |""".stripMargin
-  //
-  //   val expectedString = """|namespace foo
-  //                           |
-  //                           |use alloy#Year
-  //                           |
-  //                           |structure MyObj {
-  //                           |  t: Year
-  //                           |}
-  //                           |""".stripMargin
-  //
-  //   TestUtils.runConversionTest(openapiString, expectedString)
-  // }
 }
