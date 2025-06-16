@@ -40,11 +40,9 @@ object OpenApiCompiler extends AbstractToSmithyCompiler[OpenApiCompilerInput] {
       case UnparsedSpecs(specs) =>
         val parser = new OpenAPIParser()
         specs.map { case FileContents(path, content) =>
-          // println(s"going through specs $path: $content")
           val cleanedPath = removeFileExtension(path)
           val result = parser.readContents(content, null, null)
 
-          // println(s"got result $result")
           val parsed =
             if (
               opts.validateInput && !result
@@ -66,7 +64,6 @@ object OpenApiCompiler extends AbstractToSmithyCompiler[OpenApiCompilerInput] {
         List(cleanedPath -> Right(openapiModel))
     }
     prepared.foldMap { case (path, parsed) =>
-      // println(s"running to openAPIToIModel $path, $parsed")
       OpenApiToIModel.compile(NonEmptyChain.fromNonEmptyList(path), parsed)
     }
   }

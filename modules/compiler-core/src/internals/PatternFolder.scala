@@ -95,8 +95,10 @@ private[compiler] final class PatternFolder[F[
       case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
       case PTimestamp => std("Timestamp")
       case PLocalDate => std("String", Hint.Timestamp(TimestampFormat.LocalDate))
-
       case PLocalTime =>  std("String", Hint.Timestamp(TimestampFormat.LocalTime))
+      case PLocalDateTime => std("String", Hint.Timestamp(TimestampFormat.LocalDateTime))
+      case POffsetDateTime => std("Timestamp", Hint.Timestamp(TimestampFormat.OffsetDateTime), Hint.Timestamp(TimestampFormat.DateTime))
+      case POffsetTime => std("String", Hint.Timestamp(TimestampFormat.OffsetTime))
     }
     // format: on
     
@@ -104,6 +106,9 @@ private[compiler] final class PatternFolder[F[
     primitive match {
       case PLocalDate => alloy("LocalDate")
       case PLocalTime =>  alloy("LocalTime")
+      case PLocalDateTime => alloy("LocalDateTime")
+      case POffsetDateTime => alloy("OffsetDateTime")
+      case POffsetTime => alloy("OffsetTime")
       case _ => topLevelIdFromPrimitive(primitive)
     }
 

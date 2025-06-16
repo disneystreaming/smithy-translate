@@ -120,9 +120,27 @@ private[json_schema] object Extractors {
 
         // S:
         //  type: string
-        //  format: local-date
+        //  format: local-time
         case (_: StringSchema) & Format("local-time") =>
           Some(List.empty -> PLocalTime)
+
+        // S:
+        //  type: string
+        //  format: local-date-time
+        case (_: StringSchema) & Format("local-date-time") =>
+          Some(List.empty -> PLocalDateTime)
+
+        // S:
+        //  type: string
+        //  format: offset-date-time
+        case (_: StringSchema) & Format("offset-date-time") =>
+          Some(List.empty -> POffsetDateTime)
+
+        // S:
+        //  type: string
+        //  format: offset-time
+        case (_: StringSchema) & Format("offset-time") =>
+          Some(List.empty -> POffsetTime)
 
         // S:
         //  type: string

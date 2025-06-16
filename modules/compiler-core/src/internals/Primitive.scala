@@ -42,6 +42,7 @@ private[compiler] object Primitive {
   case object PLocalDate extends Primitive { type T = LocalDate }
   case object PLocalTime extends Primitive { type T = LocalTime }
   case object PLocalDateTime extends Primitive { type T = LocalDateTime }
+  case object POffsetDateTime extends Primitive { type T = OffsetTime }
   case object POffsetTime extends Primitive { type T = OffsetTime }
   case object PZoneId extends Primitive { type T = ZoneId }
   case object PZoneOffset extends Primitive { type T = ZoneOffset }

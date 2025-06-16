@@ -125,7 +125,7 @@ private[openapi] object CasePrimitive {
     // S:
     //   type: string
     //   format: offset-date-time
-    case (_: StringSchema) & Format("offset-date-time") => Some(PDateTime)
+    case (_: StringSchema) & Format("offset-date-time") => Some(POffsetDateTime)
 
     // S:
     //   type: string

@@ -15,15 +15,12 @@
 
 package smithytranslate.compiler.internals
 
-import alloy.DateFormatTrait
 import alloy.DiscriminatedUnionTrait
 import alloy.NullableTrait
 import alloy.DataExamplesTrait
 import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
-import alloy.LocalTimeFormatTrait
-import alloy.LocalDateTimeFormatTrait
 import cats.syntax.all._
 import smithytranslate.ContentTypeDiscriminatedTrait
 import smithytranslate.ContentTypeTrait
@@ -425,9 +422,12 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.Timestamp(format) =>
       format match {
         case DateTime   => List(new TimestampFormatTrait("date-time"))
-        case SimpleDate => List(new DateFormatTrait())
-        case LocalDate => List(new DateFormatTrait())
-        case LocalTime => List(new LocalTimeFormatTrait())
+        case SimpleDate => List(new alloy.DateFormatTrait())
+        case LocalDate => List(new alloy.DateFormatTrait())
+        case LocalTime => List(new alloy.LocalTimeFormatTrait())
+        case LocalDateTime => List(new alloy.LocalDateTimeFormatTrait())
+        case OffsetDateTime => List(new alloy.OffsetDateTimeFormatTrait())
+        case OffsetTime => List(new alloy.OffsetTimeFormatTrait())
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())

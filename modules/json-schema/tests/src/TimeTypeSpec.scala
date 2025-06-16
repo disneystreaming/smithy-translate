@@ -18,46 +18,31 @@ package smithytranslate.compiler.json_schema
 final class TimeTypeSpec extends munit.FunSuite {
 
   test("local-date newtype definitions") {
-    val jsonSchString =
-      """|{
-         |  "$id": "localDate.json",
-         |  "$schema": "http://json-schema.org/draft-07/schema#",
-         |  "title": "MyLocalDate",
-         |  "type": "string",
-         |  "format": "local-date"
-         |}
-      """.stripMargin
-
-    val expectedString = """|namespace foo
-                            |
-                            |@alloy#dateFormat
-                            |string MyLocalDate
-                            |""".stripMargin
-
-    TestUtils.runConversionTest(jsonSchString, expectedString)
+    runNewtypeTest("local-date", "@alloy#dateFormat" )
   }
 
   test("local-time newtype definition") {
-
-    val jsonSchString =
-      """|{
-         |  "$id": "localTime.json",
-         |  "$schema": "http://json-schema.org/draft-07/schema#",
-         |  "title": "MyLocalTime",
-         |  "type": "string",
-         |  "format": "local-time"
-         |}
-         |""".stripMargin
-
-    val expectedString = """|namespace foo
-                            |
-                            |@alloy#localTimeFormat
-                            |string MyLocalTime
-                            |""".stripMargin
-
-    TestUtils.runConversionTest(jsonSchString, expectedString)
+    runNewtypeTest("local-time", "@alloy#localTimeFormat" )
   }
 
+  test("local-date-time newtype definition") {
+    runNewtypeTest("local-date-time", "@alloy#localDateTimeFormat" )
+  }
+
+  test("offset-date-time newtype definition") {
+    runNewtypeTest(
+      "offset-date-time",
+      List("@alloy#offsetDateTimeFormat", "@timestampFormat(\"date-time\")"),
+      "timestamp"
+    )
+  }
+
+  test("offset-time newtype definition") {
+    runNewtypeTest(
+      "offset-time",
+      "@alloy#offsetTimeFormat"
+    )
+  }
 
   test("nested definitions") {
     val jsonSchString =
@@ -74,6 +59,18 @@ final class TimeTypeSpec extends munit.FunSuite {
          |    "localTime": {
          |      "type": "string",
          |      "format": "local-time"
+         |    },
+         |    "localDateTime": {
+         |      "type": "string",
+         |      "format": "local-date-time"
+         |    },
+         |    "offsetDateTime": {
+         |      "type": "string",
+         |      "format": "offset-date-time"
+         |    },
+         |    "offsetTime": {
+         |      "type": "string",
+         |      "format": "offset-time"
          |    }
          |  }
          |}
@@ -84,10 +81,35 @@ final class TimeTypeSpec extends munit.FunSuite {
                             |structure Foo {
                             | localDate: alloy#LocalDate
                             | localTime: alloy#LocalTime
+                            | localDateTime: alloy#LocalDateTime
+                            | offsetDateTime: alloy#OffsetDateTime
+                            | offsetTime: alloy#OffsetTime
                             |}
                             |""".stripMargin
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
+  private def runNewtypeTest(format: String, formatTrait: String): Unit = {
+    runNewtypeTest(format, formatTrait :: Nil, "string")
+  }
 
+  private def runNewtypeTest(format: String, formatTraits: List[String], smithyType: String = "string"): Unit = {
+    val jsonSchString =
+      s"""|{
+         |  "$$id": "test.json",
+         |  "$$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "MyTimeType",
+         |  "type": "string",
+         |  "format": "$format"
+         |}
+         |""".stripMargin
+
+    val expectedString = s"""|namespace foo
+                            |
+                            |${formatTraits.mkString("\n")}
+                            |$smithyType MyTimeType
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
 }

@@ -33,6 +33,15 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |    MyLocalTime:
                            |      type: string
                            |      format: local-time
+                           |    MyLocalDateTime:
+                           |      type: string
+                           |      format: local-date-time
+                           |    MyOffsetDateTime:
+                           |      type: string
+                           |      format: "offset-date-time"
+                           |    MyOffsetTime:
+                           |      type: string
+                           |      format: "offset-time"
                            |""".stripMargin
 
     val expectedString = """|namespace foo
@@ -45,6 +54,16 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |
                             |@alloy#localTimeFormat
                             |string MyLocalTime
+                            |
+                            |@alloy#localDateTimeFormat
+                            |string MyLocalDateTime
+                            |
+                            |@timestampFormat("date-time")
+                            |@alloy#offsetDateTimeFormat
+                            |timestamp MyOffsetDateTime
+                            |
+                            |@alloy#offsetTimeFormat
+                            |string MyOffsetTime
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
@@ -71,6 +90,15 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |        localTime:
                            |          type: string
                            |          format: local-time
+                           |        localDateTime:
+                           |          type: string
+                           |          format: local-date-time
+                           |        offsetDateTime:
+                           |          type: string
+                           |          format: offset-date-time
+                           |        offsetTime:
+                           |          type: string
+                           |          format: offset-time
                            |    MyTimestamp:
                            |      type: string
                            |      format: date-time
@@ -86,6 +114,9 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |  b: MyLocalDate
                             |  localDate: alloy#LocalDate
                             |  localTime: alloy#LocalTime
+                            |  localDateTime: alloy#LocalDateTime
+                            |  offsetDateTime: alloy#OffsetDateTime
+                            |  offsetTime: alloy#OffsetTime
                             |}
                             |
                             |@timestampFormat("date-time")
