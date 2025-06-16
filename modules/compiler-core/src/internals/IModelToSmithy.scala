@@ -428,6 +428,9 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         case LocalDateTime => List(new alloy.LocalDateTimeFormatTrait())
         case OffsetDateTime => List(new alloy.OffsetDateTimeFormatTrait())
         case OffsetTime => List(new alloy.OffsetTimeFormatTrait())
+        case ZoneId => List(new alloy.ZoneIdFormatTrait())
+        case ZoneOffset => List(new alloy.ZoneOffsetFormatTrait())
+        case ZonedDateTime => List(new alloy.ZonedDateTimeFormatTrait())
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())

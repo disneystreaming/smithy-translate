@@ -99,9 +99,12 @@ private[compiler] final class PatternFolder[F[
       case PLocalDateTime => std("String", Hint.Timestamp(TimestampFormat.LocalDateTime))
       case POffsetDateTime => std("Timestamp", Hint.Timestamp(TimestampFormat.OffsetDateTime), Hint.Timestamp(TimestampFormat.DateTime))
       case POffsetTime => std("String", Hint.Timestamp(TimestampFormat.OffsetTime))
+      case PZoneId => std("String", Hint.Timestamp(TimestampFormat.ZoneId))
+      case PZoneOffset => std("String", Hint.Timestamp(TimestampFormat.ZoneOffset))
+      case PZonedDateTime=> std("String", Hint.Timestamp(TimestampFormat.ZonedDateTime))
+ 
     }
-    // format: on
-    
+
   def nestedIdFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
     primitive match {
       case PLocalDate => alloy("LocalDate")
@@ -109,8 +112,12 @@ private[compiler] final class PatternFolder[F[
       case PLocalDateTime => alloy("LocalDateTime")
       case POffsetDateTime => alloy("OffsetDateTime")
       case POffsetTime => alloy("OffsetTime")
+      case PZoneId => alloy("ZoneId")
+      case PZoneOffset => alloy("ZoneOffset")
+      case PZonedDateTime=> alloy("ZonedDateTime")
       case _ => topLevelIdFromPrimitive(primitive)
     }
+  // format: on
 
   /** Folds one layer into a type, recording definitions into the monadic tell
     * as we go

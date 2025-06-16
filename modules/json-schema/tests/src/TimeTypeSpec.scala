@@ -44,6 +44,27 @@ final class TimeTypeSpec extends munit.FunSuite {
     )
   }
 
+  test("zone-id newtype definition") {
+    runNewtypeTest(
+      "zone-id",
+      "@alloy#zoneIdFormat"
+    )
+  }
+
+  test("zone-offset newtype definition") {
+    runNewtypeTest(
+      "zone-offset",
+      "@alloy#zoneOffsetFormat"
+    )
+  }
+
+  test("zoned-date-time newtype definition") {
+    runNewtypeTest(
+      "zoned-date-time",
+      "@alloy#zonedDateTimeFormat"
+    )
+  }
+
   test("nested definitions") {
     val jsonSchString =
       """|{
@@ -71,7 +92,20 @@ final class TimeTypeSpec extends munit.FunSuite {
          |    "offsetTime": {
          |      "type": "string",
          |      "format": "offset-time"
+         |    },
+         |    "zoneId": {
+         |      "type": "string",
+         |      "format": "zone-id"
+         |    },
+         |    "zoneOffset": {
+         |      "type": "string",
+         |      "format": "zone-offset"
+         |    },
+         |    "zonedDateTime": {
+         |      "type": "string",
+         |      "format": "zoned-date-time"
          |    }
+
          |  }
          |}
          |""".stripMargin
@@ -84,6 +118,9 @@ final class TimeTypeSpec extends munit.FunSuite {
                             | localDateTime: alloy#LocalDateTime
                             | offsetDateTime: alloy#OffsetDateTime
                             | offsetTime: alloy#OffsetTime
+                            | zoneId: alloy#ZoneId
+                            | zoneOffset: alloy#ZoneOffset
+                            | zonedDateTime: alloy#ZonedDateTime
                             |}
                             |""".stripMargin
 

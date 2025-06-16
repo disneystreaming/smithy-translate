@@ -144,6 +144,24 @@ private[json_schema] object Extractors {
 
         // S:
         //  type: string
+        //  format: zone-id
+        case (_: StringSchema) & Format("zone-id") =>
+          Some(List.empty -> PZoneId)
+
+        // S:
+        //  type: string
+        //  format: zone-offset
+        case (_: StringSchema) & Format("zone-offset") =>
+          Some(List.empty -> PZoneOffset)
+
+        // S:
+        //  type: string
+        //  format: zoned-date-time
+        case (_: StringSchema) & Format("zoned-date-time") =>
+          Some(List.empty -> PZonedDateTime)
+
+        // S:
+        //  type: string
         //  format: date
         case (_: StringSchema) & Format("date") =>
           Some(List.empty -> PDate)
