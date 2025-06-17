@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.compiler.json_schema
+package smithytranslate.compiler
 
 import software.amazon.smithy.model._
 import software.amazon.smithy.model.node._

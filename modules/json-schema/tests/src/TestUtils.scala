@@ -19,6 +19,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import munit.Assertions
 import munit.Location
+import smithytranslate.compiler.ModelWrapper
 import smithytranslate.compiler.FileContents
 import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyCompilerOptions
