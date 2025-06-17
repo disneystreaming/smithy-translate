@@ -31,7 +31,8 @@ private[compiler] object IModelPostProcessor {
     ContentTypeShiftTransformer,
     ReorientDefaultValueTransformer,
     DropRequiredWhenDefaultValue,
-    EmptyStructureToUnitTransformer
+    EmptyStructureToUnitTransformer,
+    DropAlloyTimeExtensionsTransformer
   )
 
   private[this] def transform(

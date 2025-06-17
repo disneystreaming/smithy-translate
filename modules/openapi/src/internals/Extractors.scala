@@ -60,6 +60,13 @@ private[openapi] object Format {
   def unapply(sch: Schema[_]): Option[String] = Option(sch.getFormat())
 }
 
+private[openapi] object XFormat {
+  def unapply(sch: Schema[_]): Option[String] =
+    Option(sch.getExtensions().asScala)
+      .flatMap(_.get("x-format"))
+      .map(_.toString())
+}
+
 private[openapi] object NoFormat {
   def unapply(sch: Schema[_]): Boolean = Option(sch.getFormat()).isEmpty
 }
@@ -107,60 +114,61 @@ private[openapi] object CasePrimitive {
     //   format: timestamp
     case (_: StringSchema) & Format("timestamp") => Some(PTimestamp)
 
+
     // S:
     //   type: string
     //   format: local-date
-    case (_: StringSchema) & Format("local-date") => Some(PLocalDate)
+    case (_: StringSchema) & (Format("local-date") | XFormat("local-date"))=> Some(PLocalDate)
 
     // S:
     //   type: string
     //   format: local-time
-    case (_: StringSchema) & Format("local-time") =>  Some(PLocalTime)
+    case (_: StringSchema) & (Format("local-time") | XFormat("local-time")) =>  Some(PLocalTime)
 
     // S:
     //   type: string
     //   format: local-date-time
-    case (_: StringSchema) & Format("local-date-time") => Some(PLocalDateTime)
+    case (_: StringSchema) & (Format("local-date-time") | XFormat("local-date-time")) => Some(PLocalDateTime)
 
     // S:
     //   type: string
     //   format: offset-date-time
-    case (_: StringSchema) & Format("offset-date-time") => Some(POffsetDateTime)
+    case (_: StringSchema) & (Format("offset-date-time") | XFormat("offset-date-time")) => Some(POffsetDateTime)
 
     // S:
     //   type: string
     //   format: offset-time
-    case (_: StringSchema) & Format("offset-time") => Some(POffsetTime)
+    case (_: StringSchema) & (Format("offset-time") | XFormat("offset-time")) => Some(POffsetTime)
 
     // S:
     //   type: string
     //   format: zone-id
-    case (_: StringSchema) & Format("zone-id") => Some(PZoneId)
+    case (_: StringSchema) & (Format("zone-id") | XFormat("zone-id")) => Some(PZoneId)
 
     // S:
     //   type: string
     //   format: zone-offset
-    case (_: StringSchema) & Format("zone-offset") => Some(PZoneOffset)
+    case (_: StringSchema) & (Format("zone-offset") | XFormat("zone-offset")) => Some(PZoneOffset)
 
     // S:
     //   type: string
     //   format: zoned-date-time
-    case (_: StringSchema) & Format("zoned-date-time") => Some(PZonedDateTime)
+    case (_: StringSchema) & (Format("zoned-date-time") | XFormat("zoned-date-time")) => Some(PZonedDateTime)
 
     // I:
     //   type: integer
     //   format: year
-    case (_: IntegerSchema) & Format("year") => Some(PYear)
+    case (_: IntegerSchema) & (Format("year") | XFormat("year")) => Some(PYear)
 
     // S:
     //   type: string
     //   format: year-month
-    case (_: StringSchema) & Format("year-month") => Some(PYearMonth)
+    case (_: StringSchema) & (Format("year-month") | XFormat("year-month")) => Some(PYearMonth)
 
     // S:
     //   type: string
     //   format: month-day
-    case (_: StringSchema) & Format("month-day") => Some(PMonthDay)
+    case (_: StringSchema) & (Format("month-day") | XFormat("month-day")) => Some(PMonthDay)
 
     // S:
     //   type: string

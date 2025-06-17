@@ -50,8 +50,6 @@ private[compiler] object Primitive {
   case object PYear extends Primitive { type T = Year }
   case object PYearMonth extends Primitive { type T = YearMonth }
   case object PMonthDay extends Primitive { type T = MonthDay }
-  case object PDayOfWeek extends Primitive { type T = DayOfWeek }
-  case object PMonth extends Primitive { type T = Month }
   case object PBytes extends Primitive { type T = Array[Byte] }
   case object PFreeForm extends Primitive { type T = Any }
 }

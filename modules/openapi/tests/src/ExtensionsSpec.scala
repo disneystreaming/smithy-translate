@@ -151,4 +151,77 @@ final class ExtensionsSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("extensions: doesn't capture x-format of alloy time types".only) {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MyTime:
+                           |      type: string
+                           |      x-format: local-time
+                           |    MyObj:
+                           |      type: object
+                           |      properties:
+                           |        localDate:
+                           |          type: string
+                           |          x-format: local-date
+                           |        localTime:
+                           |          type: string
+                           |          x-format: local-time
+                           |        localDateTime:
+                           |          type: string
+                           |          x-format: local-date-time
+                           |        offsetDateTime:
+                           |          type: string
+                           |          x-format: offset-date-time
+                           |        offsetTime:
+                           |          type: string
+                           |          x-format: offset-time
+                           |        zoneId:
+                           |          type: string
+                           |          x-format: zone-id
+                           |        zoneOffset:
+                           |          type: string
+                           |          x-format: zone-offset
+                           |        zonedDateTime:
+                           |          type: string
+                           |          x-format: zoned-date-time
+                           |        year:
+                           |          type: integer
+                           |          x-format: year
+                           |        yearMonth:
+                           |          type: string
+                           |          x-format: year-month
+                           |        monthDay:
+                           |          type: string
+                           |          x-format: month-day
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@alloy#localTimeFormat
+                            |string MyTime
+                            |
+                            |structure MyObj {
+                            |  localDate: alloy#LocalDate
+                            |  localTime: alloy#LocalTime
+                            |  localDateTime: alloy#LocalDateTime
+                            |  offsetDateTime: alloy#OffsetDateTime
+                            |  offsetTime: alloy#OffsetTime
+                            |  zoneId: alloy#ZoneId
+                            |  zoneOffset: alloy#ZoneOffset
+                            |  zonedDateTime: alloy#ZonedDateTime
+                            |  year: alloy#Year
+                            |  yearMonth: alloy#YearMonth
+                            |  monthDay: alloy#MonthDay
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+
 }

@@ -105,7 +105,6 @@ private[compiler] final class PatternFolder[F[
       case PYear => std("Integer", Hint.Timestamp(TimestampFormat.Year))
       case PYearMonth => std("String", Hint.Timestamp(TimestampFormat.YearMonth))
       case PMonthDay => std("String", Hint.Timestamp(TimestampFormat.MonthDay))
- 
     }
 
   def nestedIdFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
