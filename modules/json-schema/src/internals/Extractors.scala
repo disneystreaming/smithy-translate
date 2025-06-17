@@ -26,7 +26,6 @@ import smithytranslate.compiler.internals.GetExtensions
 import scala.jdk.CollectionConverters._
 import cats.syntax.all._
 import scala.collection.compat._
-import smithytranslate.compiler.internals.TimestampFormat.LocalDate
 
 private[json_schema] object Extractors {
 
@@ -160,6 +159,41 @@ private[json_schema] object Extractors {
         case (_: StringSchema) & Format("zoned-date-time") =>
           Some(List.empty -> PZonedDateTime)
 
+        // I:
+        //  type: integer
+        //  format: year
+        //  The json schema parser treats any integer type with a format fields as a CombinedSchema of StringSchema and NumberSchema
+        //  where the StringSchema has the format set
+        case (combinedSchema: CombinedSchema) => {
+          val subschemas = combinedSchema.getSubschemas().asScala.toSet
+
+          val isNumberSchema = subschemas.exists { 
+            case (_: NumberSchema) => true 
+            case _ => false
+          }
+          val hasYearFormat = subschemas.exists { 
+            case Format("year") => true  
+            case _ => false
+          }
+
+          if (isNumberSchema && hasYearFormat) {
+            Some(List.empty -> PYear)
+          } else
+            None
+        }
+
+        // S:
+        //  type: string
+        //  format: year-month
+        case (_: StringSchema) & Format("year-month") =>
+          Some(List.empty -> PYearMonth)
+
+        // S:
+        //  type: string
+        //  format: month-day
+        case (_: StringSchema) & Format("month-day") =>
+          Some(List.empty -> PMonthDay)
+
         // S:
         //  type: string
         //  format: date
@@ -213,6 +247,7 @@ private[json_schema] object Extractors {
 
         case _ => None
       }
+
       specific.map(_.leftMap(_ ++ genericHints))
     }
   }

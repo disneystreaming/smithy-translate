@@ -150,7 +150,7 @@ private[openapi] object CasePrimitive {
     // I:
     //   type: integer
     //   format: year
-    // case (_: IntegerSchema) & Format("year") => Some(PYear)
+    case (_: IntegerSchema) & Format("year") => Some(PYear)
 
     // S:
     //   type: string

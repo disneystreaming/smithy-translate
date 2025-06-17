@@ -51,6 +51,15 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |    MyZonedDateTime:
                            |      type: string
                            |      format: "zoned-date-time"
+                           |    MyYear:
+                           |      type: integer
+                           |      format: "year"
+                           |    MyYearMonth:
+                           |      type: string
+                           |      format: "year-month"
+                           |    MyMonthDay:
+                           |      type: string
+                           |      format: "month-day"
                            |""".stripMargin
 
     val expectedString = """|namespace foo
@@ -79,10 +88,18 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |
                             |@alloy#zoneOffsetFormat
                             |string MyZoneOffset
-
                             |
                             |@alloy#zonedDateTimeFormat
                             |string MyZonedDateTime
+                            |
+                            |@alloy#yearFormat
+                            |integer MyYear
+                            |
+                            |@alloy#yearMonthFormat
+                            |string MyYearMonth
+                            |
+                            |@alloy#monthDayFormat
+                            |string MyMonthDay
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
@@ -127,6 +144,15 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |        zonedDateTime:
                            |          type: string
                            |          format: zoned-date-time
+                           |        year:
+                           |          type: integer
+                           |          format: year
+                           |        yearMonth:
+                           |          type: string
+                           |          format: year-month
+                           |        monthDay:
+                           |          type: string
+                           |          format: month-day
                            |    MyTimestamp:
                            |      type: string
                            |      format: date-time
@@ -148,6 +174,9 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |  zoneId: alloy#ZoneId
                             |  zoneOffset: alloy#ZoneOffset
                             |  zonedDateTime: alloy#ZonedDateTime
+                            |  year: alloy#Year
+                            |  yearMonth: alloy#YearMonth
+                            |  monthDay: alloy#MonthDay
                             |}
                             |
                             |@timestampFormat("date-time")

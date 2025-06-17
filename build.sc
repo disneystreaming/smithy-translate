@@ -57,7 +57,6 @@ trait CompilerCoreModule
     buildDeps.alloy.core,
     buildDeps.collectionsCompat
   )
-
 }
 
 object `json-schema` extends Cross[JsonSchemaModule](scalaVersions)
@@ -78,6 +77,7 @@ trait JsonSchemaModule
   object tests extends this.ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
+      buildDeps.smithy.diff,
       buildDeps.lihaoyi.oslib
     )
   }

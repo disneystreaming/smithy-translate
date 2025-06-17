@@ -33,6 +33,7 @@ final class TimeTypeSpec extends munit.FunSuite {
     runNewtypeTest(
       "offset-date-time",
       List("@alloy#offsetDateTimeFormat", "@timestampFormat(\"date-time\")"),
+      "string",
       "timestamp"
     )
   }
@@ -62,6 +63,30 @@ final class TimeTypeSpec extends munit.FunSuite {
     runNewtypeTest(
       "zoned-date-time",
       "@alloy#zonedDateTimeFormat"
+    )
+  }
+
+  test("year newtype definition") {
+    runNewtypeTest(
+      "year",
+      List("@alloy#yearFormat"),
+      "integer",
+      "integer"
+    )
+  }
+
+  test("year-month newtype definition") {
+    runNewtypeTest(
+      "year-month",
+      "@alloy#yearMonthFormat"
+    )
+
+  }
+
+  test("month-day newtype definition") {
+    runNewtypeTest(
+      "month-day",
+      "@alloy#monthDayFormat",
     )
   }
 
@@ -104,8 +129,19 @@ final class TimeTypeSpec extends munit.FunSuite {
          |    "zonedDateTime": {
          |      "type": "string",
          |      "format": "zoned-date-time"
+         |    },
+         |    "year": {
+         |      "type": "integer",
+         |      "format": "year"
+         |    },
+         |    "yearMonth": {
+         |      "type": "string",
+         |      "format": "year-month"
+         |    },
+         |    "monthDay": {
+         |      "type": "string",
+         |      "format": "month-day"
          |    }
-
          |  }
          |}
          |""".stripMargin
@@ -121,22 +157,25 @@ final class TimeTypeSpec extends munit.FunSuite {
                             | zoneId: alloy#ZoneId
                             | zoneOffset: alloy#ZoneOffset
                             | zonedDateTime: alloy#ZonedDateTime
+                            | year: alloy#Year
+                            | yearMonth: alloy#YearMonth
+                            | monthDay: alloy#MonthDay
                             |}
                             |""".stripMargin
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
   private def runNewtypeTest(format: String, formatTrait: String): Unit = {
-    runNewtypeTest(format, formatTrait :: Nil, "string")
+    runNewtypeTest(format, List(formatTrait))
   }
 
-  private def runNewtypeTest(format: String, formatTraits: List[String], smithyType: String = "string"): Unit = {
+  private def runNewtypeTest(format: String, formatTraits: List[String], jsonType: String = "string", smithyType: String = "string"): Unit = {
     val jsonSchString =
       s"""|{
          |  "$$id": "test.json",
          |  "$$schema": "http://json-schema.org/draft-07/schema#",
          |  "title": "MyTimeType",
-         |  "type": "string",
+         |  "type": "$jsonType",
          |  "format": "$format"
          |}
          |""".stripMargin

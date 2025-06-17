@@ -101,7 +101,10 @@ private[compiler] final class PatternFolder[F[
       case POffsetTime => std("String", Hint.Timestamp(TimestampFormat.OffsetTime))
       case PZoneId => std("String", Hint.Timestamp(TimestampFormat.ZoneId))
       case PZoneOffset => std("String", Hint.Timestamp(TimestampFormat.ZoneOffset))
-      case PZonedDateTime=> std("String", Hint.Timestamp(TimestampFormat.ZonedDateTime))
+      case PZonedDateTime => std("String", Hint.Timestamp(TimestampFormat.ZonedDateTime))
+      case PYear => std("Integer", Hint.Timestamp(TimestampFormat.Year))
+      case PYearMonth => std("String", Hint.Timestamp(TimestampFormat.YearMonth))
+      case PMonthDay => std("String", Hint.Timestamp(TimestampFormat.MonthDay))
  
     }
 
@@ -115,6 +118,9 @@ private[compiler] final class PatternFolder[F[
       case PZoneId => alloy("ZoneId")
       case PZoneOffset => alloy("ZoneOffset")
       case PZonedDateTime=> alloy("ZonedDateTime")
+      case PYear => alloy("Year")
+      case PYearMonth => alloy("YearMonth")
+      case PMonthDay => alloy("MonthDay")
       case _ => topLevelIdFromPrimitive(primitive)
     }
   // format: on
