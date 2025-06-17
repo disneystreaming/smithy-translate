@@ -17,13 +17,8 @@ package smithytranslate.compiler.internals
 package postprocess
 import smithytranslate.compiler.internals.Hint.OpenApiExtension
 
-// import cats.syntax.all._
-// import scala.annotation.tailrec
-// import cats.kernel.Eq
-// import org.typelevel.ci._
-// import scala.collection.mutable
-
-private[compiler] object DropAlloyTimeExtensionsTransformer extends IModelPostProcessor {
+private[compiler] object DropAlloyTimeExtensionsTransformer
+    extends IModelPostProcessor {
 
   def apply(model: IModel): IModel = {
     model.copy(definitions = model.definitions.map(process))
@@ -41,15 +36,15 @@ private[compiler] object DropAlloyTimeExtensionsTransformer extends IModelPostPr
     "zoned-date-time",
     "year",
     "year-month",
-    "month-day",
+    "month-day"
   )
 
   private def process(d: Definition) = {
     d match {
-      case x: Newtype => x.copy(hints = removeAlloyTimeExtension(x.hints))
+      case x: Newtype   => x.copy(hints = removeAlloyTimeExtension(x.hints))
       case x: Structure => x.copy(localFields = updateFields(x.localFields))
-      case x: Union => x.copy(alts = updateAlts(x.alts))
-      case x => x.mapHints(removeAlloyTimeExtension)
+      case x: Union     => x.copy(alts = updateAlts(x.alts))
+      case x            => x.mapHints(removeAlloyTimeExtension)
     }
   }
 
@@ -70,9 +65,9 @@ private[compiler] object DropAlloyTimeExtensionsTransformer extends IModelPostPr
           ext == "x-format" && formatsToDrop.contains(value.toString())
         }
 
-        if (updatedValues.isEmpty) None else Some(OpenApiExtension(updatedValues))
+        if (updatedValues.isEmpty) None
+        else Some(OpenApiExtension(updatedValues))
       }
       case hint => Some(hint)
     }
 }
-

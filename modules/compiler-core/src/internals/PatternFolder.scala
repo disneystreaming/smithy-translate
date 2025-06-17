@@ -69,7 +69,10 @@ private[compiler] final class PatternFolder[F[
   // checks to see if the current primitive is topLevel. This is because a newtype
   // definition may be required for top level primitives, and in nested instances
   // the default newtype definition should be used.
-  def idFromPrimitive(primitive: Primitive, context: Context): (DefId, List[Hint]) = {
+  def idFromPrimitive(
+      primitive: Primitive,
+      context: Context
+  ): (DefId, List[Hint]) = {
     if (context.hints.contains(Hint.TopLevel))
       topLevelIdFromPrimitive(primitive)
     else

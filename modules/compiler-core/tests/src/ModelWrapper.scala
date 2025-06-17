@@ -76,7 +76,9 @@ class ModelWrapper(val model: Model) {
               oldMember <- changed.getOldShape().asMemberShape().toScala
               newMember <- changed.getNewShape().asMemberShape().toScala
             } yield oldMember.getTarget() != newMember.getTarget()
-            addedTraits.nonEmpty || removedTraits.nonEmpty || changedTraits.nonEmpty || hasDifferentTargets.exists(identity)
+
+            addedTraits.nonEmpty || removedTraits.nonEmpty || changedTraits.nonEmpty || hasDifferentTargets
+              .exists(identity)
           }
       val removed =
         diff.removedShapes().asList

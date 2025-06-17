@@ -167,13 +167,13 @@ private[json_schema] object Extractors {
         case (combinedSchema: CombinedSchema) => {
           val subschemas = combinedSchema.getSubschemas().asScala.toSet
 
-          val isNumberSchema = subschemas.exists { 
-            case (_: NumberSchema) => true 
-            case _ => false
+          val isNumberSchema = subschemas.exists {
+            case (_: NumberSchema) => true
+            case _                 => false
           }
-          val hasYearFormat = subschemas.exists { 
-            case Format("year") => true  
-            case _ => false
+          val hasYearFormat = subschemas.exists {
+            case Format("year") => true
+            case _              => false
           }
 
           if (isNumberSchema && hasYearFormat) {

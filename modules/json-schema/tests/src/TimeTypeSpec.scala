@@ -18,15 +18,15 @@ package smithytranslate.compiler.json_schema
 final class TimeTypeSpec extends munit.FunSuite {
 
   test("local-date newtype definitions") {
-    runNewtypeTest("local-date", "@alloy#dateFormat" )
+    runNewtypeTest("local-date", "@alloy#dateFormat")
   }
 
   test("local-time newtype definition") {
-    runNewtypeTest("local-time", "@alloy#localTimeFormat" )
+    runNewtypeTest("local-time", "@alloy#localTimeFormat")
   }
 
   test("local-date-time newtype definition") {
-    runNewtypeTest("local-date-time", "@alloy#localDateTimeFormat" )
+    runNewtypeTest("local-date-time", "@alloy#localDateTimeFormat")
   }
 
   test("offset-date-time newtype definition") {
@@ -86,7 +86,7 @@ final class TimeTypeSpec extends munit.FunSuite {
   test("month-day newtype definition") {
     runNewtypeTest(
       "month-day",
-      "@alloy#monthDayFormat",
+      "@alloy#monthDayFormat"
     )
   }
 
@@ -169,22 +169,27 @@ final class TimeTypeSpec extends munit.FunSuite {
     runNewtypeTest(format, List(formatTrait))
   }
 
-  private def runNewtypeTest(format: String, formatTraits: List[String], jsonType: String = "string", smithyType: String = "string"): Unit = {
+  private def runNewtypeTest(
+      format: String,
+      formatTraits: List[String],
+      jsonType: String = "string",
+      smithyType: String = "string"
+  ): Unit = {
     val jsonSchString =
       s"""|{
-         |  "$$id": "test.json",
-         |  "$$schema": "http://json-schema.org/draft-07/schema#",
-         |  "title": "MyTimeType",
-         |  "type": "$jsonType",
-         |  "format": "$format"
-         |}
-         |""".stripMargin
+          |  "$$id": "test.json",
+          |  "$$schema": "http://json-schema.org/draft-07/schema#",
+          |  "title": "MyTimeType",
+          |  "type": "$jsonType",
+          |  "format": "$format"
+          |}
+          |""".stripMargin
 
     val expectedString = s"""|namespace foo
-                            |
-                            |${formatTraits.mkString("\n")}
-                            |$smithyType MyTimeType
-                            |""".stripMargin
+                             |
+                             |${formatTraits.mkString("\n")}
+                             |$smithyType MyTimeType
+                             |""".stripMargin
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }

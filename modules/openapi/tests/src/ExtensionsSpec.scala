@@ -223,5 +223,4 @@ final class ExtensionsSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
-
 }

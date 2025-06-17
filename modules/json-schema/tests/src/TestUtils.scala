@@ -73,7 +73,6 @@ object TestUtils {
       val spec = s"""|$$version: "${i.smithyVersion}"
                      |
                      |${i.smithySpec}""".stripMargin
-
       assembler.addUnparsedModel(name, spec)
       i.errorSmithySpec.foreach(assembler.addUnparsedModel("error.smithy", _))
     }
@@ -83,13 +82,6 @@ object TestUtils {
         .unwrap()
     )
     ConversionResult(resultW, expected)
-  }
-
-  def serializeAsJson(model: Model): String = {
-    val serialiser =
-      software.amazon.smithy.model.shapes.ModelSerializer.builder().build()
-
-    Node.prettyPrintJson(serialiser.serialize(model))
   }
 
   def runConversionTest(
@@ -102,13 +94,11 @@ object TestUtils {
       input0,
       remaining: _*
     )
-
     res match {
       case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
       case ToSmithyResult.Success(_, output) =>
-
         Assertions.assertEquals(output, expected)
     }
   }

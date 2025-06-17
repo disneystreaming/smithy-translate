@@ -83,7 +83,6 @@ trait JsonSchemaModule
 
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
-      buildDeps.smithy.diff,
       buildDeps.lihaoyi.oslib
     )
   }
