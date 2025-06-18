@@ -5,8 +5,10 @@ import $ivy.`com.lewisjkl::header-mill-plugin::0.0.3`
 import $file.buildDeps
 
 import header._
-import $file.plugins.ci.CiReleaseModules
-import CiReleaseModules.{CiReleaseModule, SonatypeHost, ReleaseModule}
+import $ivy.`com.lihaoyi::mill-contrib-sonatypecentral:`
+import mill.contrib.sonatypecentral.SonatypeCentralPublishModule
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.4.1`
+import de.tobiasroeser.mill.vcs.version.VcsVersion
 import mill._
 import mill.scalajslib.api.ModuleKind
 import mill.scalajslib.ScalaJSModule
@@ -29,8 +31,8 @@ object ScalaVersions {
 trait BaseModule extends Module with HeaderModule {
 
   def millSourcePath: os.Path = {
-    val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
-    os.pwd / "modules" / originalRelativePath
+    val originalPath = super.millSourcePath
+    (originalPath / os.up) / "modules" / originalPath.last
   }
 
   def includeFileExtensions: List[String] = List("scala", "java")
@@ -52,16 +54,20 @@ trait BaseModule extends Module with HeaderModule {
   )
 }
 
-trait BasePublishModule extends BaseModule with CiReleaseModule {
+trait BasePublishModule extends BaseModule with SonatypeCentralPublishModule {
 
   def publishArtifactName: T[String]
   override final def artifactName = publishArtifactName
 
-  override def sonatypeHost = Some(SonatypeHost.s01)
+  override def publishVersion: T[String] = T {
+    if (isCI()) VcsVersion.vcsState().format() else "dev-SNAPSHOT"
+  }
+
+  def isCI = T.input(T.ctx().env.contains("CI"))
 
   def pomSettings = PomSettings(
     description = "A smithy-translation toolkit",
-    organization = "com.disneystreaming.smithy",
+    organization = "io.github.disneystreaming.smithy",
     url = "https://github.com/disneystreaming/smithy-translate",
     licenses = Seq(
       License(

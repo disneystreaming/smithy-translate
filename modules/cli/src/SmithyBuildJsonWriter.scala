@@ -23,10 +23,10 @@ object SmithyBuildJsonWriter {
       "maven" -> ujson.Obj(
         "dependencies" -> ujson.Arr(
           ujson.Str(
-            s"com.disneystreaming.alloy:alloy-core:${BuildInfo.alloyVersion}"
+            s"io.github.disneystreaming.alloy:alloy-core:${BuildInfo.alloyVersion}"
           ),
           ujson.Str(
-            s"com.disneystreaming.smithy:smithytranslate-traits:${BuildInfo.cliVersion}"
+            s"io.github.disneystreaming.smithy:smithytranslate-traits:${BuildInfo.cliVersion}"
           )
         )
       )
