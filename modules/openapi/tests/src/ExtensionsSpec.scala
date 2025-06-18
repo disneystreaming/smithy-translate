@@ -151,7 +151,7 @@ final class ExtensionsSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
-  test("extensions: doesn't capture x-format of alloy time types".only) {
+  test("extensions: doesn't capture x-format of alloy time types") {
     val openapiString = """|openapi: '3.0.'
                            |info:
                            |  title: test
