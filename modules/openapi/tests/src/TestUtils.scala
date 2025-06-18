@@ -24,6 +24,7 @@ import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyResult
 import smithytranslate.compiler.ToSmithyCompilerOptions
 import smithytranslate.compiler.FileContents
+import smithytranslate.compiler.ModelWrapper
 
 object TestUtils {
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.compiler.openapi
+package smithytranslate.compiler
 
 import software.amazon.smithy.model._
 import software.amazon.smithy.model.node._
@@ -27,6 +27,8 @@ import software.amazon.smithy.model.shapes.Shape
 import software.amazon.smithy.model.traits.BoxTrait
 import software.amazon.smithy.diff.ModelDiff
 import java.util.stream.Collectors
+
+import scala.jdk.OptionConverters.*
 
 // In order to have nice comparisons from test reports.
 class ModelWrapper(val model: Model) {
@@ -69,7 +71,14 @@ class ModelWrapper(val model: Model) {
                 // don't consider synthetic traits
                 pair.getLeft().toShapeId().getNamespace() == "smithy.synthetic"
               }
-            addedTraits.nonEmpty || removedTraits.nonEmpty || changedTraits.nonEmpty
+
+            val hasDifferentTargets: Option[Boolean] = for {
+              oldMember <- changed.getOldShape().asMemberShape().toScala
+              newMember <- changed.getNewShape().asMemberShape().toScala
+            } yield oldMember.getTarget() != newMember.getTarget()
+
+            addedTraits.nonEmpty || removedTraits.nonEmpty || changedTraits.nonEmpty || hasDifferentTargets
+              .exists(identity)
           }
       val removed =
         diff.removedShapes().asList

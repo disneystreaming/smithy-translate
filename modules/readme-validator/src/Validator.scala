@@ -115,7 +115,8 @@ object Validator {
           .addUnparsedModel(s"$namespace.smithy", actualSmithy)
           .assemble()
           .unwrap()
-        if (expectedModel != actualModel)
+
+        if (ModelWrapper(expectedModel) != ModelWrapper(actualModel))
           List(
             ValidationError.OpenapiConversionError(
               expectedModel,
@@ -165,7 +166,7 @@ object Validator {
           .addUnparsedModel(s"$namespace.smithy", actualSmithy)
           .assemble()
           .unwrap()
-        if (expectedModel != actualModel)
+        if (ModelWrapper(expectedModel) != ModelWrapper(actualModel))
           List(
             ValidationError.OpenapiConversionError(
               expectedModel,
