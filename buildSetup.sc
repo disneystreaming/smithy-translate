@@ -31,8 +31,8 @@ object ScalaVersions {
 trait BaseModule extends Module with HeaderModule {
 
   def millSourcePath: os.Path = {
-    val originalRelativePath = super.millSourcePath.relativeTo(os.pwd)
-    os.pwd / "modules" / originalRelativePath
+    val originalPath = super.millSourcePath
+    (originalPath / os.up) / "modules" / originalPath.last
   }
 
   def includeFileExtensions: List[String] = List("scala", "java")

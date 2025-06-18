@@ -83,7 +83,6 @@ jobs:
               --connectTimeout 36000 \
               --shouldRelease true
         env:
-          PGP_PASSPHRASE: ""
           MILL_PGP_SECRET_BASE64: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_USERNAME }}
