@@ -25,7 +25,6 @@ import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyCompilerOptions
 import smithytranslate.compiler.ToSmithyResult
 import software.amazon.smithy.model.Model
-import software.amazon.smithy.model.node._
 
 object TestUtils {
 
