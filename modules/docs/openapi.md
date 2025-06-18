@@ -253,13 +253,6 @@ string MyZoneId
 string MyZoneOffset
 ```
 
-OpenAPI:
-
-Smithy:
-
-
-
-
 #### Aggregate Shapes
 
 ##### Structure
