@@ -113,6 +113,89 @@ private[json_schema] object Extractors {
 
         // S:
         //  type: string
+        //  format: local-date
+        case (_: StringSchema) & Format("local-date") =>
+          Some(List.empty -> PLocalDate)
+
+        // S:
+        //  type: string
+        //  format: local-time
+        case (_: StringSchema) & Format("local-time") =>
+          Some(List.empty -> PLocalTime)
+
+        // S:
+        //  type: string
+        //  format: local-date-time
+        case (_: StringSchema) & Format("local-date-time") =>
+          Some(List.empty -> PLocalDateTime)
+
+        // S:
+        //  type: string
+        //  format: offset-date-time
+        case (_: StringSchema) & Format("offset-date-time") =>
+          Some(List.empty -> POffsetDateTime)
+
+        // S:
+        //  type: string
+        //  format: offset-time
+        case (_: StringSchema) & Format("offset-time") =>
+          Some(List.empty -> POffsetTime)
+
+        // S:
+        //  type: string
+        //  format: zone-id
+        case (_: StringSchema) & Format("zone-id") =>
+          Some(List.empty -> PZoneId)
+
+        // S:
+        //  type: string
+        //  format: zone-offset
+        case (_: StringSchema) & Format("zone-offset") =>
+          Some(List.empty -> PZoneOffset)
+
+        // S:
+        //  type: string
+        //  format: zoned-date-time
+        case (_: StringSchema) & Format("zoned-date-time") =>
+          Some(List.empty -> PZonedDateTime)
+
+        // I:
+        //  type: integer
+        //  format: year
+        //  The json schema parser treats any integer type with a format fields as a CombinedSchema of StringSchema and NumberSchema
+        //  where the StringSchema has the format set
+        case (combinedSchema: CombinedSchema) => {
+          val subschemas = combinedSchema.getSubschemas().asScala.toSet
+
+          val isNumberSchema = subschemas.exists {
+            case (_: NumberSchema) => true
+            case _                 => false
+          }
+          val hasYearFormat = subschemas.exists {
+            case Format("year") => true
+            case _              => false
+          }
+
+          if (isNumberSchema && hasYearFormat) {
+            Some(List.empty -> PYear)
+          } else
+            None
+        }
+
+        // S:
+        //  type: string
+        //  format: year-month
+        case (_: StringSchema) & Format("year-month") =>
+          Some(List.empty -> PYearMonth)
+
+        // S:
+        //  type: string
+        //  format: month-day
+        case (_: StringSchema) & Format("month-day") =>
+          Some(List.empty -> PMonthDay)
+
+        // S:
+        //  type: string
         //  format: date
         case (_: StringSchema) & Format("date") =>
           Some(List.empty -> PDate)
@@ -164,6 +247,7 @@ private[json_schema] object Extractors {
 
         case _ => None
       }
+
       specific.map(_.leftMap(_ ++ genericHints))
     }
   }

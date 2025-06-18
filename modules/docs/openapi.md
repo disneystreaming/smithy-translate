@@ -48,26 +48,210 @@ Smithy.
 
 #### Primitives
 
-| OpenAPI Base Type | OpenAPI Format     | Smithy Shape | Smithy Trait(s)               |
-| ----------------- | ------------------ | ------------ | ----------------------------- |
-| string            |                    | String       |                               |
-| string            | timestamp          | Timestamp    |                               |
-| string            | date-time          | Timestamp    | @timestampFormat("date-time") |
-| string            | date               | String       | alloy#dateFormat              |
-| string            | uuid               | alloy#UUID   |                               |
-| string            | binary             | Blob         |                               |
-| string            | byte               | Blob         |                               |
-| string            | password           | String       | @sensitive                    |
-| number            | float              | Float        |                               |
-| number            | double             | Double       |                               |
-| number            | double             | Double       |                               |
-| number            |                    | Double       |                               |
-| integer           | int16              | Short        |                               |
-| integer           |                    | Integer      |                               |
-| integer           | int32              | Integer      |                               |
-| integer           | int64              | Long         |                               |
-| boolean           |                    | Boolean      |                               |
-| object            | (empty properties) | Document     |                               |
+| OpenAPI Base Type | OpenAPI Format     | Smithy Shape         | Smithy Trait(s)               |
+| ----------------- | ------------------ | -------------------- | ----------------------------- |
+| string            |                    | String               |                               |
+| string            | timestamp          | Timestamp            |                               |
+| string            | date-time          | Timestamp            | @timestampFormat("date-time") |
+| string            | date               | String               | alloy#dateFormat              |
+| string            | local-date         | alloy#LocalDate      | alloy#localDateFormat         |
+| string            | local-time         | alloy#LocalTime      | alloy#localTimeFormat         |
+| string            | local-date-time    | alloy#LocalDateTime  | alloy#localDateTimeFormat     |
+| string            | offset-date-time   | alloy#OffsetDateTime | alloy#offsetDateTimeFormat    |
+| string            | offset-time        | alloy#OffsetTime     | alloy#offsetTimeFormat        |
+| string            | zone-id            | alloy#ZoneId         | alloy#zoneIdFormat            |
+| string            | zone-offset        | alloy#ZoneOffset     | alloy#zoneOffsetFormat        |
+| string            | zoned-date-time    | alloy#ZonedDateTime  | alloy#zonedDateTimeFormat     |
+| integer           | year               | alloy#Year           | alloy#yearFormat              |
+| string            | year-month         | alloy#YearMonth      | alloy#yearMonthFormat         |
+| string            | month-day          | alloy#MonthDay       | alloy#monthDayFormat          |
+| string            | uuid               | alloy#UUID           |                               |
+| string            | binary             | Blob                 |                               |
+| string            | byte               | Blob                 |                               |
+| string            | password           | String               | @sensitive                    |
+| number            | float              | Float                |                               |
+| number            | double             | Double               |                               |
+| number            | double             | Double               |                               |
+| number            |                    | Double               |                               |
+| integer           | int16              | Short                |                               |
+| integer           |                    | Integer              |                               |
+| integer           | int32              | Integer              |                               |
+| integer           | int64              | Long                 |                               |
+| boolean           |                    | Boolean              |                               |
+| object            | (empty properties) | Document             |                               |
+
+##### Time types
+
+Time types are treated in two different ways. If the definition of the schema is just a primitive with a `format` or `x-format` defined
+then the resulting smithy type will be a newtype. If the definition is within an aggregate shape then the smithy type will be the default
+alloy time type.
+
+
+OpenAPI:
+```yaml
+openapi: '3.0.'
+info:
+  title: test
+  version: '1.0'
+paths: {}
+components:
+  schemas:
+    MyTimestamp:
+      type: string
+      format: date-time
+    MyLocalDate:
+      type: string
+      format: local-date
+    MyLocalTime:
+      type: string
+      format: local-time
+    MyLocalDateTime:
+      type: string
+      format: local-date-time
+    MyOffsetDateTime:
+      type: string
+      format: "offset-date-time"
+    MyOffsetTime:
+      type: string
+      format: "offset-time"
+    MyZoneId:
+      type: string
+      format: "zone-id"
+    MyZoneOffset:
+      type: string
+      format: "zone-offset"
+    MyZonedDateTime:
+      type: string
+      format: "zoned-date-time"
+    MyYear:
+      type: integer
+      format: "year"
+    MyYearMonth:
+      type: string
+      format: "year-month"
+    MyMonthDay:
+      type: string
+      format: "month-day"
+    MyObj:
+      type: object
+      properties:
+        myTimestamp:
+          $ref: '#/components/schemas/MyTimestamp'
+        myLocalDate:
+          $ref: '#/components/schemas/MyLocalDate'
+        localDate:
+          type: string
+          format: local-date
+        localTime:
+          type: string
+          format: local-time
+        localDateTime:
+          type: string
+          format: local-date-time
+        offsetDateTime:
+          type: string
+          format: offset-date-time
+        offsetTime:
+          type: string
+          format: offset-time
+        zoneId:
+          type: string
+          format: zone-id
+        zoneOffset:
+          type: string
+          format: zone-offset
+        zonedDateTime:
+          type: string
+          format: zoned-date-time
+        year:
+          type: integer
+          format: year
+        yearMonth:
+          type: string
+          format: year-month
+        monthDay:
+          type: string
+          format: month-day
+```
+
+Smithy:
+```smithy
+use alloy#dateFormat
+use alloy#LocalDate
+use alloy#LocalDateTime
+use alloy#localDateTimeFormat
+use alloy#LocalTime
+use alloy#localTimeFormat
+use alloy#MonthDay
+use alloy#monthDayFormat
+use alloy#OffsetDateTime
+use alloy#offsetDateTimeFormat
+use alloy#OffsetTime
+use alloy#offsetTimeFormat
+use alloy#Year
+use alloy#yearFormat
+use alloy#YearMonth
+use alloy#yearMonthFormat
+use alloy#ZonedDateTime
+use alloy#zonedDateTimeFormat
+use alloy#ZoneId
+use alloy#zoneIdFormat
+use alloy#ZoneOffset
+use alloy#zoneOffsetFormat
+
+structure MyObj {
+    myTimestamp: MyTimestamp
+    myLocalDate: MyLocalDate
+    localDate: LocalDate
+    localTime: LocalTime
+    localDateTime: LocalDateTime
+    offsetDateTime: OffsetDateTime
+    offsetTime: OffsetTime
+    zoneId: ZoneId
+    zoneOffset: ZoneOffset
+    zonedDateTime: ZonedDateTime
+    year: Year
+    yearMonth: YearMonth
+    monthDay: MonthDay
+}
+
+@dateFormat
+string MyLocalDate
+
+@localDateTimeFormat
+string MyLocalDateTime
+
+@localTimeFormat
+string MyLocalTime
+
+@monthDayFormat
+string MyMonthDay
+
+@offsetDateTimeFormat
+@timestampFormat("date-time")
+timestamp MyOffsetDateTime
+
+@offsetTimeFormat
+string MyOffsetTime
+
+@timestampFormat("date-time")
+timestamp MyTimestamp
+
+@yearFormat
+integer MyYear
+
+@yearMonthFormat
+string MyYearMonth
+
+@zonedDateTimeFormat
+string MyZonedDateTime
+
+@zoneIdFormat
+string MyZoneId
+
+@zoneOffsetFormat
+string MyZoneOffset
+```
 
 #### Aggregate Shapes
 
@@ -938,7 +1122,6 @@ components:
       x-string: foo
       x-int: 1
       x-array: [1, 2, 3]
-      x-null: null
       x-obj:
         a: 1
         b: 2
@@ -953,7 +1136,6 @@ use alloy.openapi#openapiExtensions
  "x-array": [1, 2, 3],
  "x-string": "foo",
  "x-int": 1,
- "x-null": null,
  "x-obj": {
    a: 1,
    b: 2

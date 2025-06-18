@@ -66,8 +66,22 @@ private[compiler] final class PatternFolder[F[
       hints.toList
     )
 
+  // checks to see if the current primitive is topLevel. This is because a newtype
+  // definition may be required for top level primitives, and in nested instances
+  // the default newtype definition should be used.
+  def idFromPrimitive(
+      primitive: Primitive,
+      context: Context
+  ): (DefId, List[Hint]) = {
+    if (context.hints.contains(Hint.TopLevel))
+      topLevelIdFromPrimitive(primitive)
+    else
+      nestedIdFromPrimitive(primitive)
+  }
+
+
   // format: off
-  def idFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
+  def topLevelIdFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
     primitive match {
       case PInt       => std("Integer")
       case PBoolean   => std("Boolean")
@@ -83,8 +97,35 @@ private[compiler] final class PatternFolder[F[
       case PDate      => std("String", Hint.Timestamp(TimestampFormat.SimpleDate))
       case PDateTime  => std("Timestamp", Hint.Timestamp(TimestampFormat.DateTime))
       case PTimestamp => std("Timestamp")
+      case PLocalDate => std("String", Hint.Timestamp(TimestampFormat.LocalDate))
+      case PLocalTime =>  std("String", Hint.Timestamp(TimestampFormat.LocalTime))
+      case PLocalDateTime => std("String", Hint.Timestamp(TimestampFormat.LocalDateTime))
+      case POffsetDateTime => std("Timestamp", Hint.Timestamp(TimestampFormat.OffsetDateTime), Hint.Timestamp(TimestampFormat.DateTime))
+      case POffsetTime => std("String", Hint.Timestamp(TimestampFormat.OffsetTime))
+      case PZoneId => std("String", Hint.Timestamp(TimestampFormat.ZoneId))
+      case PZoneOffset => std("String", Hint.Timestamp(TimestampFormat.ZoneOffset))
+      case PZonedDateTime => std("String", Hint.Timestamp(TimestampFormat.ZonedDateTime))
+      case PYear => std("Integer", Hint.Timestamp(TimestampFormat.Year))
+      case PYearMonth => std("String", Hint.Timestamp(TimestampFormat.YearMonth))
+      case PMonthDay => std("String", Hint.Timestamp(TimestampFormat.MonthDay))
     }
-    // format: on
+
+  def nestedIdFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
+    primitive match {
+      case PLocalDate => alloy("LocalDate")
+      case PLocalTime =>  alloy("LocalTime")
+      case PLocalDateTime => alloy("LocalDateTime")
+      case POffsetDateTime => alloy("OffsetDateTime")
+      case POffsetTime => alloy("OffsetTime")
+      case PZoneId => alloy("ZoneId")
+      case PZoneOffset => alloy("ZoneOffset")
+      case PZonedDateTime=> alloy("ZonedDateTime")
+      case PYear => alloy("Year")
+      case PYearMonth => alloy("YearMonth")
+      case PMonthDay => alloy("MonthDay")
+      case _ => topLevelIdFromPrimitive(primitive)
+    }
+  // format: on
 
   /** Folds one layer into a type, recording definitions into the monadic tell
     * as we go
@@ -94,7 +135,7 @@ private[compiler] final class PatternFolder[F[
       (layer match {
         case OpenApiPrimitive(context, primitive) =>
           val ntId = id(context)
-          val (target, hints) = idFromPrimitive(primitive)
+          val (target, hints) = idFromPrimitive(primitive, context)
           val nt = Newtype(ntId, target, context.hints ++ hints)
           recordDef(nt).as(ntId)
 
@@ -118,7 +159,7 @@ private[compiler] final class PatternFolder[F[
 
         case OpenApiMap(context, itemType) =>
           val defId = id(context)
-          val (key, _) = idFromPrimitive(Primitive.PString)
+          val (key, _) = idFromPrimitive(Primitive.PString, context)
           val definition = MapDef(defId, key, itemType, context.hints)
           recordDef(definition).as(defId)
 

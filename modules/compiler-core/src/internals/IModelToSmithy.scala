@@ -15,7 +15,6 @@
 
 package smithytranslate.compiler.internals
 
-import alloy.DateFormatTrait
 import alloy.DiscriminatedUnionTrait
 import alloy.NullableTrait
 import alloy.DataExamplesTrait
@@ -29,8 +28,7 @@ import smithytranslate.ErrorMessageTrait
 import smithytranslate.NullFormatTrait
 import smithytranslate.compiler.internals.Hint.Header
 import smithytranslate.compiler.internals.Hint.QueryParam
-import smithytranslate.compiler.internals.TimestampFormat.DateTime
-import smithytranslate.compiler.internals.TimestampFormat.SimpleDate
+import smithytranslate.compiler.internals.TimestampFormat._
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.node.Node
 import software.amazon.smithy.model.pattern.UriPattern
@@ -423,8 +421,19 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       List(new OpenApiExtensionsTrait(objNode))
     case Hint.Timestamp(format) =>
       format match {
-        case DateTime   => List(new TimestampFormatTrait("date-time"))
-        case SimpleDate => List(new DateFormatTrait())
+        case DateTime       => List(new TimestampFormatTrait("date-time"))
+        case SimpleDate     => List(new alloy.DateFormatTrait())
+        case LocalDate      => List(new alloy.DateFormatTrait())
+        case LocalTime      => List(new alloy.LocalTimeFormatTrait())
+        case LocalDateTime  => List(new alloy.LocalDateTimeFormatTrait())
+        case OffsetDateTime => List(new alloy.OffsetDateTimeFormatTrait())
+        case OffsetTime     => List(new alloy.OffsetTimeFormatTrait())
+        case ZoneId         => List(new alloy.ZoneIdFormatTrait())
+        case ZoneOffset     => List(new alloy.ZoneOffsetFormatTrait())
+        case ZonedDateTime  => List(new alloy.ZonedDateTimeFormatTrait())
+        case Year           => List(new alloy.YearFormatTrait())
+        case YearMonth      => List(new alloy.YearMonthFormatTrait())
+        case MonthDay       => List(new alloy.MonthDayFormatTrait())
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())

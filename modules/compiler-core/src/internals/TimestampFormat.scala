@@ -22,4 +22,15 @@ private[compiler] sealed abstract class TimestampFormat
 private[compiler] object TimestampFormat {
   case object DateTime extends TimestampFormat // e.g. 2017-07-21T17:32:28Z
   case object SimpleDate extends TimestampFormat // e.g. 2017-07-21
+  case object LocalTime extends TimestampFormat
+  case object LocalDate extends TimestampFormat
+  case object LocalDateTime extends TimestampFormat
+  case object OffsetDateTime extends TimestampFormat
+  case object OffsetTime extends TimestampFormat
+  case object ZoneId extends TimestampFormat
+  case object ZoneOffset extends TimestampFormat
+  case object ZonedDateTime extends TimestampFormat
+  case object Year extends TimestampFormat
+  case object YearMonth extends TimestampFormat
+  case object MonthDay extends TimestampFormat
 }

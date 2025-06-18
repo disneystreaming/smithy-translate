@@ -16,8 +16,7 @@
 package smithytranslate.compiler.internals
 
 import java.util.Date
-import java.time.OffsetDateTime
-import java.time.Instant
+import java.time._
 import java.util.UUID
 
 private[compiler] sealed trait Primitive {
@@ -40,6 +39,17 @@ private[compiler] object Primitive {
   case object PDate extends Primitive { type T = Date }
   case object PDateTime extends Primitive { type T = OffsetDateTime }
   case object PTimestamp extends Primitive { type T = Instant }
+  case object PLocalDate extends Primitive { type T = LocalDate }
+  case object PLocalTime extends Primitive { type T = LocalTime }
+  case object PLocalDateTime extends Primitive { type T = LocalDateTime }
+  case object POffsetDateTime extends Primitive { type T = OffsetTime }
+  case object POffsetTime extends Primitive { type T = OffsetTime }
+  case object PZoneId extends Primitive { type T = ZoneId }
+  case object PZoneOffset extends Primitive { type T = ZoneOffset }
+  case object PZonedDateTime extends Primitive { type T = ZonedDateTime }
+  case object PYear extends Primitive { type T = Year }
+  case object PYearMonth extends Primitive { type T = YearMonth }
+  case object PMonthDay extends Primitive { type T = MonthDay }
   case object PBytes extends Primitive { type T = Array[Byte] }
   case object PFreeForm extends Primitive { type T = Any }
 }

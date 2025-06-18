@@ -40,6 +40,9 @@ trait CompilerCoreModule
     buildDeps.collectionsCompat
   )
 
+  object tests extends this.ScalaTests with BaseMunitTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(buildDeps.smithy.diff)
+  }
 }
 
 object `json-schema` extends Cross[JsonSchemaModule](scalaVersions)
@@ -58,6 +61,8 @@ trait JsonSchemaModule
   )
 
   object tests extends this.ScalaTests with BaseMunitTests {
+    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().tests)
+
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.lihaoyi.oslib
@@ -79,6 +84,8 @@ trait OpenApiModule
     buildDeps.swagger.parser
 
   object tests extends this.ScalaTests with BaseMunitTests {
+    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().tests)
+
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.smithy.diff,
@@ -263,7 +270,7 @@ object traits extends BaseJavaModule with BasePublishModule {
 
 object `readme-validator` extends BaseScala213Module {
   def moduleDeps =
-    Seq(openapi(scala213), proto(scala213), `json-schema`(scala213))
+    Seq(openapi(scala213), proto(scala213), `json-schema`(scala213), `compiler-core`(scala213).tests)
 
   def ivyDeps = Agg(
     buildDeps.cats.parse,
