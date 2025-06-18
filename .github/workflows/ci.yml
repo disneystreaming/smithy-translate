@@ -36,32 +36,24 @@ jobs:
             distribution: adopt
             java-version: 11
 
-      - name: Get mill version
-        run: echo "MILL_VERSION=$(cat .mill-version)" >> $GITHUB_ENV
-
-      - name: Setup Mill
-        uses: jodersky/setup-mill@master
-        with:
-          mill-version: ${{ env.MILL_VERSION }}
-
       - name: Check formatting
-        run: mill -k --disable-ticker __.checkFormat
+        run: ./mill -k --disable-ticker __.checkFormat
 
       - name: Check headers
-        run: mill -k --disable-ticker __.headerCheck
+        run: ./mill -k --disable-ticker __.headerCheck
 
       - name: Compile
-        run: mill -k --disable-ticker __.compile
+        run: ./mill -k --disable-ticker __.compile
 
       - name: Run tests
         run: |
-          mill -k --disable-ticker __.test
-          mill -k --disable-ticker cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
-          mill -k --disable-ticker cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
-          mill -k --disable-ticker proto-examples.compileScalaPB # trigger smithy-to-proto run
+          ./mill -k --disable-ticker __.test
+          ./mill -k --disable-ticker cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
+          ./mill -k --disable-ticker cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
+          ./mill -k --disable-ticker proto-examples.compileScalaPB # trigger smithy-to-proto run
 
       - name: Validate README.md
-        run: mill -k --disable-ticker readme-validator.validate
+        run: ./mill -k --disable-ticker readme-validator.validate
 
       - name: Check for untracked changes
         run: |
