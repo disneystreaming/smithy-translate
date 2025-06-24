@@ -9,6 +9,7 @@ object alloy {
     ivy"$org:alloy-core:$alloyVersion"
   val protobuf =
     ivy"$org:alloy-protobuf:$alloyVersion"
+
 }
 object circe {
   val jawn = ivy"io.circe::circe-jawn:0.14.6"
