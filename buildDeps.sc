@@ -3,11 +3,13 @@ import mill.define._
 import mill.scalalib._
 
 object alloy {
-  val alloyVersion = "0.3.22"
+  val alloyVersion = "0.3.23"
+  val org = "io.github.disneystreaming.alloy"
   val core =
-    ivy"io.github.disneystreaming.alloy:alloy-core:$alloyVersion"
+    ivy"$org:alloy-core:$alloyVersion"
   val protobuf =
-    ivy"io.github.disneystreaming.alloy:alloy-protobuf:$alloyVersion"
+    ivy"$org:alloy-protobuf:$alloyVersion"
+
 }
 object circe {
   val jawn = ivy"io.circe::circe-jawn:0.14.6"
