@@ -10,6 +10,6 @@ mill cli.run smithy-to-proto -i modules/proto/examples/smithy/demo.smithy module
 
 ```
 $ grpcurl -plaintext localhost:9000 list
-$ grpcurl -plaintext localhost:9000 describe com.disneystreaming.smithyproto.demo.Hello
-$ grpcurl -plaintext -d '{"name":"john"}' localhost:9000 com.disneystreaming.smithyproto.demo.Hello/SayHello
+$ grpcurl -plaintext localhost:9000 describe io.github.disneystreaming.smithyproto.demo.Hello
+$ grpcurl -plaintext -d '{"name":"john"}' localhost:9000 io.github.disneystreaming.smithyproto.demo.Hello/SayHello
 ```
