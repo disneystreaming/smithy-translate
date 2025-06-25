@@ -15,27 +15,9 @@ import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
 import mill.scalalib.publish._
 import mill.contrib.buildinfo.BuildInfo
-import $file.plugins.ci.CiReleaseModules
-import CiReleaseModules.{ReleaseModule, Discover}
 
 import scala.Ordering.Implicits._
 import mill.eval.Evaluator
-
-object InternalReleaseModule extends Module {
-
-  /** This is a replacement for the mill.scalalib.PublishModule/publishAll task
-    * that should basically work identically _but_ without requiring the user to
-    * pass in anything. It also sets up your gpg stuff and grabs the necessary
-    * env variables to publish to sonatype for you.
-    */
-  def publishAll(ev: Evaluator): Command[Unit] = {
-    ReleaseModule.publishAll(ev)
-  }
-
-  import Discover._
-  lazy val millDiscover: mill.define.Discover[this.type] =
-    mill.define.Discover[this.type]
-}
 
 object `compiler-core` extends Cross[CompilerCoreModule](scalaVersions)
 trait CompilerCoreModule
@@ -62,7 +44,7 @@ trait CompilerCoreModule
     buildDeps.collectionsCompat
   )
 
-  object tests extends this.ScalaTests with BaseMunitTests {
+  object test extends ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(buildDeps.smithy.diff)
   }
 }
@@ -82,8 +64,8 @@ trait JsonSchemaModule
     buildDeps.collectionsCompat
   )
 
-  object tests extends this.ScalaTests with BaseMunitTests {
-    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().tests)
+  object test extends ScalaTests with BaseMunitTests {
+    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
@@ -105,8 +87,8 @@ trait OpenApiModule
   def ivyDeps =
     buildDeps.swagger.parser
 
-  object tests extends this.ScalaTests with BaseMunitTests {
-    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().tests)
+  object test extends ScalaTests with BaseMunitTests {
+    def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
@@ -139,7 +121,7 @@ object cli
     buildDeps.smithy.build
   )
 
-  object tests extends this.ScalaTests with BaseMunitTests {
+  object test extends ScalaTests with BaseMunitTests {
     def ivyDeps =
       super.ivyDeps() ++ Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson)
   }
@@ -158,9 +140,9 @@ object cli
     val cmd = List("smithy-to-proto")
     val args = cmd ++ inputArgs ++ List(output.toString)
 
-    mill.util.Jvm.runSubprocess(
-      finalMainClass(),
-      runClasspath().map(_.path),
+    mill.util.Jvm.callProcess(
+      mainClass = finalMainClass(),
+      classPath = runClasspath().map(_.path),
       mainArgs = args
     )
   }
@@ -185,7 +167,7 @@ object formatter extends BaseModule { outer =>
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
-    object tests extends this.ScalaTests with BaseMunitTests {
+    object test extends ScalaTests with BaseMunitTests {
       def ivyDeps = super.ivyDeps() ++ Agg(
         buildDeps.smithy.build,
         buildDeps.lihaoyi.oslib
@@ -286,13 +268,18 @@ object traits extends BaseJavaModule with BasePublishModule {
     )
   }
 
-  object tests extends Cross[TestsModule](scalaVersions)
-  trait TestsModule extends CrossScalaModule with JavaTests with BaseMunitTests
+  object test extends Cross[TestModule](scalaVersions)
+  trait TestModule extends CrossScalaModule with JavaTests with BaseMunitTests
 }
 
 object `readme-validator` extends BaseScala213Module {
   def moduleDeps =
-    Seq(openapi(scala213), proto(scala213), `json-schema`(scala213), `compiler-core`(scala213).tests)
+    Seq(
+      openapi(scala213),
+      proto(scala213),
+      `json-schema`(scala213),
+      `compiler-core`(scala213).test
+    )
 
   def ivyDeps = Agg(
     buildDeps.cats.parse,
@@ -301,9 +288,9 @@ object `readme-validator` extends BaseScala213Module {
 
   def validate() = T.command {
     val args = docs.docFiles().map(_.path.toString)
-    mill.util.Jvm.runSubprocess(
-      finalMainClass(),
-      runClasspath().map(_.path),
+    mill.util.Jvm.callProcess(
+      mainClass = finalMainClass(),
+      classPath = runClasspath().map(_.path),
       mainArgs = args
     )
   }
@@ -341,7 +328,7 @@ trait ProtoModule
   )
 
   def moduleDeps = Seq(traits, transitive())
-  object tests extends this.ScalaTests with BaseMunitTests with ScalaPBModule {
+  object test extends ScalaTests with BaseMunitTests with ScalaPBModule {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.scalapb.compilerPlugin,
@@ -415,7 +402,7 @@ trait TransitiveModule
     buildDeps.smithy.build,
     buildDeps.collectionsCompat
   )
-  object tests extends ScalaTests with BaseMunitTests {
+  object test extends ScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.scalaJavaCompat
     )
