@@ -33,6 +33,7 @@ import alloy.OpenEnumTrait
 import software.amazon.smithy.model.traits.EnumValueTrait
 import alloy.proto.ProtoTimestampFormatTrait
 import alloy.proto.ProtoTimestampFormatTrait.TimestampFormat
+import smithytranslate.proto3.internals.ProtoIR.Type.AlloyTypes
 
 private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
@@ -636,13 +637,18 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         val hasUUIDFormat = shape.hasTrait(classOf[alloy.UuidFormatTrait])
         val hasProtoCompactUUID =
           shape.hasTrait(classOf[alloy.proto.ProtoCompactUUIDTrait])
+
         if (hasUUIDFormat && hasProtoCompactUUID) Type.AlloyTypes.CompactUUID
-        else if (!isWrapped) Type.String
-        else Type.GoogleWrappers.String
+        else StringType.resolveStringType(isWrapped, shape.toShapeId())
       }
+
       override def enumShape(shape: EnumShape): Option[Type] = {
         if (shape.hasTrait(classOf[OpenEnumTrait])) {
           Some(Type.String)
+        } else if (shape.toShapeId() == ShapeId.from("alloy#DayOfWeek")) {
+          Some(AlloyTypes.DayOfWeek) 
+        } else if (shape.toShapeId() == ShapeId.from("alloy#Month")) {
+          Some(AlloyTypes.Month) 
         } else {
           Some(Type.RefType(shape))
         }

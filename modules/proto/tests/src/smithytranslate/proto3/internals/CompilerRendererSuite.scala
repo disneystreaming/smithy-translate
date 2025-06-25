@@ -1205,6 +1205,38 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
+  test("using alloy DayOfWeek and Month enum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#DayOfWeek
+                    |use alloy#Month
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  dayOfWeek: DayOfWeek
+                    |  month: Month
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  alloy.protobuf.DayOfWeek dayOfWeek = 1;
+                      |  alloy.protobuf.Month month = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
   test("union with protoIndex") {
     val source = """|$version: "2"
                     |namespace test

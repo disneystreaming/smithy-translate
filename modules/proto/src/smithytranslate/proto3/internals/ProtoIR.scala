@@ -16,6 +16,7 @@
 package smithytranslate.proto3.internals
 
 import software.amazon.smithy.model.shapes.ToShapeId
+import software.amazon.smithy.model.shapes.Shape
 
 private[internals] object ProtoIR {
 
@@ -161,6 +162,52 @@ private[internals] object ProtoIR {
         alloyFqn("EpochMillisTimestamp"),
         alloyTypesImport
       )
+      val DayOfWeek = RefType(
+        alloyFqn("DayOfWeek"),
+        alloyTypesImport
+      )
+      val Month = RefType(
+        alloyFqn("Month"),
+        alloyTypesImport
+      )
+      val CompactLocalDate = RefType(
+        alloyFqn("CompactLocalDate"),
+        alloyTypesImport
+      )
+      val CompactYearMonth = RefType(
+        alloyFqn("CompactYearMonth"),
+        alloyTypesImport
+      )
+      val CompactMonthDay = RefType(
+        alloyFqn("CompactMonthDay"),
+        alloyTypesImport
+      )
+      val CompactOffsetDateTime = RefType(
+        alloyFqn("CompactOffsetDateTime"),
+        alloyTypesImport
+      )
+
+      private val uuidTraits = Set(classOf[alloy.UuidFormatTrait], classOf[alloy.proto.ProtoCompactUUIDTrait])
+      private val localDateTraits = Set(classOf[alloy.DateFormatTrait], classOf[alloy.proto.ProtoCompactLocalDateTrait])
+      private val yearMonthTraits = Set(classOf[alloy.YearMonthFormatTrait], classOf[alloy.proto.ProtoCompactYearMonthTrait])
+      private val monthDayTraits = Set(classOf[alloy.MonthDayFormatTrait], classOf[alloy.proto.ProtoCompactMonthDayTrait])
+      private val offsetDateTimeTraits = Set(classOf[alloy.OffsetDateTimeFormatTrait], classOf[alloy.proto.ProtoCompactOffsetDateTimeTrait])
+
+      def fromShape(shape: Shape): Option[Type] = {
+        if (uuidTraits.forall(shape.hasTrait(_))) {
+          Some(CompactUUID)
+        } else if (localDateTraits.forall(shape.hasTrait(_))) {
+          Some(CompactLocalDate)
+        } else if (yearMonthTraits.forall(shape.hasTrait(_))) {
+          Some(CompactYearMonth)
+        } else if (monthDayTraits.forall(shape.hasTrait(_))) {
+          Some(CompactMonthDay)
+        } else if (offsetDateTimeTraits.forall(shape.hasTrait(_))) {
+          Some(CompactOffsetDateTime)
+        } else {
+          None
+        }
+      }
     }
 
     object AlloyWrappers {
@@ -218,6 +265,50 @@ private[internals] object ProtoIR {
       )
       val Document = RefType(
         alloyFqn("DocumentValue"),
+        alloyWrappersImport
+      )
+      val LocalDate = RefType(
+        alloyFqn("LocalDateValue"),
+        alloyWrappersImport
+      )
+      val LocalTime = RefType(
+        alloyFqn("LocalTimeValue"),
+        alloyWrappersImport
+      )
+      val LocalDateTime = RefType(
+        alloyFqn("LocalDateTimeValue"),
+        alloyWrappersImport
+      )
+      val OffsetDateTime = RefType(
+        alloyFqn("OffsetDateTimeValu"),
+        alloyWrappersImport
+      )
+      val OffsetTime = RefType(
+        alloyFqn("OffsetTimeValu"),
+        alloyWrappersImport
+      )
+      val ZoneId = RefType(
+        alloyFqn("ZoneIdValue"),
+        alloyWrappersImport
+      )
+      val ZoneOffset = RefType(
+        alloyFqn("ZoneOffsetValue"),
+        alloyWrappersImport
+      )
+      val ZonedDateTime = RefType(
+        alloyFqn("ZonedDateTimeValue"),
+        alloyWrappersImport
+      )
+      val Year = RefType(
+        alloyFqn("YearValue"),
+        alloyWrappersImport
+      )
+      val YearMonth = RefType(
+        alloyFqn("YearMonthValue"),
+        alloyWrappersImport
+      )
+      val MonthDay = RefType(
+        alloyFqn("MonthDayValue"),
         alloyWrappersImport
       )
     }

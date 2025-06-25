@@ -5,9 +5,9 @@ import mill.scalalib._
 object alloy {
   val alloyVersion = "0.3.21"
   val core =
-    ivy"com.disneystreaming.alloy:alloy-core:$alloyVersion"
+    ivy"io.github.disneystreaming.alloy:alloy-core:$alloyVersion"
   val protobuf =
-    ivy"com.disneystreaming.alloy:alloy-protobuf:$alloyVersion"
+    ivy"io.github.disneystreaming.alloy:alloy-protobuf:$alloyVersion"
 }
 object circe {
   val jawn = ivy"io.circe::circe-jawn:0.14.6"

@@ -45,6 +45,10 @@ trait CompilerCoreModule
 
   def publishArtifactName = "smithytranslate-compiler-core"
 
+  override def repositoriesTask: Task[Seq[Repository]] = T.task {
+    super.repositoriesTask() ++ Seq(coursier.LocalRepositories.ivy2Local)
+  }
+
   def moduleDeps = Seq(traits)
 
   def ivyDeps = Agg(
@@ -326,11 +330,16 @@ trait ProtoModule
 
   def publishArtifactName = "smithytranslate-proto"
 
+  override def repositoriesTask: Task[Seq[Repository]] = T.task {
+    super.repositoriesTask() ++ Seq(coursier.LocalRepositories.ivy2Local)
+  }
+
   def ivyDeps = Agg(
     buildDeps.smithy.model,
     buildDeps.alloy.core,
     buildDeps.collectionsCompat
   )
+
   def moduleDeps = Seq(traits, transitive())
   object tests extends this.ScalaTests with BaseMunitTests with ScalaPBModule {
     def ivyDeps = super.ivyDeps() ++ Agg(
