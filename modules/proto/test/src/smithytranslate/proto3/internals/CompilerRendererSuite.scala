@@ -1205,38 +1205,6 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("using alloy DayOfWeek and Month enum") {
-    val source = """|$version: "2"
-                    |namespace test
-                    |
-                    |use alloy.proto#protoEnabled
-                    |use alloy#DayOfWeek
-                    |use alloy#Month
-                    |
-                    |@protoEnabled
-                    |structure MyStructure {
-                    |  dayOfWeek: DayOfWeek
-                    |  month: Month
-                    |}
-                    |""".stripMargin
-    val expected = """|syntax = "proto3";
-                      |
-                      |package test;
-                      |
-                      |import "alloy/protobuf/types.proto";
-                      |
-                      |message MyStructure {
-                      |  alloy.protobuf.DayOfWeek dayOfWeek = 1;
-                      |  alloy.protobuf.Month month = 2;
-                      |}
-                      |""".stripMargin
-
-    convertCheck(
-      source,
-      Map("test/definitions.proto" -> expected)
-    )
-  }
-
   test("union with protoIndex") {
     val source = """|$version: "2"
                     |namespace test
@@ -1475,6 +1443,466 @@ class CompilerRendererSuite extends FunSuite {
                       |}
                       |""".stripMargin
     convertCheck(source, Map("another/namespace/namespace.proto" -> expected))
+  }
+
+  test("using alloy DayOfWeek and Month enum") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#DayOfWeek
+                    |use alloy#Month
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  dayOfWeek: DayOfWeek
+                    |  month: Month
+                    |}
+                    |""".stripMargin
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  alloy.protobuf.DayOfWeek dayOfWeek = 1;
+                      |  alloy.protobuf.Month month = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#LocalDate") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#LocalDate
+                    |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoCompactLocalDate
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: LocalDate
+
+                    |  @protoWrapped
+                    |  wrapped: LocalDate
+
+                    |  @protoCompactLocalDate
+                    |  compact: LocalDate
+
+                    |  @protoWrapped
+                    |  @protoCompactLocalDate
+                    |  wrappedCompact: LocalDate
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.LocalDateValue wrapped = 2;
+                      |  alloy.protobuf.CompactLocalDate compact = 3;
+                      |  alloy.protobuf.CompactLocalDateValue wrappedCompact = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#LocalTime") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#LocalTime
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: LocalTime
+                    |  @protoWrapped
+                    |  wrapped: LocalTime
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.LocalTimeValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#LocalDateTime") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#LocalDateTime
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: LocalDateTime
+                    |  @protoWrapped
+                    |  wrapped: LocalDateTime
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.LocalDateTimeValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#OffsetDateTime") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#OffsetDateTime
+                    |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoCompactOffsetDateTime
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: OffsetDateTime
+
+                    |  @protoWrapped
+                    |  wrapped: OffsetDateTime
+
+                    |  @protoCompactOffsetDateTime
+                    |  compact: OffsetDateTime
+
+                    |  @protoWrapped
+                    |  @protoCompactOffsetDateTime
+                    |  wrappedCompact: OffsetDateTime
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "google/protobuf/timestamp.proto";
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  google.protobuf.Timestamp basic = 1;
+                      |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
+                      |  alloy.protobuf.CompactOffsetDateTime compact = 3;
+                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#OffsetTime") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#OffsetTime
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: OffsetTime
+                    |  @protoWrapped
+                    |  wrapped: OffsetTime
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.OffsetTimeValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#ZoneId") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#ZoneId
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: ZoneId
+                    |  @protoWrapped
+                    |  wrapped: ZoneId
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.ZoneIdValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#MonthDay") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#MonthDay
+                    |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoCompactMonthDay
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: MonthDay
+
+                    |  @protoWrapped
+                    |  wrapped: MonthDay
+
+                    |  @protoCompactMonthDay
+                    |  compact: MonthDay
+
+                    |  @protoWrapped
+                    |  @protoCompactMonthDay
+                    |  wrappedCompact: MonthDay
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.MonthDayValue wrapped = 2;
+                      |  alloy.protobuf.CompactMonthDay compact = 3;
+                      |  alloy.protobuf.CompactMonthDayValue wrappedCompact = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#ZoneOffset") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#ZoneOffset
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: ZoneOffset
+                    |  @protoWrapped
+                    |  wrapped: ZoneOffset
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.ZoneOffsetValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#ZonedDateTime") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#ZonedDateTime
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: ZonedDateTime
+                    |  @protoWrapped
+                    |  wrapped: ZonedDateTime
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.ZonedDateTimeValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#Year") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#Year
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: Year
+                    |  @protoWrapped
+                    |  wrapped: Year
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  int32 basic = 1;
+                      |  alloy.protobuf.YearValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
+  test("using alloy alloy#YearMonth") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#YearMonth
+                    |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoCompactYearMonth
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: YearMonth
+
+                    |  @protoWrapped
+                    |  wrapped: YearMonth
+
+                    |  @protoCompactYearMonth
+                    |  compact: YearMonth
+
+                    |  @protoWrapped
+                    |  @protoCompactYearMonth
+                    |  wrappedCompact: YearMonth
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |message MyStructure {
+                      |  string basic = 1;
+                      |  alloy.protobuf.YearMonthValue wrapped = 2;
+                      |  alloy.protobuf.CompactYearMonth compact = 3;
+                      |  alloy.protobuf.CompactYearMonthValue wrappedCompact = 4;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
   }
 
   private def convertCheck(

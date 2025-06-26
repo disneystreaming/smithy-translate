@@ -200,7 +200,7 @@ private[internals] object ProtoIR {
 
         val yearMonthMatcher = new TypeMatcher {
           def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.YearMonthFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#YearMonth")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactMonthDayTrait])
+          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactYearMonthTrait])
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactYearMonth
             case (true, false) => AlloyTypes.CompactYearMonth
@@ -387,7 +387,7 @@ private[internals] object ProtoIR {
         alloyWrappersImport
       )
       val CompactOffsetDateTime = RefType(
-        alloyFqn("CompactLocalDateValue"),
+        alloyFqn("CompactOffsetDateTimeValue"),
         alloyWrappersImport
       )
       val Document = RefType(
