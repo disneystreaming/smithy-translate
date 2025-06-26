@@ -27,10 +27,6 @@ trait CompilerCoreModule
 
   def publishArtifactName = "smithytranslate-compiler-core"
 
-  override def repositoriesTask: Task[Seq[Repository]] = T.task {
-    super.repositoriesTask() ++ Seq(coursier.LocalRepositories.ivy2Local)
-  }
-
   def moduleDeps = Seq(traits)
 
   def ivyDeps = Agg(
@@ -316,10 +312,6 @@ trait ProtoModule
     with BasePublishModule {
 
   def publishArtifactName = "smithytranslate-proto"
-
-  override def repositoriesTask: Task[Seq[Repository]] = T.task {
-    super.repositoriesTask() ++ Seq(coursier.LocalRepositories.ivy2Local)
-  }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model,
