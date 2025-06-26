@@ -586,9 +586,11 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         if (!isWrapped) Type.Int32
         else Type.AlloyWrappers.ShortValue
       }
-      def integerShape(shape: IntegerShape): Option[Type] = Some {
-        NumberType.resolveInt(isWrapped, numType)
-      }
+      def integerShape(shape: IntegerShape): Option[Type] = 
+        Type.Alloy.fromShape(shape, isWrapped).orElse {
+          Some(NumberType.resolveInt(isWrapped, numType))
+        }
+
       def longShape(shape: LongShape): Option[Type] = Some {
         NumberType.resolveLong(isWrapped, numType)
       }
@@ -633,14 +635,10 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
 
-      def stringShape(shape: StringShape): Option[Type] = Some {
-        val hasUUIDFormat = shape.hasTrait(classOf[alloy.UuidFormatTrait])
-        val hasProtoCompactUUID =
-          shape.hasTrait(classOf[alloy.proto.ProtoCompactUUIDTrait])
-
-        if (hasUUIDFormat && hasProtoCompactUUID) Type.AlloyTypes.CompactUUID
-        else StringType.resolveStringType(isWrapped, shape.toShapeId())
-      }
+      def stringShape(shape: StringShape): Option[Type] = 
+        Type.Alloy.fromShape(shape, isWrapped).orElse {
+          if (isWrapped) Some(Type.GoogleWrappers.String) else Some(Type.String)
+        }
 
       override def enumShape(shape: EnumShape): Option[Type] = {
         if (shape.hasTrait(classOf[OpenEnumTrait])) {
