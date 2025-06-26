@@ -405,8 +405,11 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                       val numType = extractNumType(m)
                       val maybeTimestampFormat = extractTimestampFormat(m)
                       val wrapped = hasProtoWrapped(m)
-                      val targetShapeBuilder: AbstractShapeBuilder[?, Shape] = Shape.shapeToBuilder(targetShape)
-                      val updatedShape = targetShapeBuilder.addTraits(m.getAllTraits().values()).build()
+                      val targetShapeBuilder: AbstractShapeBuilder[?, Shape] =
+                        Shape.shapeToBuilder(targetShape)
+                      val updatedShape = targetShapeBuilder
+                        .addTraits(m.getAllTraits().values())
+                        .build()
 
                       updatedShape
                         .accept(
@@ -589,7 +592,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         if (!isWrapped) Type.Int32
         else Type.AlloyWrappers.ShortValue
       }
-      def integerShape(shape: IntegerShape): Option[Type] = 
+      def integerShape(shape: IntegerShape): Option[Type] =
         Type.Alloy.fromShape(shape, isWrapped).orElse {
           Some(NumberType.resolveInt(isWrapped, numType))
         }
@@ -640,7 +643,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
 
-      def stringShape(shape: StringShape): Option[Type] = 
+      def stringShape(shape: StringShape): Option[Type] =
         Type.Alloy.fromShape(shape, isWrapped).orElse {
           if (isWrapped) Some(Type.GoogleWrappers.String) else Some(Type.String)
         }
@@ -649,9 +652,9 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         if (shape.hasTrait(classOf[OpenEnumTrait])) {
           Some(Type.String)
         } else if (shape.toShapeId() == ShapeId.from("alloy#DayOfWeek")) {
-          Some(AlloyTypes.DayOfWeek) 
+          Some(AlloyTypes.DayOfWeek)
         } else if (shape.toShapeId() == ShapeId.from("alloy#Month")) {
-          Some(AlloyTypes.Month) 
+          Some(AlloyTypes.Month)
         } else {
           Some(Type.RefType(shape))
         }
@@ -671,7 +674,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
           Type.RefType(shape)
       }
 
-      def timestampShape(shape: TimestampShape): Option[Type] = 
+      def timestampShape(shape: TimestampShape): Option[Type] =
         Type.Alloy.fromShape(shape, isWrapped).orElse {
           val format =
             extractTimestampFormat(shape)
