@@ -160,19 +160,16 @@ private[internals] object ProtoIR {
       // a compacted/efficient protobuf representation of a type
       // a wrapped value of the compacted protobuf type
       trait TypeMatcher {
-        def shapeMatches(shape: Shape): Boolean
-        def isCompact(shape: Shape): Boolean
+        def matchingTrait: ShapeId
         type IsCompact = Boolean
         type IsWrapped = Boolean
         val mapShapeToType: PartialFunction[(IsCompact, IsWrapped), Type]
       }
 
       case class WrappedTypeMatcher(
-        matchingFn: Shape => Boolean,
+        val matchingTrait: ShapeId,
         wrappedType: Type
       ) extends TypeMatcher {
-        def shapeMatches(shape: Shape): Boolean = matchingFn(shape)
-        def isCompact(shape: Shape): Boolean = false
         val mapShapeToType = {
           case (false, true) => wrappedType
         }
@@ -180,8 +177,7 @@ private[internals] object ProtoIR {
 
       object TypeMatcher {
         val uuidMatcher = new TypeMatcher {
-          def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.UuidFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#UUID")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactUUIDTrait])
+          val matchingTrait = alloy.UuidFormatTrait.ID
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactUUID
             case (true, false) => AlloyTypes.CompactUUID
@@ -189,8 +185,7 @@ private[internals] object ProtoIR {
         }
 
         val localDateMatcher = new TypeMatcher {
-          def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.DateFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#LocalDate")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactLocalDateTrait])
+          val matchingTrait = alloy.DateFormatTrait.ID
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactLocalDate
             case (true, false) => AlloyTypes.CompactLocalDate
@@ -199,8 +194,7 @@ private[internals] object ProtoIR {
         }
 
         val yearMonthMatcher = new TypeMatcher {
-          def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.YearMonthFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#YearMonth")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactYearMonthTrait])
+          val matchingTrait = alloy.YearMonthFormatTrait.ID
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactYearMonth
             case (true, false) => AlloyTypes.CompactYearMonth
@@ -209,8 +203,7 @@ private[internals] object ProtoIR {
         }
 
         val monthDayMatcher = new TypeMatcher {
-          def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.MonthDayFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#MonthDay")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactMonthDayTrait])
+          val matchingTrait = alloy.MonthDayFormatTrait.ID
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactMonthDay
             case (true, false) => AlloyTypes.CompactMonthDay
@@ -219,8 +212,8 @@ private[internals] object ProtoIR {
         }
 
         val offsetDateTimeMatcher = new TypeMatcher {
-          def shapeMatches(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.OffsetDateTimeFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#OffsetDateTime")
-          def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactOffsetDateTimeTrait])
+          val matchingTrait = alloy.OffsetDateTimeFormatTrait.ID
+          // def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactOffsetDateTimeTrait])
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactOffsetDateTime
             case (true, false) => AlloyTypes.CompactOffsetDateTime
@@ -229,37 +222,37 @@ private[internals] object ProtoIR {
         }
 
         val localTimeMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.LocalTimeFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#LocalTime"),
+          alloy.LocalTimeFormatTrait.ID,
           AlloyWrappers.LocalTime
         )
 
         val localDateTimeMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.LocalDateTimeFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#LocalDateTime"),
+          alloy.LocalDateTimeFormatTrait.ID,
           AlloyWrappers.LocalDateTime
         )
 
         val offsetTimeMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.OffsetTimeFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#OffsetTime"),
+          alloy.OffsetTimeFormatTrait.ID,
           AlloyWrappers.OffsetTime
         )
 
         val zoneIdMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.ZoneIdFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#ZoneId"),
+          alloy.ZoneIdFormatTrait.ID,
           AlloyWrappers.ZoneId
         )
 
         val zoneOffsetMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.ZoneOffsetFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#ZoneOffset"),
+          alloy.ZoneOffsetFormatTrait.ID,
           AlloyWrappers.ZoneOffset
         )
 
         val zonedDateTimeMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.ZonedDateTimeFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#ZonedDateTime"),
+          alloy.ZonedDateTimeFormatTrait.ID,
           AlloyWrappers.ZonedDateTime
         )
 
         val yearMatcher = WrappedTypeMatcher(
-          (shape) => shape.hasTrait(classOf[alloy.YearFormatTrait]) || shape.toShapeId() == ShapeId.from("alloy#Year"),
+          alloy.YearFormatTrait.ID,
           AlloyWrappers.Year
         )
 
@@ -279,9 +272,9 @@ private[internals] object ProtoIR {
         )
       }
 
-      def fromShape(shape: Shape, isWrapped: Boolean): Option[Type] = {
-        TypeMatcher.all.collectFirst { case matcher if matcher.shapeMatches(shape) => 
-          matcher.mapShapeToType.lift((matcher.isCompact(shape), isWrapped))
+      def fromShape(shape: Shape, isWrapped: Boolean, isCompact: Boolean): Option[Type] = {
+        TypeMatcher.all.collectFirst { case matcher if shape.hasTrait(matcher.matchingTrait) => 
+          matcher.mapShapeToType.lift((isCompact, isWrapped))
         }.flatten
       }
     }
@@ -431,11 +424,11 @@ private[internals] object ProtoIR {
         alloyWrappersImport
       )
       val YearMonth = RefType(
-        alloyFqn("YearMonthValue"),
+        alloyFqn("YearMonth"),
         alloyWrappersImport
       )
       val MonthDay = RefType(
-        alloyFqn("MonthDayValue"),
+        alloyFqn("MonthDay"),
         alloyWrappersImport
       )
     }
