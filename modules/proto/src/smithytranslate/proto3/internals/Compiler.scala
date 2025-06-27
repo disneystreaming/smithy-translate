@@ -177,7 +177,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
     alloy.proto.ProtoCompactOffsetDateTimeTrait.ID
   )
 
-  private def hasProtoCompact(m: Shape):Boolean =
+  private def hasProtoCompact(m: Shape): Boolean =
     compactTraits.exists(m.hasTrait)
 
   private def isProtoService(ss: ServiceShape): Boolean =
@@ -419,7 +419,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                         val isMemberWrapped = hasProtoWrapped(m)
                         val isTargetWrapped = hasProtoWrapped(targetShape)
                         isMemberWrapped || isTargetWrapped
-                      } 
+                      }
                       val isCompact = {
                         val isMemberCompact = hasProtoCompact(m)
                         val isTargetCompact = hasProtoCompact(targetShape)
