@@ -243,7 +243,13 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
           .getTrait(classOf[ProtoNumTypeTrait])
           .toScala
           .map(_.getNumType())
-        val maybeType = shape.accept(typeVisitor(false, false, maybeNumType))
+        val maybeType = shape.accept(
+          typeVisitor(
+            isWrapped = false,
+            isCompact = false,
+            maybeNumType
+          )
+        )
         maybeType.toList.flatMap(topLevelMessage(shape, _))
       } else Nil
 
@@ -640,9 +646,12 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
       def memberShape(shape: MemberShape): Option[Type] = {
         val target = model.expectShape(shape.getTarget())
-        val memberHasWrapped = shape.hasTrait(classOf[ProtoWrappedTrait])
-        val targetHasWrapped = target.hasTrait(classOf[ProtoWrappedTrait])
+        val memberHasWrapped = hasProtoWrapped(shape)
+        val targetHasWrapped = hasProtoWrapped(target)
+        val memberHasCompact = hasProtoCompact(shape)
+        val targetHasCompact = hasProtoCompact(target)
         val isWrapped = memberHasWrapped || targetHasWrapped
+        val isCompact = memberHasCompact || targetHasCompact
         val numType =
           shape
             .getTrait(classOf[ProtoNumTypeTrait])
@@ -655,6 +664,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
           target.accept(
             typeVisitor(
               isWrapped = isWrapped,
+              isCompact = isCompact,
               numType = numType,
               timestampFormat = timestampFormatValue
             )
