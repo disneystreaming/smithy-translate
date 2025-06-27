@@ -318,6 +318,7 @@ trait ProtoModule
     buildDeps.alloy.core,
     buildDeps.collectionsCompat
   )
+
   def moduleDeps = Seq(traits, transitive())
   object test extends ScalaTests with BaseMunitTests with ScalaPBModule {
     def ivyDeps = super.ivyDeps() ++ Agg(

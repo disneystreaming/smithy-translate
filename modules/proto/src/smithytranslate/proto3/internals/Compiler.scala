@@ -33,6 +33,7 @@ import alloy.OpenEnumTrait
 import software.amazon.smithy.model.traits.EnumValueTrait
 import alloy.proto.ProtoTimestampFormatTrait
 import alloy.proto.ProtoTimestampFormatTrait.TimestampFormat
+import smithytranslate.proto3.internals.ProtoIR.Type.AlloyTypes
 
 private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
@@ -168,6 +169,17 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
   private def hasProtoWrapped(m: Shape): Boolean =
     m.hasTrait(classOf[alloy.proto.ProtoWrappedTrait])
 
+  private val compactTraits = Set(
+    alloy.proto.ProtoCompactUUIDTrait.ID,
+    alloy.proto.ProtoCompactLocalDateTrait.ID,
+    alloy.proto.ProtoCompactYearMonthTrait.ID,
+    alloy.proto.ProtoCompactMonthDayTrait.ID,
+    alloy.proto.ProtoCompactOffsetDateTimeTrait.ID
+  )
+
+  private def hasProtoCompact(m: Shape): Boolean =
+    compactTraits.exists(m.hasTrait)
+
   private def isProtoService(ss: ServiceShape): Boolean =
     ss.hasTrait(classOf[ProtoEnabledTrait])
 
@@ -231,7 +243,13 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
           .getTrait(classOf[ProtoNumTypeTrait])
           .toScala
           .map(_.getNumType())
-        val maybeType = shape.accept(typeVisitor(false, maybeNumType))
+        val maybeType = shape.accept(
+          typeVisitor(
+            isWrapped = false,
+            isCompact = false,
+            maybeNumType
+          )
+        )
         maybeType.toList.flatMap(topLevelMessage(shape, _))
       } else Nil
 
@@ -403,11 +421,22 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                     } else {
                       val numType = extractNumType(m)
                       val maybeTimestampFormat = extractTimestampFormat(m)
-                      val wrapped = hasProtoWrapped(m)
+                      val wrapped = {
+                        val isMemberWrapped = hasProtoWrapped(m)
+                        val isTargetWrapped = hasProtoWrapped(targetShape)
+                        isMemberWrapped || isTargetWrapped
+                      }
+                      val isCompact = {
+                        val isMemberCompact = hasProtoCompact(m)
+                        val isTargetCompact = hasProtoCompact(targetShape)
+                        isMemberCompact || isTargetCompact
+                      }
+
                       targetShape
                         .accept(
                           typeVisitor(
                             isWrapped = wrapped,
+                            isCompact = isCompact,
                             numType = numType,
                             timestampFormat = maybeTimestampFormat
                           )
@@ -452,12 +481,18 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             val isMap = targetShape.isMapShape()
             memberHasWrapped || targetHasWrapped || isList || isMap
           }
+          val isCompact = {
+            val memberHasCompact = hasProtoCompact(m)
+            val targetHasCompact = hasProtoCompact(targetShape)
+            memberHasCompact || targetHasCompact
+          }
           val maybeTimestampFormat = extractTimestampFormat(m)
           val fieldType =
             targetShape
               .accept(
                 typeVisitor(
                   isWrapped = isWrapped,
+                  isCompact = isCompact,
                   numType,
                   maybeTimestampFormat
                 )
@@ -544,6 +579,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
   // TODO: namespace in type?
   private def typeVisitor(
       isWrapped: Boolean = false,
+      isCompact: Boolean = false,
       numType: Option[ProtoNumTypeTrait.NumType] = None,
       timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
@@ -585,9 +621,11 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         if (!isWrapped) Type.Int32
         else Type.AlloyWrappers.ShortValue
       }
-      def integerShape(shape: IntegerShape): Option[Type] = Some {
-        NumberType.resolveInt(isWrapped, numType)
-      }
+      def integerShape(shape: IntegerShape): Option[Type] =
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          Some(NumberType.resolveInt(isWrapped, numType))
+        }
+
       def longShape(shape: LongShape): Option[Type] = Some {
         NumberType.resolveLong(isWrapped, numType)
       }
@@ -608,9 +646,12 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
       def memberShape(shape: MemberShape): Option[Type] = {
         val target = model.expectShape(shape.getTarget())
-        val memberHasWrapped = shape.hasTrait(classOf[ProtoWrappedTrait])
-        val targetHasWrapped = target.hasTrait(classOf[ProtoWrappedTrait])
+        val memberHasWrapped = hasProtoWrapped(shape)
+        val targetHasWrapped = hasProtoWrapped(target)
+        val memberHasCompact = hasProtoCompact(shape)
+        val targetHasCompact = hasProtoCompact(target)
         val isWrapped = memberHasWrapped || targetHasWrapped
+        val isCompact = memberHasCompact || targetHasCompact
         val numType =
           shape
             .getTrait(classOf[ProtoNumTypeTrait])
@@ -619,30 +660,34 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .map(_.getNumType())
         val timestampFormatValue = extractTimestampFormat(shape)
 
-        target.accept(
-          typeVisitor(
-            isWrapped = isWrapped,
-            numType = numType,
-            timestampFormat = timestampFormatValue
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          target.accept(
+            typeVisitor(
+              isWrapped = isWrapped,
+              isCompact = isCompact,
+              numType = numType,
+              timestampFormat = timestampFormatValue
+            )
           )
-        )
+        }
       }
 
       def operationShape(shape: OperationShape): Option[Type] = None
       def resourceShape(shape: ResourceShape): Option[Type] = None
       def serviceShape(shape: ServiceShape): Option[Type] = None
 
-      def stringShape(shape: StringShape): Option[Type] = Some {
-        val hasUUIDFormat = shape.hasTrait(classOf[alloy.UuidFormatTrait])
-        val hasProtoCompactUUID =
-          shape.hasTrait(classOf[alloy.proto.ProtoCompactUUIDTrait])
-        if (hasUUIDFormat && hasProtoCompactUUID) Type.AlloyTypes.CompactUUID
-        else if (!isWrapped) Type.String
-        else Type.GoogleWrappers.String
-      }
+      def stringShape(shape: StringShape): Option[Type] =
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          if (isWrapped) Some(Type.GoogleWrappers.String) else Some(Type.String)
+        }
+
       override def enumShape(shape: EnumShape): Option[Type] = {
         if (shape.hasTrait(classOf[OpenEnumTrait])) {
           Some(Type.String)
+        } else if (shape.toShapeId() == ShapeId.from("alloy#DayOfWeek")) {
+          Some(AlloyTypes.DayOfWeek)
+        } else if (shape.toShapeId() == ShapeId.from("alloy#Month")) {
+          Some(AlloyTypes.Month)
         } else {
           Some(Type.RefType(shape))
         }
@@ -662,21 +707,22 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
           Type.RefType(shape)
       }
 
-      def timestampShape(shape: TimestampShape): Option[Type] = Some {
-        val format =
-          extractTimestampFormat(shape)
-            .orElse(timestampFormat)
-            .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
+      def timestampShape(shape: TimestampShape): Option[Type] =
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          val format =
+            extractTimestampFormat(shape)
+              .orElse(timestampFormat)
+              .getOrElse(ProtoTimestampFormatTrait.TimestampFormat.PROTOBUF)
 
-        format match {
-          case TimestampFormat.PROTOBUF | TimestampFormat.UNKNOWN =>
-            if (isWrapped) Type.AlloyWrappers.Timestamp
-            else Type.GoogleTimestamp
-          case TimestampFormat.EPOCH_MILLIS =>
-            if (isWrapped) Type.AlloyWrappers.EpochMillisTimestamp
-            else Type.AlloyTypes.EpochMillisTimestamp
+          format match {
+            case TimestampFormat.PROTOBUF | TimestampFormat.UNKNOWN =>
+              if (isWrapped) Some(Type.AlloyWrappers.Timestamp)
+              else Some(Type.GoogleTimestamp)
+            case TimestampFormat.EPOCH_MILLIS =>
+              if (isWrapped) Some(Type.AlloyWrappers.EpochMillisTimestamp)
+              else Some(Type.AlloyTypes.EpochMillisTimestamp)
+          }
         }
-      }
 
       def unionShape(shape: UnionShape): Option[Type] = Some(
         Type.RefType(shape)

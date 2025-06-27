@@ -1,10 +1,10 @@
 {
-  "imports": [
-    "./modules/proto/examples/smithy"
-  ],
+  "version": "1.0",
+  "imports": ["./modules/proto-examples/smithy"],
   "maven": {
     "dependencies": [
       "io.github.disneystreaming.alloy:alloy-core:0.3.22"
     ]
-  }
+  },
+  "languageServer": "software.amazon.smithy:smithy-language-server:0.7.0"
 }
