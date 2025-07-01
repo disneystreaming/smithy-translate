@@ -1744,7 +1744,7 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |message MyStructure {
                       |  string basic = 1;
-                      |  alloy.protobuf.MonthDay wrapped = 2;
+                      |  alloy.protobuf.MonthDayValue wrapped = 2;
                       |  alloy.protobuf.CompactMonthDay compact = 3;
                       |  alloy.protobuf.CompactMonthDayValue wrappedCompact = 4;
                       |}
@@ -1893,7 +1893,7 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |message MyStructure {
                       |  string basic = 1;
-                      |  alloy.protobuf.YearMonth wrapped = 2;
+                      |  alloy.protobuf.YearMonthValue wrapped = 2;
                       |  alloy.protobuf.CompactYearMonth compact = 3;
                       |  alloy.protobuf.CompactYearMonthValue wrappedCompact = 4;
                       |}
