@@ -213,7 +213,6 @@ private[internals] object ProtoIR {
 
         val offsetDateTimeMatcher = new TypeMatcher {
           val matchingTrait = alloy.OffsetDateTimeFormatTrait.ID
-          // def isCompact(shape: Shape): Boolean = shape.hasTrait(classOf[alloy.proto.ProtoCompactOffsetDateTimeTrait])
           val mapShapeToType = {
             case (true, true) => AlloyWrappers.CompactOffsetDateTime
             case (true, false) => AlloyTypes.CompactOffsetDateTime
@@ -424,11 +423,11 @@ private[internals] object ProtoIR {
         alloyWrappersImport
       )
       val YearMonth = RefType(
-        alloyFqn("YearMonth"),
+        alloyFqn("YearMonthValue"),
         alloyWrappersImport
       )
       val MonthDay = RefType(
-        alloyFqn("MonthDay"),
+        alloyFqn("MonthDayValue"),
         alloyWrappersImport
       )
     }
