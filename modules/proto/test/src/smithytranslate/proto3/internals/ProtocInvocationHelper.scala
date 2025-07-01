@@ -82,6 +82,7 @@ trait ProtocInvocationHelper {
       file.getAbsoluteFile
     }
     val outFile = new File(tmpDir, "descriptor.out")
+
     require(
       protoc
         .run(

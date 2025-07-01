@@ -16,6 +16,8 @@
 package smithytranslate.proto3.internals
 
 import software.amazon.smithy.model.shapes.ToShapeId
+import software.amazon.smithy.model.shapes.Shape
+import software.amazon.smithy.model.shapes.ShapeId
 
 private[internals] object ProtoIR {
 
@@ -152,6 +154,130 @@ private[internals] object ProtoIR {
     private val alloyWrappersImport =
       Fqn(Some(List("alloy", "protobuf")), "wrappers")
 
+    object Alloy {
+      // Helper trait to be able select between different protobuf types for a given smithy type, the different types would be
+      // a wrapped value type
+      // a compacted/efficient protobuf representation of a type
+      // a wrapped value of the compacted protobuf type
+      trait TypeMatcher {
+        def matchingTrait: ShapeId
+        type IsCompact = Boolean
+        type IsWrapped = Boolean
+        val mapShapeToType: PartialFunction[(IsCompact, IsWrapped), Type]
+      }
+
+      case class WrappedTypeMatcher(
+        val matchingTrait: ShapeId,
+        wrappedType: Type
+      ) extends TypeMatcher {
+        val mapShapeToType = {
+          case (false, true) => wrappedType
+        }
+      }
+
+      object TypeMatcher {
+        val uuidMatcher = new TypeMatcher {
+          val matchingTrait = alloy.UuidFormatTrait.ID
+          val mapShapeToType = {
+            case (true, true) => AlloyWrappers.CompactUUID
+            case (true, false) => AlloyTypes.CompactUUID
+          }
+        }
+
+        val localDateMatcher = new TypeMatcher {
+          val matchingTrait = alloy.DateFormatTrait.ID
+          val mapShapeToType = {
+            case (true, true) => AlloyWrappers.CompactLocalDate
+            case (true, false) => AlloyTypes.CompactLocalDate
+            case (false, true) => AlloyWrappers.LocalDate
+          }
+        }
+
+        val yearMonthMatcher = new TypeMatcher {
+          val matchingTrait = alloy.YearMonthFormatTrait.ID
+          val mapShapeToType = {
+            case (true, true) => AlloyWrappers.CompactYearMonth
+            case (true, false) => AlloyTypes.CompactYearMonth
+            case (false, true) => AlloyWrappers.YearMonth
+          }
+        }
+
+        val monthDayMatcher = new TypeMatcher {
+          val matchingTrait = alloy.MonthDayFormatTrait.ID
+          val mapShapeToType = {
+            case (true, true) => AlloyWrappers.CompactMonthDay
+            case (true, false) => AlloyTypes.CompactMonthDay
+            case (false, true) => AlloyWrappers.MonthDay
+          }
+        }
+
+        val offsetDateTimeMatcher = new TypeMatcher {
+          val matchingTrait = alloy.OffsetDateTimeFormatTrait.ID
+          val mapShapeToType = {
+            case (true, true) => AlloyWrappers.CompactOffsetDateTime
+            case (true, false) => AlloyTypes.CompactOffsetDateTime
+            case (false, true) => AlloyWrappers.OffsetDateTime
+          }
+        }
+
+        val localTimeMatcher = WrappedTypeMatcher(
+          alloy.LocalTimeFormatTrait.ID,
+          AlloyWrappers.LocalTime
+        )
+
+        val localDateTimeMatcher = WrappedTypeMatcher(
+          alloy.LocalDateTimeFormatTrait.ID,
+          AlloyWrappers.LocalDateTime
+        )
+
+        val offsetTimeMatcher = WrappedTypeMatcher(
+          alloy.OffsetTimeFormatTrait.ID,
+          AlloyWrappers.OffsetTime
+        )
+
+        val zoneIdMatcher = WrappedTypeMatcher(
+          alloy.ZoneIdFormatTrait.ID,
+          AlloyWrappers.ZoneId
+        )
+
+        val zoneOffsetMatcher = WrappedTypeMatcher(
+          alloy.ZoneOffsetFormatTrait.ID,
+          AlloyWrappers.ZoneOffset
+        )
+
+        val zonedDateTimeMatcher = WrappedTypeMatcher(
+          alloy.ZonedDateTimeFormatTrait.ID,
+          AlloyWrappers.ZonedDateTime
+        )
+
+        val yearMatcher = WrappedTypeMatcher(
+          alloy.YearFormatTrait.ID,
+          AlloyWrappers.Year
+        )
+
+        val all = List(
+          uuidMatcher,
+          localDateMatcher,
+          yearMonthMatcher,
+          monthDayMatcher,
+          offsetDateTimeMatcher,
+          localTimeMatcher,
+          localDateTimeMatcher,
+          offsetTimeMatcher,
+          zoneIdMatcher,
+          zoneOffsetMatcher,
+          zonedDateTimeMatcher,
+          yearMatcher
+        )
+      }
+
+      def fromShape(shape: Shape, isWrapped: Boolean, isCompact: Boolean): Option[Type] = {
+        TypeMatcher.all.collectFirst { case matcher if shape.hasTrait(matcher.matchingTrait) => 
+          matcher.mapShapeToType.lift((isCompact, isWrapped))
+        }.flatten
+      }
+    }
+
     object AlloyTypes {
       val CompactUUID = RefType(
         alloyFqn("CompactUUID"),
@@ -159,6 +285,30 @@ private[internals] object ProtoIR {
       )
       val EpochMillisTimestamp = RefType(
         alloyFqn("EpochMillisTimestamp"),
+        alloyTypesImport
+      )
+      val DayOfWeek = RefType(
+        alloyFqn("DayOfWeek"),
+        alloyTypesImport
+      )
+      val Month = RefType(
+        alloyFqn("Month"),
+        alloyTypesImport
+      )
+      val CompactLocalDate = RefType(
+        alloyFqn("CompactLocalDate"),
+        alloyTypesImport
+      )
+      val CompactYearMonth = RefType(
+        alloyFqn("CompactYearMonth"),
+        alloyTypesImport
+      )
+      val CompactMonthDay = RefType(
+        alloyFqn("CompactMonthDay"),
+        alloyTypesImport
+      )
+      val CompactOffsetDateTime = RefType(
+        alloyFqn("CompactOffsetDateTime"),
         alloyTypesImport
       )
     }
@@ -216,8 +366,68 @@ private[internals] object ProtoIR {
         alloyFqn("CompactUUIDValue"),
         alloyWrappersImport
       )
+      val CompactLocalDate = RefType(
+        alloyFqn("CompactLocalDateValue"),
+        alloyWrappersImport
+      )
+      val CompactYearMonth = RefType(
+        alloyFqn("CompactYearMonthValue"),
+        alloyWrappersImport
+      )
+      val CompactMonthDay = RefType(
+        alloyFqn("CompactMonthDayValue"),
+        alloyWrappersImport
+      )
+      val CompactOffsetDateTime = RefType(
+        alloyFqn("CompactOffsetDateTimeValue"),
+        alloyWrappersImport
+      )
       val Document = RefType(
         alloyFqn("DocumentValue"),
+        alloyWrappersImport
+      )
+      val LocalDate = RefType(
+        alloyFqn("LocalDateValue"),
+        alloyWrappersImport
+      )
+      val LocalTime = RefType(
+        alloyFqn("LocalTimeValue"),
+        alloyWrappersImport
+      )
+      val LocalDateTime = RefType(
+        alloyFqn("LocalDateTimeValue"),
+        alloyWrappersImport
+      )
+      val OffsetDateTime = RefType(
+        alloyFqn("OffsetDateTimeValue"),
+        alloyWrappersImport
+      )
+      val OffsetTime = RefType(
+        alloyFqn("OffsetTimeValue"),
+        alloyWrappersImport
+      )
+      val ZoneId = RefType(
+        alloyFqn("ZoneIdValue"),
+        alloyWrappersImport
+      )
+      val ZoneOffset = RefType(
+        alloyFqn("ZoneOffsetValue"),
+        alloyWrappersImport
+      )
+      val ZonedDateTime = RefType(
+        alloyFqn("ZonedDateTimeValue"),
+        alloyWrappersImport
+      )
+      val Year = RefType(
+        alloyFqn("YearValue"),
+        alloyWrappersImport
+      )
+      val YearMonth = RefType(
+        alloyFqn("YearMonthValue"),
+        alloyWrappersImport
+      )
+      val MonthDay = RefType(
+        alloyFqn("MonthDayValue"),
         alloyWrappersImport
       )
     }
