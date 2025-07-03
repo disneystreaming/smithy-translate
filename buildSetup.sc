@@ -67,7 +67,7 @@ trait BasePublishModule extends BaseModule with SonatypeCentralPublishModule {
 
   def pomSettings = PomSettings(
     description = "A smithy-translation toolkit",
-    organization = "io.github.disneystreaming.smithy",
+    organization = "com.disneystreaming.smithy",
     url = "https://github.com/disneystreaming/smithy-translate",
     licenses = Seq(
       License(
