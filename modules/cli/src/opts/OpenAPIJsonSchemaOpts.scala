@@ -103,7 +103,7 @@ object OpenAPIJsonSchemaOpts {
     header = "Take Open API specs as input and produce Smithy files as output."
   ) { getOpts(isOpenapi = true) }
   val openApiToSmithy =
-    Opts.subcommand(openApiToSmithyCmd).map(OpenApiTranslate)
+    Opts.subcommand(openApiToSmithyCmd).map(OpenApiTranslate.apply)
 
   private val jsonSchemaToSmithyCmd = Command(
     name = "json-schema-to-smithy",
@@ -111,5 +111,5 @@ object OpenAPIJsonSchemaOpts {
       "Take Json Schema specs as input and produce Smithy files as output."
   ) { getOpts(isOpenapi = false) }
   val jsonSchemaToSmithy =
-    Opts.subcommand(jsonSchemaToSmithyCmd).map(OpenApiTranslate)
+    Opts.subcommand(jsonSchemaToSmithyCmd).map(OpenApiTranslate.apply)
 }

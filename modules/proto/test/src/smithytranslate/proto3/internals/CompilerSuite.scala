@@ -23,6 +23,7 @@ import software.amazon.smithy.model.shapes.StringShape
 import software.amazon.smithy.model.shapes.StructureShape
 import alloy.proto.ProtoEnabledTrait
 import software.amazon.smithy.model.shapes.ShapeId
+import scala.jdk.OptionConverters._
 
 class CompilerSuite extends FunSuite {
 
@@ -122,6 +123,38 @@ class CompilerSuite extends FunSuite {
     namespaceTest(
       "com.Some_OTHER_Example",
       List("com", "Some_OTHER_Example", "some_other_example.proto")
+    )
+  }
+
+  test("hasProtoCompact returns true when PROTOBUF value present in protoOffsetDateTimeFormat trait") {
+    val spec =
+      """$version: "2"
+        |
+        |namespace example
+        |
+        |use alloy#OffsetDateTime
+        |use alloy.proto#protoOffsetDateTimeFormat
+        |
+        |structure Timer {
+        |  @protoOffsetDateTimeFormat("PROTOBUF")
+        |  start: OffsetDateTime
+        |}
+        |""".stripMargin
+
+    val assembledSpec = Model
+      .assembler()
+      .discoverModels()
+      .addUnparsedModel("spec.smithy", spec)
+      .assemble()
+      .validate()
+      .get()
+
+    val timerShape = assembledSpec.expectShape(ShapeId.fromParts("example", "Timer"), classOf[StructureShape])
+    val result = timerShape.getMember("start").toScala.map(Compiler.hasProtoCompact)
+
+    assertEquals(
+      result,
+      Some(true)
     )
   }
 

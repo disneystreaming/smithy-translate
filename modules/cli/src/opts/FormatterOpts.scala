@@ -63,6 +63,6 @@ object FormatterOpts {
     Command(name = "format", header = header)(formatOpts)
 
   val format: Opts[Format] =
-    Opts.subcommand(command = formatCommand).map(Format)
+    Opts.subcommand(command = formatCommand).map(Format.apply)
 
 }
