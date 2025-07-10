@@ -780,9 +780,9 @@ object Compiler {
 
   private[proto3] def hasProtoCompact(m: Shape): Boolean =
     compactTraits.exists(m.hasTrait) ||
-    m
-      .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
-      .toScala
-      .map(_.getValue())
-      .contains(alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
+      m
+        .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+        .toScala
+        .map(_.getValue())
+        .contains(alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
 }
