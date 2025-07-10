@@ -21,9 +21,9 @@ import mill.scalalib.api.ZincWorkerUtil
 import scala.Ordering.Implicits._
 
 object ScalaVersions {
-  val scala212 = "2.12.18"
-  val scala213 = "2.13.12"
-  val scala3 = "3.3.1"
+  val scala212 = "2.12.20"
+  val scala213 = "2.13.16"
+  val scala3 = "3.3.6"
 
   val scalaVersions = List(scala213, scala212, scala3)
 }
@@ -123,7 +123,7 @@ trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
   override def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val plugins =
-      if (sv.startsWith("2.")) Agg(ivy"org.typelevel:::kind-projector:0.13.2")
+      if (sv.startsWith("2.")) Agg(ivy"org.typelevel:::kind-projector:0.13.3")
       else Agg.empty
     super.scalacPluginIvyDeps() ++ plugins
   }
@@ -134,7 +134,7 @@ trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
 }
 
 trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
-  def scalaJSVersion = "1.11.0"
+  def scalaJSVersion = "1.19.0"
   def moduleKind = ModuleKind.CommonJSModule
 }
 

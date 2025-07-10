@@ -36,6 +36,7 @@ import alloy.proto.ProtoTimestampFormatTrait.TimestampFormat
 import smithytranslate.proto3.internals.ProtoIR.Type.AlloyTypes
 
 private[proto3] class Compiler(model: Model, allShapes: Boolean) {
+  import Compiler.*
 
   // Reference:
   // 1. https://github.com/protocolbuffers/protobuf/blob/master/docs/field_presence.md
@@ -168,17 +169,6 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
   private def hasProtoWrapped(m: Shape): Boolean =
     m.hasTrait(classOf[alloy.proto.ProtoWrappedTrait])
-
-  private val compactTraits = Set(
-    alloy.proto.ProtoCompactUUIDTrait.ID,
-    alloy.proto.ProtoCompactLocalDateTrait.ID,
-    alloy.proto.ProtoCompactYearMonthTrait.ID,
-    alloy.proto.ProtoCompactMonthDayTrait.ID,
-    alloy.proto.ProtoCompactOffsetDateTimeTrait.ID
-  )
-
-  private def hasProtoCompact(m: Shape): Boolean =
-    compactTraits.exists(m.hasTrait)
 
   private def isProtoService(ss: ServiceShape): Boolean =
     ss.hasTrait(classOf[ProtoEnabledTrait])
@@ -721,6 +711,9 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             case TimestampFormat.EPOCH_MILLIS =>
               if (isWrapped) Some(Type.AlloyWrappers.EpochMillisTimestamp)
               else Some(Type.AlloyTypes.EpochMillisTimestamp)
+            case TimestampFormat.RFC3339_STRING =>
+              if (isWrapped) Some(Type.GoogleWrappers.String)
+              else Some(Type.String)
           }
         }
 
@@ -775,4 +768,21 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       }
     }
   }
+}
+
+object Compiler {
+  private val compactTraits = Set(
+    alloy.proto.ProtoCompactUUIDTrait.ID,
+    alloy.proto.ProtoCompactLocalDateTrait.ID,
+    alloy.proto.ProtoCompactYearMonthTrait.ID,
+    alloy.proto.ProtoCompactMonthDayTrait.ID
+  )
+
+  private[proto3] def hasProtoCompact(m: Shape): Boolean =
+    compactTraits.exists(m.hasTrait) ||
+      m
+        .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+        .toScala
+        .map(_.getValue())
+        .contains(alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
 }

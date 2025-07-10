@@ -1599,7 +1599,7 @@ class CompilerRendererSuite extends FunSuite {
                     |use alloy.proto#protoEnabled
                     |use alloy#OffsetDateTime
                     |use alloy.proto#protoWrapped
-                    |use alloy.proto#protoCompactOffsetDateTime
+                    |use alloy.proto#protoOffsetDateTimeFormat
                     |
                     |@protoEnabled
                     |structure MyStructure {
@@ -1608,11 +1608,11 @@ class CompilerRendererSuite extends FunSuite {
                     |  @protoWrapped
                     |  wrapped: OffsetDateTime
 
-                    |  @protoCompactOffsetDateTime
+                    |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  compact: OffsetDateTime
 
                     |  @protoWrapped
-                    |  @protoCompactOffsetDateTime
+                    |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  wrappedCompact: OffsetDateTime
                     |}
                     |""".stripMargin

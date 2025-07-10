@@ -53,5 +53,6 @@ object ProtoOpts {
     header =
       "Take Smithy definitions as input and produce Proto files as output."
   ) { opts }
-  val smithyToProto = Opts.subcommand(smithyToProtoCmd).map(ProtoTranslate)
+  val smithyToProto =
+    Opts.subcommand(smithyToProtoCmd).map(ProtoTranslate.apply)
 }
