@@ -5,7 +5,7 @@
   ],
   "maven": {
     "dependencies": [
-      "com.disneystreaming.alloy:alloy-core:0.3.28"
+      "com.disneystreaming.alloy:alloy-core:0.3.29"
     ]
   },
   "languageServer": "software.amazon.smithy:smithy-language-server:0.7.0"
