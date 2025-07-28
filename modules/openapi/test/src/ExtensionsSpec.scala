@@ -199,6 +199,9 @@ final class ExtensionsSpec extends munit.FunSuite {
                            |        monthDay:
                            |          type: string
                            |          x-format: month-day
+                           |        duration:
+                           |          type: number
+                           |          x-format: duration
                            |""".stripMargin
 
     val expectedString = """|namespace foo
@@ -218,6 +221,7 @@ final class ExtensionsSpec extends munit.FunSuite {
                             |  year: alloy#Year
                             |  yearMonth: alloy#YearMonth
                             |  monthDay: alloy#MonthDay
+                            |  duration: alloy#Duration
                             |}
                             |""".stripMargin
 
