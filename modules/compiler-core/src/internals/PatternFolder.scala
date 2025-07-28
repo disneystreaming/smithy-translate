@@ -108,6 +108,7 @@ private[compiler] final class PatternFolder[F[
       case PYear => std("Integer", Hint.Timestamp(TimestampFormat.Year))
       case PYearMonth => std("String", Hint.Timestamp(TimestampFormat.YearMonth))
       case PMonthDay => std("String", Hint.Timestamp(TimestampFormat.MonthDay))
+      case PDuration => std("BigDecimal", Hint.Timestamp(TimestampFormat.Duration))
     }
 
   def nestedIdFromPrimitive(primitive: Primitive): (DefId, List[Hint]) =
@@ -123,6 +124,7 @@ private[compiler] final class PatternFolder[F[
       case PYear => alloy("Year")
       case PYearMonth => alloy("YearMonth")
       case PMonthDay => alloy("MonthDay")
+      case PDuration => alloy("Duration")
       case _ => topLevelIdFromPrimitive(primitive)
     }
   // format: on

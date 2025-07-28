@@ -89,6 +89,15 @@ final class TimeTypeSpec extends munit.FunSuite {
       "@alloy#monthDayFormat"
     )
   }
+  
+  test("duration newtype definition") {
+    runNewtypeTest(
+      "duration",
+      List("@alloy#durationSecondsFormat"),
+      "number",
+      "bigDecimal"
+    )
+  }
 
   test("nested definitions") {
     val jsonSchString =
@@ -141,6 +150,10 @@ final class TimeTypeSpec extends munit.FunSuite {
          |    "monthDay": {
          |      "type": "string",
          |      "format": "month-day"
+         |    },
+         |    "duration": {
+         |      "type": "number",
+         |      "format": "duration"
          |    }
          |  }
          |}
@@ -160,6 +173,7 @@ final class TimeTypeSpec extends munit.FunSuite {
                             | year: alloy#Year
                             | yearMonth: alloy#YearMonth
                             | monthDay: alloy#MonthDay
+                            | duration: alloy#Duration
                             |}
                             |""".stripMargin
 

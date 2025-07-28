@@ -36,7 +36,8 @@ private[compiler] object DropAlloyTimeExtensionsTransformer
     "zoned-date-time",
     "year",
     "year-month",
-    "month-day"
+    "month-day",
+    "duration"
   )
 
   private def process(d: Definition) = {

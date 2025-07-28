@@ -162,25 +162,45 @@ private[json_schema] object Extractors {
         // I:
         //  type: integer
         //  format: year
+        // I:
+        //  type: number
+        //  format: duration
         //  The json schema parser treats any integer type with a format fields as a CombinedSchema of StringSchema and NumberSchema
         //  where the StringSchema has the format set
         case (combinedSchema: CombinedSchema) => {
           val subschemas = combinedSchema.getSubschemas().asScala.toSet
 
-          val isNumberSchema = subschemas.exists {
-            case (_: NumberSchema) => true
-            case _                 => false
-          }
-          val hasYearFormat = subschemas.exists {
-            case Format("year") => true
-            case _              => false
-          }
-
-          if (isNumberSchema && hasYearFormat) {
-            Some(List.empty -> PYear)
-          } else
-            None
+          for {
+            _ <- subschemas.collectFirst { case (x: NumberSchema) => Some(x) }
+            format <- subschemas.collectFirst {
+              case Format("year") => PYear
+              case Format("duration") => PDuration
+            }
+          } yield List.empty -> format
         }
+
+        // // I:
+        // //  type: number
+        // //  format: duration
+        // //  The json schema parser treats any integer type with a format fields as a CombinedSchema of StringSchema and NumberSchema
+        // //  where the StringSchema has the format set
+        // case (combinedSchema: CombinedSchema) => {
+        //   val subschemas = combinedSchema.getSubschemas().asScala.toSet
+        //
+        //   val isNumberSchema = subschemas.exists {
+        //     case (_: NumberSchema) => true
+        //     case _                 => false
+        //   }
+        //   val hasDurationFormat = subschemas.exists {
+        //     case Format("duration") => true
+        //     case _              => false
+        //   }
+        //
+        //   if (isNumberSchema && hasDurationFormat) {
+        //     Some(List.empty -> PDuration)
+        //   } else
+        //     None
+        // }
 
         // S:
         //  type: string

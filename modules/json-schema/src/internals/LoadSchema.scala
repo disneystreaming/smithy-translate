@@ -40,6 +40,7 @@ private[compiler] object LoadSchema extends (JSONObject => Schema) {
       .addFormatValidator(new EmptyValidator("year"))
       .addFormatValidator(new EmptyValidator("year-month"))
       .addFormatValidator(new EmptyValidator("month-day"))
+      .addFormatValidator(new EmptyValidator("duration"))
       .useDefaults(true)
       .schemaJson(sch)
       .build()

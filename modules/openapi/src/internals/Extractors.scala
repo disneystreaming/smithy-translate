@@ -212,6 +212,11 @@ private[openapi] object CasePrimitive {
     case _: DateTimeSchema => Some(PDateTime)
 
     // N:
+    //  type: number
+    //  format: duration
+    case (_: NumberSchema) & (Format("duration") | XFormat("duration")) => Some(PDuration)
+
+    // N:
     //   type: number
     //   format: float
     case (_: NumberSchema) & Format("float") => Some(PFloat)
