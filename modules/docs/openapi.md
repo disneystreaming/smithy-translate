@@ -69,6 +69,7 @@ Smithy.
 | string            | binary             | Blob                 |                               |
 | string            | byte               | Blob                 |                               |
 | string            | password           | String               | @sensitive                    |
+| number            | duration           | Duration             | alloy#durationSecondsFormat   |
 | number            | float              | Float                |                               |
 | number            | double             | Double               |                               |
 | number            | double             | Double               |                               |
@@ -132,6 +133,9 @@ components:
     MyMonthDay:
       type: string
       format: "month-day"
+    MyDuration:
+      type: number
+      format: "duration"
     MyObj:
       type: object
       properties:
@@ -172,6 +176,9 @@ components:
         monthDay:
           type: string
           format: month-day
+        duration:
+          type: number
+          format: duration
 ```
 
 Smithy:
@@ -198,6 +205,8 @@ use alloy#ZoneId
 use alloy#zoneIdFormat
 use alloy#ZoneOffset
 use alloy#zoneOffsetFormat
+use alloy#Duration
+use alloy#durationSecondsFormat
 
 structure MyObj {
     myTimestamp: MyTimestamp
@@ -213,6 +222,7 @@ structure MyObj {
     year: Year
     yearMonth: YearMonth
     monthDay: MonthDay
+    duration: Duration
 }
 
 @dateFormat
@@ -251,6 +261,9 @@ string MyZoneId
 
 @zoneOffsetFormat
 string MyZoneOffset
+
+@durationSecondsFormat
+bigdecimal 
 ```
 
 #### Aggregate Shapes

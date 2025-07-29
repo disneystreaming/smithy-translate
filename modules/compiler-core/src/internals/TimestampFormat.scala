@@ -33,4 +33,5 @@ private[compiler] object TimestampFormat {
   case object Year extends TimestampFormat
   case object YearMonth extends TimestampFormat
   case object MonthDay extends TimestampFormat
+  case object Duration extends TimestampFormat
 }

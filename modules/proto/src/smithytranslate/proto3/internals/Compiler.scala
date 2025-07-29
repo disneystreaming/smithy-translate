@@ -574,10 +574,12 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
-      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
-        if (!isWrapped) Type.String
-        else Type.AlloyWrappers.BigDecimal
-      }
+      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = 
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          if (!isWrapped) Some(Type.String)
+          else Some(Type.AlloyWrappers.BigDecimal)
+        }
+
       def bigIntegerShape(shape: BigIntegerShape): Option[Type] = Some {
         if (!isWrapped) Type.String
         else Type.AlloyWrappers.BigInteger
@@ -775,7 +777,8 @@ object Compiler {
     alloy.proto.ProtoCompactUUIDTrait.ID,
     alloy.proto.ProtoCompactLocalDateTrait.ID,
     alloy.proto.ProtoCompactYearMonthTrait.ID,
-    alloy.proto.ProtoCompactMonthDayTrait.ID
+    alloy.proto.ProtoCompactMonthDayTrait.ID,
+    alloy.proto.ProtoCompactLocalTimeTrait.ID
   )
 
   private[proto3] def hasProtoCompact(m: Shape): Boolean =

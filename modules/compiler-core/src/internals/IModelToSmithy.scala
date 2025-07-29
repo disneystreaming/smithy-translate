@@ -434,6 +434,7 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
         case Year           => List(new alloy.YearFormatTrait())
         case YearMonth      => List(new alloy.YearMonthFormatTrait())
         case MonthDay       => List(new alloy.MonthDayFormatTrait())
+        case Duration       => List(new alloy.DurationSecondsFormatTrait())
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())

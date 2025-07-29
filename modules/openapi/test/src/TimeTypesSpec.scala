@@ -60,6 +60,9 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |    MyMonthDay:
                            |      type: string
                            |      format: "month-day"
+                           |    MyDuration:
+                           |      type: number
+                           |      format: "duration"
                            |""".stripMargin
 
     val expectedString = """|namespace foo
@@ -100,6 +103,9 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |
                             |@alloy#monthDayFormat
                             |string MyMonthDay
+                            |
+                            |@alloy#durationSecondsFormat
+                            |bigDecimal MyDuration
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
@@ -153,6 +159,9 @@ final class TimeTypesSpec extends munit.FunSuite {
                            |        monthDay:
                            |          type: string
                            |          format: month-day
+                           |        duration:
+                           |          type: number
+                           |          format: duration
                            |    MyTimestamp:
                            |      type: string
                            |      format: date-time
@@ -177,6 +186,7 @@ final class TimeTypesSpec extends munit.FunSuite {
                             |  year: alloy#Year
                             |  yearMonth: alloy#YearMonth
                             |  monthDay: alloy#MonthDay
+                            |  duration: alloy#Duration
                             |}
                             |
                             |@timestampFormat("date-time")
