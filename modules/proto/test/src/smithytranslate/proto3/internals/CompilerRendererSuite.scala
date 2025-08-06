@@ -1638,7 +1638,7 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-
+  // TODO: What should the default format be if no @protoOffsetDateTime is specified PROTOBUF or RFC3339_String?
   test("using alloy alloy#OffsetDateTime") {
     val source = """|$version: "2"
                     |namespace test
@@ -1650,14 +1650,14 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |@protoEnabled
                     |structure MyStructure {
+                    |  @protoOffsetDateTimeFormat("RFC3339_STRING")
                     |  basic: OffsetDateTime
-
                     |  @protoWrapped
+                    |  @protoOffsetDateTimeFormat("RFC3339_STRING")
                     |  wrapped: OffsetDateTime
-
+                    |  defaultWithNoFormat: OffsetDateTime
                     |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  compact: OffsetDateTime
-
                     |  @protoWrapped
                     |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  wrappedCompact: OffsetDateTime
@@ -1668,17 +1668,16 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package test;
                       |
-                      |import "google/protobuf/timestamp.proto";
-                      |
                       |import "alloy/protobuf/wrappers.proto";
                       |
                       |import "alloy/protobuf/types.proto";
                       |
                       |message MyStructure {
-                      |  google.protobuf.Timestamp basic = 1;
+                      |  string basic = 1;
                       |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
-                      |  alloy.protobuf.CompactOffsetDateTime compact = 3;
-                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 4;
+                      |  string defaultWithNoFormat = 3;
+                      |  alloy.protobuf.CompactOffsetDateTime compact = 4;
+                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 5;
                       |}
                       |""".stripMargin
 

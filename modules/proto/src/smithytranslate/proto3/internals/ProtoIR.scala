@@ -217,6 +217,7 @@ private[internals] object ProtoIR {
             case (true, true) => AlloyWrappers.CompactOffsetDateTime
             case (true, false) => AlloyTypes.CompactOffsetDateTime
             case (false, true) => AlloyWrappers.OffsetDateTime
+            case (false, false) => Type.String
           }
         }
 
