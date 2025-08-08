@@ -173,7 +173,7 @@ private[json_schema] object Extractors {
           for {
             _ <- subschemas.collectFirst { case (x: NumberSchema) => Some(x) }
             format <- subschemas.collectFirst {
-              case Format("year") => PYear
+              case Format("year")     => PYear
               case Format("duration") => PDuration
             }
           } yield List.empty -> format

@@ -214,7 +214,8 @@ private[openapi] object CasePrimitive {
     // N:
     //  type: number
     //  format: duration
-    case (_: NumberSchema) & (Format("duration") | XFormat("duration")) => Some(PDuration)
+    case (_: NumberSchema) & (Format("duration") | XFormat("duration")) =>
+      Some(PDuration)
 
     // N:
     //   type: number

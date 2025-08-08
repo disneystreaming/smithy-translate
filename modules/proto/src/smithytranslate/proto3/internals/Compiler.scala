@@ -574,7 +574,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
-      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = 
+      def bigDecimalShape(shape: BigDecimalShape): Option[Type] =
         Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
           if (!isWrapped) Some(Type.String)
           else Some(Type.AlloyWrappers.BigDecimal)
