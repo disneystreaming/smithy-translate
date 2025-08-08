@@ -263,7 +263,7 @@ string MyZoneId
 string MyZoneOffset
 
 @durationSecondsFormat
-bigdecimal 
+bigDecimal MyDuration
 ```
 
 #### Aggregate Shapes
