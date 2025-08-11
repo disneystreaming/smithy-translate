@@ -287,7 +287,7 @@ private[internals] object ProtoIR {
 
       def fromShape(shape: Shape, isWrapped: Boolean, isCompact: Boolean): Option[Type] = {
         TypeMatcher.all.collectFirst { case matcher if shape.hasTrait(matcher.matchingTrait) => 
-          matcher.mapShapeToType.lift((isCompact, isWrapped))
+          matcher.mapShapeToType.lift((isCompact, isWrapped)) 
         }.flatten
       }
     }

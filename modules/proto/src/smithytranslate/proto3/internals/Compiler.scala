@@ -416,11 +416,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                         val isTargetWrapped = hasProtoWrapped(targetShape)
                         isMemberWrapped || isTargetWrapped
                       }
-                      val isCompact = {
-                        val isMemberCompact = hasProtoCompact(m)
-                        val isTargetCompact = hasProtoCompact(targetShape)
-                        isMemberCompact || isTargetCompact
-                      }
+                      val isCompact = hasProtoCompact(m, targetShape)
 
                       targetShape
                         .accept(
@@ -471,11 +467,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             val isMap = targetShape.isMapShape()
             memberHasWrapped || targetHasWrapped || isList || isMap
           }
-          val isCompact = {
-            val memberHasCompact = hasProtoCompact(m)
-            val targetHasCompact = hasProtoCompact(targetShape)
-            memberHasCompact || targetHasCompact
-          }
+          val isCompact = hasProtoCompact(m, targetShape)
           val maybeTimestampFormat = extractTimestampFormat(m)
           val fieldType =
             targetShape
@@ -640,10 +632,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         val target = model.expectShape(shape.getTarget())
         val memberHasWrapped = hasProtoWrapped(shape)
         val targetHasWrapped = hasProtoWrapped(target)
-        val memberHasCompact = hasProtoCompact(shape)
-        val targetHasCompact = hasProtoCompact(target)
         val isWrapped = memberHasWrapped || targetHasWrapped
-        val isCompact = memberHasCompact || targetHasCompact
+        val isCompact = hasProtoCompact(shape, target)
         val numType =
           shape
             .getTrait(classOf[ProtoNumTypeTrait])
@@ -781,11 +771,27 @@ object Compiler {
     alloy.proto.ProtoCompactLocalTimeTrait.ID
   )
 
-  private[proto3] def hasProtoCompact(m: Shape): Boolean =
-    compactTraits.exists(m.hasTrait) ||
-      m
-        .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
-        .toScala
-        .map(_.getValue())
-        .contains(alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
+  private def isCompactOffsetDateTime(m: Shape, target: Shape): Boolean = {
+    val traitStuff = m
+      .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+      .toScala
+      .orElse(
+        target
+          .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+          .toScala
+      )
+      .map(_.getValue())
+
+    // If ProtoOffsetDateTimeFormatTrait is not present default to using compact version for OffsetDateTime
+    traitStuff match {
+      case Some(alloy.proto.ProtoOffsetDateTimeFormatTrait.RFC3339_STRING) =>
+        false
+      case _ => true
+    }
+  }
+
+  private[proto3] def hasProtoCompact(member: Shape, target: Shape): Boolean =
+    compactTraits.exists(member.hasTrait) || compactTraits.exists(
+      target.hasTrait
+    ) || isCompactOffsetDateTime(member, target)
 }

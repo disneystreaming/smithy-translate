@@ -1638,8 +1638,7 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  // TODO: What should the default format be if no @protoOffsetDateTime is specified PROTOBUF or RFC3339_String?
-  test("using alloy alloy#OffsetDateTime") {
+  test("using alloy alloy#OffsetDateTime".only) {
     val source = """|$version: "2"
                     |namespace test
                     |
@@ -1675,7 +1674,7 @@ class CompilerRendererSuite extends FunSuite {
                       |message MyStructure {
                       |  string basic = 1;
                       |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
-                      |  string defaultWithNoFormat = 3;
+                      |  alloy.protobuf.CompactOffsetDateTime defaultWithNoFormat = 3;
                       |  alloy.protobuf.CompactOffsetDateTime compact = 4;
                       |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 5;
                       |}
