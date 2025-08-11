@@ -1638,7 +1638,7 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
-  test("using alloy alloy#OffsetDateTime".only) {
+  test("using alloy alloy#OffsetDateTime") {
     val source = """|$version: "2"
                     |namespace test
                     |

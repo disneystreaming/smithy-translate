@@ -772,7 +772,7 @@ object Compiler {
   )
 
   private def isCompactOffsetDateTime(m: Shape, target: Shape): Boolean = {
-    val traitStuff = m
+    val formatTrait = m
       .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
       .toScala
       .orElse(
@@ -782,12 +782,10 @@ object Compiler {
       )
       .map(_.getValue())
 
-    // If ProtoOffsetDateTimeFormatTrait is not present default to using compact version for OffsetDateTime
-    traitStuff match {
-      case Some(alloy.proto.ProtoOffsetDateTimeFormatTrait.RFC3339_STRING) =>
-        false
-      case _ => true
-    }
+    (m.hasTrait(alloy.OffsetDateTimeFormatTrait.ID) ||
+      target.hasTrait(alloy.OffsetDateTimeFormatTrait.ID)) &&
+        // In the case where no FormatTrait is specified it should default to using the compact format hence the `forall`
+        formatTrait.forall(_ == alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
   }
 
   private[proto3] def hasProtoCompact(member: Shape, target: Shape): Boolean =
