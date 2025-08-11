@@ -784,8 +784,8 @@ object Compiler {
 
     (m.hasTrait(alloy.OffsetDateTimeFormatTrait.ID) ||
       target.hasTrait(alloy.OffsetDateTimeFormatTrait.ID)) &&
-        // In the case where no FormatTrait is specified it should default to using the compact format hence the `forall`
-        formatTrait.forall(_ == alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
+    // In the case where no FormatTrait is specified it should default to using the compact format hence the `forall`
+    formatTrait.forall(_ == alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
   }
 
   private[proto3] def hasProtoCompact(member: Shape, target: Shape): Boolean =
