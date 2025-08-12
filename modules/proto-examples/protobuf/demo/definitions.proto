@@ -21,7 +21,6 @@ message HelloRequest {
   demo.common.Language lang = 2;
   int32 requiredInt = 4;
   int32 int = 5;
-  string id = 6;
 }
 
 message HelloResponse {

@@ -7,7 +7,6 @@ use alloy.proto#protoInlinedOneOf
 use alloy.proto#protoEnabled
 use alloy.proto#protoReservedFields
 use alloy.proto#protoNumType
-use alloy#UUID
 use demo.common#Language
 
 @protoEnabled
@@ -40,9 +39,6 @@ structure HelloRequest {
 
     @protoIndex(5)
     int: Integer
-
-    @protoIndex(6)
-    id: UUID
 }
 
 structure HelloResponse {

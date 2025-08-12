@@ -150,7 +150,11 @@ class CompilerSuite extends FunSuite {
       .get()
 
     val timerShape = assembledSpec.expectShape(ShapeId.fromParts("example", "Timer"), classOf[StructureShape])
-    val result = timerShape.getMember("start").toScala.map(Compiler.hasProtoCompact)
+
+    val result = for {
+      member <- timerShape.getMember("start").toScala
+      target = assembledSpec.expectShape(member.getTarget)
+    } yield Compiler.hasProtoCompact(member, target)
 
     assertEquals(
       result,

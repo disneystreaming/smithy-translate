@@ -16,8 +16,9 @@
 package smithytranslate.compiler.internals
 
 import java.util.Date
-import java.time._
+import java.time.{Duration => _, _}
 import java.util.UUID
+import scala.concurrent.duration.Duration
 
 private[compiler] sealed trait Primitive {
   type T
@@ -50,6 +51,7 @@ private[compiler] object Primitive {
   case object PYear extends Primitive { type T = Year }
   case object PYearMonth extends Primitive { type T = YearMonth }
   case object PMonthDay extends Primitive { type T = MonthDay }
+  case object PDuration extends Primitive { type T = Duration }
   case object PBytes extends Primitive { type T = Array[Byte] }
   case object PFreeForm extends Primitive { type T = Any }
 }

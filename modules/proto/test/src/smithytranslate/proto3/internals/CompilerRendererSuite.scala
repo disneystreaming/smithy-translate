@@ -1531,12 +1531,18 @@ class CompilerRendererSuite extends FunSuite {
                     |use alloy.proto#protoEnabled
                     |use alloy#LocalTime
                     |use alloy.proto#protoWrapped
+                    |use alloy.proto#protoCompactLocalTime
                     |
                     |@protoEnabled
                     |structure MyStructure {
                     |  basic: LocalTime
                     |  @protoWrapped
                     |  wrapped: LocalTime
+                    |  @protoCompactLocalTime
+                    |  compact: LocalTime
+                    |  @protoWrapped
+                    |  @protoCompactLocalTime
+                    |  wrappedCompact: LocalTime
                     |}
                     |""".stripMargin
 
@@ -1546,9 +1552,13 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |import "alloy/protobuf/wrappers.proto";
                       |
+                      |import "alloy/protobuf/types.proto";
+                      |
                       |message MyStructure {
                       |  string basic = 1;
                       |  alloy.protobuf.LocalTimeValue wrapped = 2;
+                      |  alloy.protobuf.CompactLocalTime compact = 3;
+                      |  alloy.protobuf.CompactLocalTimeValue wrappedCompact = 4;
                       |}
                       |""".stripMargin
 
@@ -1592,6 +1602,42 @@ class CompilerRendererSuite extends FunSuite {
     )
   }
 
+  test("using alloy alloy#Duration") {
+    val source = """|$version: "2"
+                    |namespace test
+                    |
+                    |use alloy.proto#protoEnabled
+                    |use alloy#Duration
+                    |use alloy.proto#protoWrapped
+                    |
+                    |@protoEnabled
+                    |structure MyStructure {
+                    |  basic: Duration
+                    |  @protoWrapped
+                    |  wrapped: Duration
+                    |}
+                    |""".stripMargin
+
+    val expected = """|syntax = "proto3";
+                      |
+                      |package test;
+                      |
+                      |import "alloy/protobuf/types.proto";
+                      |
+                      |import "alloy/protobuf/wrappers.proto";
+                      |
+                      |message MyStructure {
+                      |  alloy.protobuf.Duration basic = 1;
+                      |  alloy.protobuf.DurationValue wrapped = 2;
+                      |}
+                      |""".stripMargin
+
+    convertCheck(
+      source,
+      Map("test/definitions.proto" -> expected)
+    )
+  }
+
   test("using alloy alloy#OffsetDateTime") {
     val source = """|$version: "2"
                     |namespace test
@@ -1603,14 +1649,14 @@ class CompilerRendererSuite extends FunSuite {
                     |
                     |@protoEnabled
                     |structure MyStructure {
+                    |  @protoOffsetDateTimeFormat("RFC3339_STRING")
                     |  basic: OffsetDateTime
-
                     |  @protoWrapped
+                    |  @protoOffsetDateTimeFormat("RFC3339_STRING")
                     |  wrapped: OffsetDateTime
-
+                    |  defaultWithNoFormat: OffsetDateTime
                     |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  compact: OffsetDateTime
-
                     |  @protoWrapped
                     |  @protoOffsetDateTimeFormat("PROTOBUF")
                     |  wrappedCompact: OffsetDateTime
@@ -1621,17 +1667,16 @@ class CompilerRendererSuite extends FunSuite {
                       |
                       |package test;
                       |
-                      |import "google/protobuf/timestamp.proto";
-                      |
                       |import "alloy/protobuf/wrappers.proto";
                       |
                       |import "alloy/protobuf/types.proto";
                       |
                       |message MyStructure {
-                      |  google.protobuf.Timestamp basic = 1;
+                      |  string basic = 1;
                       |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
-                      |  alloy.protobuf.CompactOffsetDateTime compact = 3;
-                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 4;
+                      |  alloy.protobuf.CompactOffsetDateTime defaultWithNoFormat = 3;
+                      |  alloy.protobuf.CompactOffsetDateTime compact = 4;
+                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 5;
                       |}
                       |""".stripMargin
 

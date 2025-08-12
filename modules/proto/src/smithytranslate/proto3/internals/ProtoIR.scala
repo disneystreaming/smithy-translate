@@ -217,13 +217,26 @@ private[internals] object ProtoIR {
             case (true, true) => AlloyWrappers.CompactOffsetDateTime
             case (true, false) => AlloyTypes.CompactOffsetDateTime
             case (false, true) => AlloyWrappers.OffsetDateTime
+            case (false, false) => Type.String
           }
         }
 
-        val localTimeMatcher = WrappedTypeMatcher(
-          alloy.LocalTimeFormatTrait.ID,
-          AlloyWrappers.LocalTime
-        )
+        val durationMatcher = new TypeMatcher {
+          val matchingTrait = alloy.DurationSecondsFormatTrait.ID
+          val mapShapeToType = { 
+            case (_, true) => AlloyWrappers.Duration
+            case (_, false) => AlloyTypes.Duration
+          }
+        }
+
+        val localTimeMatcher = new TypeMatcher {
+          val matchingTrait = alloy.LocalTimeFormatTrait.ID
+          val mapShapeToType = { 
+            case (true, true) => AlloyWrappers.CompactLocalTime
+            case (true, false) => AlloyTypes.CompactLocalTime
+            case (false, true) => AlloyWrappers.LocalTime
+          }
+        }
 
         val localDateTimeMatcher = WrappedTypeMatcher(
           alloy.LocalDateTimeFormatTrait.ID,
@@ -267,13 +280,14 @@ private[internals] object ProtoIR {
           zoneIdMatcher,
           zoneOffsetMatcher,
           zonedDateTimeMatcher,
-          yearMatcher
+          yearMatcher,
+          durationMatcher
         )
       }
 
       def fromShape(shape: Shape, isWrapped: Boolean, isCompact: Boolean): Option[Type] = {
         TypeMatcher.all.collectFirst { case matcher if shape.hasTrait(matcher.matchingTrait) => 
-          matcher.mapShapeToType.lift((isCompact, isWrapped))
+          matcher.mapShapeToType.lift((isCompact, isWrapped)) 
         }.flatten
       }
     }
@@ -299,6 +313,10 @@ private[internals] object ProtoIR {
         alloyFqn("CompactLocalDate"),
         alloyTypesImport
       )
+      val CompactLocalTime = RefType(
+        alloyFqn("CompactLocalTime"),
+        alloyTypesImport
+      )
       val CompactYearMonth = RefType(
         alloyFqn("CompactYearMonth"),
         alloyTypesImport
@@ -309,6 +327,10 @@ private[internals] object ProtoIR {
       )
       val CompactOffsetDateTime = RefType(
         alloyFqn("CompactOffsetDateTime"),
+        alloyTypesImport
+      )
+      val Duration = RefType(
+        alloyFqn("Duration"),
         alloyTypesImport
       )
     }
@@ -370,6 +392,10 @@ private[internals] object ProtoIR {
         alloyFqn("CompactLocalDateValue"),
         alloyWrappersImport
       )
+      val CompactLocalTime = RefType(
+        alloyFqn("CompactLocalTimeValue"),
+        alloyWrappersImport
+      )
       val CompactYearMonth = RefType(
         alloyFqn("CompactYearMonthValue"),
         alloyWrappersImport
@@ -428,6 +454,10 @@ private[internals] object ProtoIR {
       )
       val MonthDay = RefType(
         alloyFqn("MonthDayValue"),
+        alloyWrappersImport
+      )
+      val Duration = RefType(
+        alloyFqn("DurationValue"),
         alloyWrappersImport
       )
     }

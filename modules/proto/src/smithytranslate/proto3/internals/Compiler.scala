@@ -416,11 +416,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                         val isTargetWrapped = hasProtoWrapped(targetShape)
                         isMemberWrapped || isTargetWrapped
                       }
-                      val isCompact = {
-                        val isMemberCompact = hasProtoCompact(m)
-                        val isTargetCompact = hasProtoCompact(targetShape)
-                        isMemberCompact || isTargetCompact
-                      }
+                      val isCompact = hasProtoCompact(m, targetShape)
 
                       targetShape
                         .accept(
@@ -471,11 +467,7 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             val isMap = targetShape.isMapShape()
             memberHasWrapped || targetHasWrapped || isList || isMap
           }
-          val isCompact = {
-            val memberHasCompact = hasProtoCompact(m)
-            val targetHasCompact = hasProtoCompact(targetShape)
-            memberHasCompact || targetHasCompact
-          }
+          val isCompact = hasProtoCompact(m, targetShape)
           val maybeTimestampFormat = extractTimestampFormat(m)
           val fieldType =
             targetShape
@@ -574,10 +566,12 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       timestampFormat: Option[ProtoTimestampFormatTrait.TimestampFormat] = None
   ): ShapeVisitor[Option[Type]] =
     new ShapeVisitor[Option[Type]] {
-      def bigDecimalShape(shape: BigDecimalShape): Option[Type] = Some {
-        if (!isWrapped) Type.String
-        else Type.AlloyWrappers.BigDecimal
-      }
+      def bigDecimalShape(shape: BigDecimalShape): Option[Type] =
+        Type.Alloy.fromShape(shape, isWrapped, isCompact).orElse {
+          if (!isWrapped) Some(Type.String)
+          else Some(Type.AlloyWrappers.BigDecimal)
+        }
+
       def bigIntegerShape(shape: BigIntegerShape): Option[Type] = Some {
         if (!isWrapped) Type.String
         else Type.AlloyWrappers.BigInteger
@@ -638,10 +632,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         val target = model.expectShape(shape.getTarget())
         val memberHasWrapped = hasProtoWrapped(shape)
         val targetHasWrapped = hasProtoWrapped(target)
-        val memberHasCompact = hasProtoCompact(shape)
-        val targetHasCompact = hasProtoCompact(target)
         val isWrapped = memberHasWrapped || targetHasWrapped
-        val isCompact = memberHasCompact || targetHasCompact
+        val isCompact = hasProtoCompact(shape, target)
         val numType =
           shape
             .getTrait(classOf[ProtoNumTypeTrait])
@@ -775,14 +767,29 @@ object Compiler {
     alloy.proto.ProtoCompactUUIDTrait.ID,
     alloy.proto.ProtoCompactLocalDateTrait.ID,
     alloy.proto.ProtoCompactYearMonthTrait.ID,
-    alloy.proto.ProtoCompactMonthDayTrait.ID
+    alloy.proto.ProtoCompactMonthDayTrait.ID,
+    alloy.proto.ProtoCompactLocalTimeTrait.ID
   )
 
-  private[proto3] def hasProtoCompact(m: Shape): Boolean =
-    compactTraits.exists(m.hasTrait) ||
-      m
-        .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
-        .toScala
-        .map(_.getValue())
-        .contains(alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
+  private def isCompactOffsetDateTime(m: Shape, target: Shape): Boolean = {
+    val formatTrait = m
+      .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+      .toScala
+      .orElse(
+        target
+          .getTrait(classOf[alloy.proto.ProtoOffsetDateTimeFormatTrait])
+          .toScala
+      )
+      .map(_.getValue())
+
+    (m.hasTrait(alloy.OffsetDateTimeFormatTrait.ID) ||
+      target.hasTrait(alloy.OffsetDateTimeFormatTrait.ID)) &&
+    // In the case where no FormatTrait is specified it should default to using the compact format hence the `forall`
+    formatTrait.forall(_ == alloy.proto.ProtoOffsetDateTimeFormatTrait.PROTOBUF)
+  }
+
+  private[proto3] def hasProtoCompact(member: Shape, target: Shape): Boolean =
+    compactTraits.exists(member.hasTrait) || compactTraits.exists(
+      target.hasTrait
+    ) || isCompactOffsetDateTime(member, target)
 }
