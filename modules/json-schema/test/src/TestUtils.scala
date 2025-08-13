@@ -83,6 +83,9 @@ object TestUtils {
     ConversionResult(resultW, expected)
   }
 
+  def runConversionTest(input: NonEmptyList[ConversionTestInput])(implicit loc: Location): Unit = 
+    runConversionTest(input.head, input.tail:_*)
+
   def runConversionTest(
       input0: ConversionTestInput,
       remaining: ConversionTestInput*

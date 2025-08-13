@@ -25,6 +25,8 @@ import cats.syntax.all._
  */
 private[compiler] abstract class RefParser(ns: Path) {
 
+  private val SupportedRefSchemes: Set[String] = Set("file", "http", "https")
+
   private def handleRef(
       uri: java.net.URI,
       pathSegsIn: List[String],
@@ -69,9 +71,10 @@ private[compiler] abstract class RefParser(ns: Path) {
       .leftMap(_ => ToSmithyError.BadRef(ref))
       .flatMap(uri =>
         Option(uri.getScheme()) match {
-          case Some("file") => Right(uri)
-          case None         => Right(uri)
-          case Some(_)      => Left(ToSmithyError.BadRef(ref))
+          case Some(scheme) if SupportedRefSchemes(scheme) => Right(uri)
+          case None                                        => Right(uri)
+          case Some(_)                                     => 
+            Left(ToSmithyError.BadRef(ref))
         }
       )
       .flatMap { uri =>
