@@ -134,9 +134,9 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
     val newFields =
       parent.localFields.map(f => f.copy(id = f.id.copy(modelId = newDef.id)))
 
-    val newHints = parent.hints 
+    val newHints = parent.hints
     val remove = parent
-    val nd = newDef.copy(localFields = newDef.localFields ++ newFields, hints = newHints)
+    val nd = newDef.copy(localFields = newDef.localFields ++ newFields, hints = newDef.hints ++ newHints)
     NonTopLevelParentNoRefsResult(nd, remove)
   }
 
