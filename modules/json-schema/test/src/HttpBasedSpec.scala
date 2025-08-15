@@ -15,6 +15,7 @@
 
 package smithytranslate.compiler.json_schema
 
+import cats.syntax.all._
 import cats.data.NonEmptyList
 import com.sun.net.httpserver.SimpleFileServer
 import java.net.InetSocketAddress
@@ -24,8 +25,16 @@ final class HttpBasedSpec extends munit.FunSuite {
 
   val FileServerLogLevel = SimpleFileServer.OutputLevel.NONE
 
-  case class FileServerMetadata(baseServerUrl: String, servingDirectory: os.Path)
-  case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: String)
+  private case class FileServerMetadata(baseServerUrl: String, servingDirectory: os.Path)
+
+  /**
+    * When `expectedSmithyOutput` is None, it will not be used as a test input. This simulates a json schema that exists
+    * only on the remote server, and not in the translation pipeline.
+    *
+    * @param jsonSchemaInput
+    * @param expectedSmithyOutput
+    */
+  private case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: Option[String])
 
   private def withFileServer(
       port: Int,
@@ -62,12 +71,14 @@ final class HttpBasedSpec extends munit.FunSuite {
       }
 
       val testInputs = 
-        files.toList.map { case (path, TranslationPair(jsonSchemaInput, expectedSmithyOutput)) =>
-          TestUtils.ConversionTestInput(
-            NonEmptyList.fromListUnsafe(path.segments.toList),
-            jsonSchemaInput,
-            expectedSmithyOutput
-          )
+        files.toList.mapFilter { 
+          case (path, TranslationPair(jsonSchemaInput, Some(expectedSmithyOutput))) =>
+            TestUtils.ConversionTestInput(
+              NonEmptyList.fromListUnsafe(path.segments.toList),
+              jsonSchemaInput,
+              expectedSmithyOutput
+            ).some
+          case (_, _) => None
         }
       TestUtils.runConversionTest(NonEmptyList.fromListUnsafe(testInputs))
     }
@@ -96,7 +107,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |structure Nested {
               |    id: String,
               |}
-              |""".stripMargin
+              |""".stripMargin.some
         ),
       os.rel / "wrapper.json" -> TranslationPair(
         s"""|{
@@ -118,7 +129,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |structure Wrapper {
             |    data: Nested
             |}
-            |""".stripMargin
+            |""".stripMargin.some
         )
       )
     }
@@ -145,7 +156,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |structure Nested {
               |    id: String,
               |}
-              |""".stripMargin
+              |""".stripMargin.some
         ),
       os.rel / "wrapper.json" -> TranslationPair(
         s"""|{
@@ -167,7 +178,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |structure Wrapper {
             |    data: String
             |}
-            |""".stripMargin
+            |""".stripMargin.some
         )
       )
     }
@@ -195,7 +206,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |structure Nested {
               |    id: String,
               |}
-              |""".stripMargin
+              |""".stripMargin.some
         ),
       os.rel / "wrapper.json" -> TranslationPair(
         s"""|{
@@ -217,7 +228,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |structure Wrapper {
             |    data: Nested
             |}
-            |""".stripMargin
+            |""".stripMargin.some
         )
       )
     }
@@ -252,7 +263,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |structure Nested {
               |    bar: Bar
               |}
-              |""".stripMargin
+              |""".stripMargin.some
         ),
       os.rel / "wrapper.json" -> TranslationPair(
         s"""|{
@@ -274,7 +285,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |structure Wrapper {
             |    data: Nested
             |}
-            |""".stripMargin
+            |""".stripMargin.some
         )
       )
     }
@@ -309,7 +320,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |structure Nested {
               |    bar: Bar
               |}
-              |""".stripMargin
+              |""".stripMargin.some
         ),
       os.rel / "wrapper.json" -> TranslationPair(
         s"""|{
@@ -331,7 +342,101 @@ final class HttpBasedSpec extends munit.FunSuite {
             |structure Wrapper {
             |    data: Bar
             |}
-            |""".stripMargin
+            |""".stripMargin.some
+        )
+      )
+    }
+  }
+
+  
+  test("multiple files - entire schema reference") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
+      Map(
+        os.rel / "nested.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/nested.json",
+              |  "type": "object",
+              |  "title": "nested",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "id": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace nested
+              |
+              |structure Nested {
+              |    id: String,
+              |}
+              |""".stripMargin.some
+        ),
+      os.rel / "wrapper.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "$baseUrl/wrapper.json",
+            |  "type": "object",
+            |  "title": "wrapper",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/nested.json#/properties/id"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace wrapper
+            |
+            |use nested#Nested
+            |
+            |structure Wrapper {
+            |    data: String
+            |}
+            |""".stripMargin.some
+        )
+      )
+    }
+  }
+
+  test("multiple files - root path - remote only") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
+      Map(
+        os.rel / "nested.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/nested.json",
+              |  "type": "object",
+              |  "title": "nested",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "id": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          None
+        ),
+      os.rel / "wrapper.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "$baseUrl/wrapper.json",
+            |  "type": "object",
+            |  "title": "wrapper",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/nested.json"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace wrapper
+            |
+            |use nested#Nested
+            |
+            |structure Wrapper {
+            |    data: Nested
+            |}
+            |""".stripMargin.some
         )
       )
     }
