@@ -17,7 +17,6 @@ package smithytranslate.compiler.json_schema
 
 import cats.data.NonEmptyList
 import com.sun.net.httpserver.SimpleFileServer
-import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
 import munit.Location
 
@@ -217,6 +216,120 @@ final class HttpBasedSpec extends munit.FunSuite {
             |
             |structure Wrapper {
             |    data: Nested
+            |}
+            |""".stripMargin
+        )
+      )
+    }
+  }
+ 
+  test("multiple files - with defs in referenced file") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
+      Map(
+        os.rel / "nested.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/nested.json",
+              |  "type": "object",
+              |  "title": "nested",
+              |  "additionalProperties": false,
+              |  "$$defs": {
+              |    "Bar": {
+              |      "type": "object",
+              |      "properties": { "id": { "type": "string" } }
+              |    }
+              |  },
+              |  "properties": {
+              |    "bar": { "$$ref": "#/$$defs/Bar" }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace nested
+              |
+              |structure Bar {
+              |    id: String
+              |}
+              |
+              |structure Nested {
+              |    bar: Bar
+              |}
+              |""".stripMargin
+        ),
+      os.rel / "wrapper.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "$baseUrl/wrapper.json",
+            |  "type": "object",
+            |  "title": "wrapper",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/nested.json"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace wrapper
+            |
+            |use nested#Nested
+            |
+            |structure Wrapper {
+            |    data: Nested
+            |}
+            |""".stripMargin
+        )
+      )
+    }
+  }
+  
+  test("multiple files - referencing def in external file") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
+      Map(
+        os.rel / "nested.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/nested.json",
+              |  "type": "object",
+              |  "title": "nested",
+              |  "additionalProperties": false,
+              |  "$$defs": {
+              |    "Bar": {
+              |      "type": "object",
+              |      "properties": { "id": { "type": "string" } }
+              |    }
+              |  },
+              |  "properties": {
+              |    "bar": { "$$ref": "#/$$defs/Bar" }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace nested
+              |
+              |structure Bar {
+              |    id: String
+              |}
+              |
+              |structure Nested {
+              |    bar: Bar
+              |}
+              |""".stripMargin
+        ),
+      os.rel / "wrapper.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "$baseUrl/wrapper.json",
+            |  "type": "object",
+            |  "title": "wrapper",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/nested.json/#/$$defs/Bar"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace wrapper
+            |
+            |use nested#Bar
+            |
+            |structure Wrapper {
+            |    data: Bar
             |}
             |""".stripMargin
         )
