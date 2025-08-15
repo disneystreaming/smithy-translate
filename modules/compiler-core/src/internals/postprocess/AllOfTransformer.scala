@@ -133,8 +133,10 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
     // shape (meaning it is a fabricated AllOf shape created by the OpenApi => IModel transform)
     val newFields =
       parent.localFields.map(f => f.copy(id = f.id.copy(modelId = newDef.id)))
+
+    val newHints = parent.hints 
     val remove = parent
-    val nd = newDef.copy(localFields = newDef.localFields ++ newFields)
+    val nd = newDef.copy(localFields = newDef.localFields ++ newFields, hints = newHints)
     NonTopLevelParentNoRefsResult(nd, remove)
   }
 
@@ -164,7 +166,6 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
               val parentHasOtherReferences =
                 isReferencedAsTarget(parent, all)
               val parentIsTopLevel = parent.hints.contains(Hint.TopLevel)
-
               if (parentHasOtherReferences) {
                 val result = parentHasOtherReferencesCase(parent, newDef)
                 newDef = result.newDef
