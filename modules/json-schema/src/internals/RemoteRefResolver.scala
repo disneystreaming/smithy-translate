@@ -42,24 +42,28 @@ private[compiler] object RemoteRefResolver {
   /**
     * Resolves all remote references and returns them as CompilationUnits
     *
-    * @param initialUnit A compilation unit representing one json schema file
-    * @return The initialUnit as well as all CompilationUnits associated with any remote references
+    * @param namespace The namespace of the json schema
+    * @param schemaJson the json representation of the schema
+    * @return All CompilationUnits associated with the input json schema, including remote schemas
     */
   def resolveRemoteReferences[F[_]: Parallel](
-      initialUnit: CompilationUnit
+      namespace: NonEmptyChain[String],
+      schemaJson: Json
   ): F[(Chain[ToSmithyError], Chain[CompilationUnit])] = {
     implicit val F: Monad[F] = Parallel[F].monad
     type ErrorLayer[A] = WriterT[F, Chain[ToSmithyError], A]
     type WriterLayer[A] = WriterT[ErrorLayer, Chain[CompilationUnit], A]
     
-    internalResolveRemoteReferences[WriterLayer](initialUnit)
+    internalResolveRemoteReferences[WriterLayer](namespace, schemaJson)
       .run
       .run
       .map { case (errors, (units, _)) => (errors, units) }
   }
 
-  private def internalResolveRemoteReferences[F[_]: Parallel: TellCompilationUnit: TellError](initialUnit: CompilationUnit): F[Unit] = {
+  private def internalResolveRemoteReferences[F[_]: Parallel: TellCompilationUnit: TellError](namespace: NonEmptyChain[String], schemaJson: Json): F[Unit] = {
     implicit val F: Monad[F] = Parallel[F].monad
+      
+    val initialUnit = CompilationUnit(namespace, LoadSchema(new JSONObject(schemaJson.noSpaces)), schemaJson)
   
     def recordError(e: ToSmithyError): F[Unit] =
       Tell.tell(Chain.one(e))

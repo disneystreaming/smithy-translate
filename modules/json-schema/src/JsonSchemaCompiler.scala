@@ -45,7 +45,6 @@ import io.circe.JsonObject
 object JsonSchemaCompiler
     extends AbstractToSmithyCompiler[JsonSchemaCompilerInput] {
 
-
   protected def convertToInternalModel(
       opts: ToSmithyCompilerOptions,
       input: JsonSchemaCompilerInput
@@ -59,8 +58,7 @@ object JsonSchemaCompiler
               // TODO: Put this in to a ToSmithyError
               throw error
             case Right(json) => 
-              val schema = LoadSchema(new JSONObject(json.noSpaces))
-              RemoteRefResolver.resolveRemoteReferences[Id](CompilationUnit(ns, schema, json))
+              RemoteRefResolver.resolveRemoteReferences[Id](ns, json)
           }
         }
       case ParsedSpec(path, rawJson, schema) =>
