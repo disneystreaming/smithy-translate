@@ -33,7 +33,7 @@ private[compiler] object JsonSchemaOps {
               Segment.Derived(CIString(key))
             )
 
-          (defSchemaName, LoadSchema(new JSONObject(topLevelJson)), topLevelJson)
+          (defSchemaName, LoadSchema(new JSONObject(topLevelJson.noSpaces)), topLevelJson)
         }.toVector
     }
   
