@@ -20,21 +20,16 @@ import cats.data.NonEmptyList
 import com.sun.net.httpserver.SimpleFileServer
 import java.net.InetSocketAddress
 import munit.Location
+import smithytranslate.compiler.SmithyVersion
 
 final class HttpBasedSpec extends munit.FunSuite {
 
-  val FileServerLogLevel = SimpleFileServer.OutputLevel.NONE
+  val FileServerLogLevel = SimpleFileServer.OutputLevel.VERBOSE
 
   private case class FileServerMetadata(baseServerUrl: String, servingDirectory: os.Path)
+  private case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: String)
+  private case class LocalAndRemoteSchemas(localSchemas: List[(os.RelPath, TranslationPair)], remoteSchemas: List[(os.RelPath, TranslationPair)])
 
-  /**
-    * When `expectedSmithyOutput` is None, it will not be used as a test input. This simulates a json schema that exists
-    * only on the remote server, and not in the translation pipeline.
-    *
-    * @param jsonSchemaInput
-    * @param expectedSmithyOutput
-    */
-  private case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: Option[String])
 
   private def withFileServer(
       port: Int,
@@ -62,39 +57,79 @@ final class HttpBasedSpec extends munit.FunSuite {
     }
   }
 
-  private def httpRefTest( port: Int)(fileContentGenerator: FileServerMetadata => Map[os.RelPath, TranslationPair])(implicit loc: Location): Unit = {
+  private def httpRefTest(port: Int)(createSchemas: FileServerMetadata => LocalAndRemoteSchemas)(implicit loc: Location): Unit = {
     withFileServer(port) { case m@FileServerMetadata(_, servingDirectory) =>
-      val files = fileContentGenerator(m)
+      val LocalAndRemoteSchemas(localSchemas, remoteSchemas) = createSchemas(m)
+      val localDir = os.temp.dir()
 
-      files.foreach { case (path, TranslationPair(jsonSchema, _)) =>
+      // Write local schemas to their own temp dir
+      localSchemas.foreach { case (path, TranslationPair(jsonSchema, _)) =>
+        os.write.over(localDir / path, jsonSchema, createFolders = true)
+      }
+
+      // Write remote schemas to the http server's servingDirectory
+      remoteSchemas.foreach { case (path, TranslationPair(jsonSchema, _)) =>
         os.write.over(servingDirectory / path, jsonSchema, createFolders = true)
       }
 
-      val testInputs = 
-        files.toList.mapFilter { 
-          case (path, TranslationPair(jsonSchemaInput, Some(expectedSmithyOutput))) =>
+      val remoteTestInputs = 
+        localSchemas.map { 
+          case (path, TranslationPair(jsonSchemaInput, expectedSmithyOutput)) =>
             TestUtils.ConversionTestInput(
               NonEmptyList.fromListUnsafe(path.segments.toList),
               jsonSchemaInput,
               expectedSmithyOutput
-            ).some
-          case (_, _) => None
+            )
+        } ++ 
+        remoteSchemas.map {
+          case (path, TranslationPair(jsonSchemaInput, expectedSmithyOutput)) =>
+            TestUtils.ConversionTestInput(
+              NonEmptyList.fromListUnsafe(path.segments.toList),
+              None, // This should be picked up from the remote server.
+              expectedSmithyOutput,
+              None,
+              SmithyVersion.Two
+            )
         }
-      TestUtils.runConversionTest(NonEmptyList.fromListUnsafe(testInputs))
+      TestUtils.runConversionTest(NonEmptyList.fromListUnsafe(remoteTestInputs))
     }
   }
     
 
 
-  test("multiple files - root path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
+  test("single local file - single remote file in root path") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      localSchemas = List(
+        os.rel / "local.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "local.json",
+            |  "type": "object",
+            |  "title": "local",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/remote.json"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace local
+            |
+            |use remote#Remote
+            |
+            |structure Local {
+            |    data: Remote
+            |}
+            |""".stripMargin
+        )
+      ),
+      remoteSchemas = List(
+        os.rel / "remote.json" -> TranslationPair(
           s"""|{
               |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
+              |  "$$id": "$baseUrl/remote.json",
               |  "type": "object",
-              |  "title": "nested",
+              |  "title": "Remote",
               |  "additionalProperties": false,
               |  "properties": {
               |    "id": {
@@ -102,343 +137,14 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace nested
+          s"""|namespace remote
               |
-              |structure Nested {
+              |structure Remote {
               |    id: String,
               |}
-              |""".stripMargin.some
+              |""".stripMargin
         ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Nested
-            |
-            |structure Wrapper {
-            |    data: Nested
-            |}
-            |""".stripMargin.some
-        )
       )
-    }
-  }
-  
-  test("multiple files - entire schema reference") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace nested
-              |
-              |structure Nested {
-              |    id: String,
-              |}
-              |""".stripMargin.some
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json#/properties/id"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Nested
-            |
-            |structure Wrapper {
-            |    data: String
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
-  }
-
-  
-  test("multiple files - nested path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "foo" / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/foo/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace foo.nested
-              |
-              |structure Nested {
-              |    id: String,
-              |}
-              |""".stripMargin.some
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/foo/nested.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use foo.nested#Nested
-            |
-            |structure Wrapper {
-            |    data: Nested
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
-  }
- 
-  test("multiple files - with defs in referenced file") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "$$defs": {
-              |    "Bar": {
-              |      "type": "object",
-              |      "properties": { "id": { "type": "string" } }
-              |    }
-              |  },
-              |  "properties": {
-              |    "bar": { "$$ref": "#/$$defs/Bar" }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace nested
-              |
-              |structure Bar {
-              |    id: String
-              |}
-              |
-              |structure Nested {
-              |    bar: Bar
-              |}
-              |""".stripMargin.some
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Nested
-            |
-            |structure Wrapper {
-            |    data: Nested
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
-  }
-  
-  test("multiple files - referencing def in external file") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "$$defs": {
-              |    "Bar": {
-              |      "type": "object",
-              |      "properties": { "id": { "type": "string" } }
-              |    }
-              |  },
-              |  "properties": {
-              |    "bar": { "$$ref": "#/$$defs/Bar" }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace nested
-              |
-              |structure Bar {
-              |    id: String
-              |}
-              |
-              |structure Nested {
-              |    bar: Bar
-              |}
-              |""".stripMargin.some
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json/#/$$defs/Bar"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Bar
-            |
-            |structure Wrapper {
-            |    data: Bar
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
-  }
-
-  
-  test("multiple files - entire schema reference") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace nested
-              |
-              |structure Nested {
-              |    id: String,
-              |}
-              |""".stripMargin.some
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json#/properties/id"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Nested
-            |
-            |structure Wrapper {
-            |    data: String
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
-  }
-
-  test("multiple files - root path - remote only") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) =>
-      Map(
-        os.rel / "nested.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/nested.json",
-              |  "type": "object",
-              |  "title": "nested",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          None
-        ),
-      os.rel / "wrapper.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "$baseUrl/wrapper.json",
-            |  "type": "object",
-            |  "title": "wrapper",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/nested.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace wrapper
-            |
-            |use nested#Nested
-            |
-            |structure Wrapper {
-            |    data: Nested
-            |}
-            |""".stripMargin.some
-        )
-      )
-    }
+    )}
   }
 }

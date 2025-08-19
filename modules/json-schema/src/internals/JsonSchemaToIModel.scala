@@ -27,10 +27,13 @@ import org.everit.json.schema.{Schema => ESchema}
 import smithytranslate.compiler.internals.Suppression
 import Extractors._
 import org.json.JSONObject
+import io.circe.jawn
 import io.circe.Json
 import io.circe.ACursor
 import io.circe.JsonObject
 import cats.catsParallelForId
+import scala.io.Source
+import smithytranslate.compiler.internals.Hint.TopLevel
 
 private[compiler] object JsonSchemaToIModel {
 
@@ -79,41 +82,16 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       Segment.Derived(CIString(Option(jsonSchema.getTitle).getOrElse("input")))
     val schemaName = Name(schemaNameSegment)
 
-    // Computing schemas under the $defs field, if it exists.
-    def $defSchemas(name: String): Vector[Local] = {
-      val defsObject = rawJson.asObject
-        .flatMap(_.apply(name))
-        .flatMap(_.asObject)
+    val topLevelLocal = Local(schemaName, jsonSchema, rawJson)
 
-      val allDefs = defsObject.toVector
-        .flatMap(_.toVector)
-        .flatMap(_.traverse(_.asObject).toVector)
-
-      allDefs
-        .flatMap { case (key, value) =>
-          val topLevelJson = Json.fromJsonObject {
-            value.add(name, Json.fromJsonObject(defsObject.get))
-          }
-
-          val defSchema = LoadSchema(new JSONObject(topLevelJson.noSpaces))
-
-          val defSchemaName =
-            Name(
-              Segment.Arbitrary(CIString(name)),
-              Segment.Derived(CIString(key))
-            )
-          Vector(
-            Local(defSchemaName, defSchema, topLevelJson).addHints(
-              Hint.TopLevel
-            )
-          )
+    val defLocal = 
+      JsonSchemaOps
+        .extractDefs(rawJson)
+        .map { case (name, schema, json) => 
+          Local(name, schema, json)
         }
-    }
 
-    val topLevelLocal =
-      Local(schemaName, jsonSchema, rawJson).addHints(List(Hint.TopLevel))
-
-    topLevelLocal +: ($defSchemas("$defs") ++ $defSchemas("definitions"))
+    (topLevelLocal +: defLocal).map(_.addHints(Hint.TopLevel))
   }
 
   /** Refolds the schema, aggregating found definitions in Tell.
@@ -243,8 +221,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       case CaseRef(idOrError) =>
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
-          case Right(id) =>
-            F.pure(OpenApiRef(local.context.removeTopLevel(), id))
+          case Right(ref) => F.pure(OpenApiRef(local.context.removeTopLevel(), ref.id))
         }
 
       // Special case for `type: [X, null]`

@@ -332,25 +332,26 @@ private[json_schema] object Extractors {
    */
   abstract class JsonSchemaCaseRefBuilder(id: Option[String], ns: Path)
       extends smithytranslate.compiler.internals.RefParser(ns) {
-    def unapply(sch: Schema): Option[Either[ToSmithyError, DefId]] = sch match {
-      case ref: ReferenceSchema =>
-        // For some reason the reference seems to get prefixed by the id every now and then
-        val refValue = ref.getReferenceValue()
-        // Sometimes, when the id starts with `file://` it actually starts with more than two `/` chars.
-        // The number of `/` chars is not always consistent between the id and the refValue.
-        val fileRegex = "^file:\\/*"
-        val refValueNoPrefix = refValue.replaceFirst(fileRegex, "")
-        val sanitisedRefValue =
-          id.map(_.replaceFirst(fileRegex, ""))
-            .collectFirst {
-              case idNoPrefix if (refValueNoPrefix.startsWith(idNoPrefix)) =>
-                refValueNoPrefix.drop(idNoPrefix.length())
-            }
-            .getOrElse(refValue)
+    def unapply(sch: Schema): Option[Either[ToSmithyError, ParsedRef]] =
+      sch match {
+        case ref: ReferenceSchema =>
+          // For some reason the reerence seems to get prefixed by the id every now and then
+          val refValue = ref.getReferenceValue()
+          // Sometimes, when the id starts with `file://` it actually starts with more than two `/` chars.
+          // The number of `/` chars is not always consistent between the id and the refValue.
+          val fileRegex = "^file:\\/*"
+          val refValueNoPrefix = refValue.replaceFirst(fileRegex, "")
+          val sanitisedRefValue =
+            id.map(_.replaceFirst(fileRegex, ""))
+              .collectFirst {
+                case idNoPrefix if (refValueNoPrefix.startsWith(idNoPrefix)) =>
+                  refValueNoPrefix.drop(idNoPrefix.length())
+              }
+              .getOrElse(refValue)
 
-        Option(sanitisedRefValue).map(this.apply)
-      case _ => None
-    }
+          Option(sanitisedRefValue).map(this.apply)
+        case _ => None
+      }
 
   }
 

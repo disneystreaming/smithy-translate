@@ -19,13 +19,27 @@ package internals
 import cats.data.NonEmptyChain
 import org.typelevel.ci.CIString
 import cats.syntax.all._
+import java.net.URI
+
+
+private[compiler] sealed trait ParsedRef {
+  def id: DefId
+}
+private[compiler] object ParsedRef {
+  final case class Local(id: DefId) extends ParsedRef
+  final case class Remote(uri: URI, id: DefId) extends ParsedRef
+
+  def apply(uri: URI, defId: DefId): Either[ToSmithyError, ParsedRef] = Option(uri.getScheme()) match {
+    case Some("http") | Some("https") => Right(Remote(uri, defId))
+    case Some("file") | None => Right(Local(defId))
+    case Some(_) => Left(ToSmithyError.BadRef(uri.toString()))
+  }
+}
 
 /*
  * The most complicated thing
  */
 private[compiler] abstract class RefParser(ns: Path) {
-
-  private val SupportedRefSchemes: Set[String] = Set("file", "http", "https")
 
   private def handleRef(
       uri: java.net.URI,
@@ -33,7 +47,7 @@ private[compiler] abstract class RefParser(ns: Path) {
       fileName: String,
       segments: Option[List[String]],
       last: Option[String]
-  ): Either[ToSmithyError, DefId] = {
+  ): Either[ToSmithyError, ParsedRef] = {
     val pathSegs = pathSegsIn.dropWhile(_ == ".")
 
     val ups = pathSegs.takeWhile(_ == "..").size
@@ -60,36 +74,26 @@ private[compiler] abstract class RefParser(ns: Path) {
             .getOrElse(Name.derived(l))
         case _ => Name.derived(nsLastPart)
       }
-      Right(DefId(fullNs, name))
+      ParsedRef(uri, DefId(fullNs, name))
     }
   }
 
-  def apply(ref: String): Either[ToSmithyError, DefId] =
+  def apply(ref: String): Either[ToSmithyError, ParsedRef] =
     scala.util
       .Try(java.net.URI.create(ref))
       .toEither
       .leftMap(_ => ToSmithyError.BadRef(ref))
-      .flatMap(uri =>
-        Option(uri.getScheme()) match {
-          case Some(scheme) if SupportedRefSchemes(scheme) => Right(uri)
-          case None                                        => Right(uri)
-          case Some(_)                                     => 
-            Left(ToSmithyError.BadRef(ref))
-        }
-      )
       .flatMap { uri =>
         (uri.getPath(), uri.getFragment()) match {
           case ("", NonEmptySegments(segments, last)) =>
             val n = Namespace(ns.toChain.toList)
             val name =
               NonEmptyChain
-                .fromSeq(
-                  segments.map(s => Segment.Arbitrary(CIString(s)))
-                )
+                .fromSeq(segments.map(s => Segment.Arbitrary(CIString(s))))
                 .map(Name(_))
                 .map(_ ++ Name.derived(last))
                 .getOrElse(Name.derived(last))
-            Right(DefId(n, name))
+            ParsedRef(uri, DefId(n, name))
           case (NonEmptySegments(pathSegsIn, fileName), null) =>
             handleRef(uri, pathSegsIn, fileName, None, None)
           case (

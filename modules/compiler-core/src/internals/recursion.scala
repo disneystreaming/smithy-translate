@@ -82,6 +82,14 @@ private[compiler] object recursion {
   }
 
   /**
+   * An method to unfold a recursive structure from a starting value
+   */
+  def unfoldPar[F[_]: Parallel: Monad, Pattern[_]: Traverse: FlatMap, A](
+    unfold: UnfoldF[F, Pattern, A]
+  )(a: A): F[Pattern[A]] = 
+    refoldPar[F, Pattern, A, Pattern[A]](unfold, pa => pa.flatTraverse(Parallel[F].monad.pure))(a)
+
+  /**
    * A version of [[refoldPar]] that accepts additional labels at each layer
    */
   def labelledRefoldPar[F[_]: Parallel, Pattern[_]: Traverse, Label, A, B](

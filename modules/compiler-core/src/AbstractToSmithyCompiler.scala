@@ -45,6 +45,7 @@ abstract class AbstractToSmithyCompiler[Input] protected[compiler] () {
     val (errors0, smithy0) = convertToInternalModel(opts, input)
       .map(IModelPostProcessor(opts.useVerboseNames))
       .map(new IModelToSmithy(opts.useEnumTraitSyntax))
+
     val translationErrors = errors0.toList
 
     val assembled: ValidatedResult[SmithyModel] = validate(smithy0)

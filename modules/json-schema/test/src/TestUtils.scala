@@ -30,11 +30,30 @@ object TestUtils {
 
   final case class ConversionTestInput(
       filePath: NonEmptyList[String],
+      jsonSpec: Option[String],
+      smithySpec: String,
+      errorSmithySpec: Option[String],
+      smithyVersion: SmithyVersion
+  ) 
+  
+  object ConversionTestInput {
+    def apply(
+      filePath: NonEmptyList[String],
       jsonSpec: String,
       smithySpec: String,
       errorSmithySpec: Option[String] = None,
       smithyVersion: SmithyVersion = SmithyVersion.Two
-  )
+    ): ConversionTestInput = {
+      ConversionTestInput(
+        filePath,
+        Some(jsonSpec),
+        smithySpec,
+        errorSmithySpec,
+        smithyVersion
+      )
+    }
+  }
+
 
   final case class ConversionResult(
       result: ToSmithyResult[ModelWrapper],
@@ -57,13 +76,13 @@ object TestUtils {
           debug = true
         ),
         JsonSchemaCompilerInput.UnparsedSpecs(
-          inputs
-            .map(i => FileContents(i.filePath, i.jsonSpec))
+          inputs // gather only specs that have a json input
+            .mapFilter(input => input.jsonSpec.map((input.filePath, _)))
+            .map { case (path, content) => FileContents(path, content) }
             .toList
         )
       )
     val resultW = result.map(ModelWrapper(_))
-
     val assembler = Model
       .assembler()
       .discoverModels()
@@ -83,8 +102,9 @@ object TestUtils {
     ConversionResult(resultW, expected)
   }
 
-  def runConversionTest(input: NonEmptyList[ConversionTestInput])(implicit loc: Location): Unit = 
-    runConversionTest(input.head, input.tail:_*)
+  def runConversionTest(inputs: NonEmptyList[ConversionTestInput])(
+      implicit loc: Location
+  ): Unit = runConversionTest(inputs.head, inputs.tail:_*)
 
   def runConversionTest(
       input0: ConversionTestInput,

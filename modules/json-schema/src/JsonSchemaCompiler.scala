@@ -30,36 +30,49 @@ import JsonSchemaCompilerInput._
 import cats.data.Chain
 import smithytranslate.compiler.ToSmithyError
 import smithytranslate.compiler.FileContents
+import cats.Monad
+import scala.io.Source
+import smithytranslate.compiler.internals.OpenApiRef
+import smithytranslate.compiler.internals.ParsedRef
+import smithytranslate.compiler.internals.json_schema.Local
+import cats.catsParallelForId
+import cats.Id
+import cats.data.WriterT
+import io.circe.JsonObject
 
 /** Converts json schema to a smithy model.
   */
 object JsonSchemaCompiler
     extends AbstractToSmithyCompiler[JsonSchemaCompilerInput] {
 
+
   protected def convertToInternalModel(
       opts: ToSmithyCompilerOptions,
       input: JsonSchemaCompilerInput
   ): (Chain[ToSmithyError], IModel) = {
-    val prepared = input match {
+    val (resolutionErrors, prepared) = input match {
       case UnparsedSpecs(specs) =>
-        val parser: String => Schema =
-          schemaString => LoadSchema(new JSONObject(schemaString))
-        specs.map { case FileContents(path, content) =>
+        specs.toVector.parFoldMapA { case FileContents(path, content) =>
           val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-          val schema = parser(content)
-          val json = io.circe.jawn.parse(content) match {
-            case Left(error)  => throw error
-            case Right(value) => value
+          io.circe.jawn.parse(content) match {
+            case Left(error) => 
+              // TODO: Put this in to a ToSmithyError
+              throw error
+            case Right(json) => 
+              val schema = LoadSchema(new JSONObject(json.noSpaces))
+              RemoteRefResolver.resolveRemoteReferences[Id](CompilationUnit(ns, schema, json))
           }
-          (ns, schema, json)
         }
       case ParsedSpec(path, rawJson, schema) =>
         val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        List((ns, schema, rawJson))
+        (Chain.nil, Chain(CompilationUnit(ns, schema, rawJson)))
     }
-    prepared.foldMap { case (ns, schema, rawJson) =>
+
+    val (compilationErrors, result) = prepared.foldMap { case CompilationUnit(ns, schema, rawJson) =>
       JsonSchemaToIModel.compile(ns, schema, rawJson)
     }
+
+    (resolutionErrors ++ compilationErrors, result)
   }
 
   type Input = (NonEmptyChain[String], Schema, Json)
@@ -74,5 +87,4 @@ object JsonSchemaCompiler
       path.toList.dropRight(1) :+ newLast.mkString(".")
     )
   }
-
 }
