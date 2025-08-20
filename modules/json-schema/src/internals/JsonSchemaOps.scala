@@ -5,14 +5,20 @@ package json_schema
 import cats.syntax.all._
 import io.circe.Json
 import org.typelevel.ci.CIString
-import org.everit.json.schema.Schema
-import io.circe.JsonObject
 import org.json.JSONObject
+import smithytranslate.compiler.json_schema.CompilationUnit
 
 private[compiler] object JsonSchemaOps {
-
-  def extractDefs(json: Json): Vector[(Name, Schema, Json)] = {
-    def $defSchemas(name: String): Vector[(Name, Schema, Json)] = {
+  /**
+   * Given some namespace path, and a json object representing a full json schema file,
+   * create all of the compilation units associated with that schema.
+   * 
+   * @param namespace The namespace path for the schema
+   * @param json The json object representing the schema
+   * @return A vector of CompilationUnits, one for the root schema and one for each $defs and definitions entry
+   */
+  def createCompilationUnits(namespace: Path, json: Json): Vector[CompilationUnit] = {
+    def $defUnits(name: String): Vector[CompilationUnit] = {
       val defsObject = json.asObject
         .flatMap(_.apply(name))
         .flatMap(_.asObject)
@@ -33,10 +39,19 @@ private[compiler] object JsonSchemaOps {
               Segment.Derived(CIString(key))
             )
 
-          (defSchemaName, LoadSchema(new JSONObject(topLevelJson.noSpaces)), topLevelJson)
+          CompilationUnit(namespace, defSchemaName, LoadSchema(new JSONObject(topLevelJson.noSpaces)), topLevelJson)
         }.toVector
     }
   
-    $defSchemas("$defs") ++ $defSchemas("definitions")
+    val schema = LoadSchema(new JSONObject(json.noSpaces))
+    val name = 
+        Name(
+          Segment.Derived(CIString(
+            Option(schema.getTitle).getOrElse("input")
+          ))
+        )
+    val rootUnit = CompilationUnit(namespace, name, schema, json)
+
+    rootUnit +: ($defUnits("$defs") ++ $defUnits("definitions"))
   }
 }

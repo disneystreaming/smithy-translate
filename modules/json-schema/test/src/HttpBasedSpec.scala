@@ -15,7 +15,6 @@
 
 package smithytranslate.compiler.json_schema
 
-import cats.syntax.all._
 import cats.data.NonEmptyList
 import com.sun.net.httpserver.SimpleFileServer
 import java.net.InetSocketAddress
@@ -82,7 +81,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             )
         } ++ 
         remoteSchemas.map {
-          case (path, TranslationPair(jsonSchemaInput, expectedSmithyOutput)) =>
+          case (path, TranslationPair(_, expectedSmithyOutput)) =>
             TestUtils.ConversionTestInput(
               NonEmptyList.fromListUnsafe(path.segments.toList),
               None, // This should be picked up from the remote server.
@@ -141,6 +140,83 @@ final class HttpBasedSpec extends munit.FunSuite {
               |
               |structure Remote {
               |    id: String,
+              |}
+              |""".stripMargin
+        ),
+      )
+    )}
+  }
+  
+  test("single local file - remote file referencing other remote file in root path") {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      localSchemas = List(
+        os.rel / "local.json" -> TranslationPair(
+        s"""|{
+            |  "$$schema": "http://json-schema.org/draft-07/schema#",
+            |  "$$id": "local.json",
+            |  "type": "object",
+            |  "title": "local",
+            |  "additionalProperties": false,
+            |  "properties": {
+            |    "data": {
+            |      "$$ref": "$baseUrl/remote2.json"
+            |    }
+            |  }
+            |}""".stripMargin,
+        s"""|namespace local
+            |
+            |use remote2#SecondRemote
+            |
+            |structure Local {
+            |    data: SecondRemote
+            |}
+            |""".stripMargin
+        )
+      ),
+      remoteSchemas = List(
+        os.rel / "remote1.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/remote1.json",
+              |  "type": "object",
+              |  "title": "Remote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "something": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace remote1
+              |
+              |structure Remote {
+              |    something: String
+              |}
+              |""".stripMargin
+        ),
+        os.rel / "remote2.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/remote2.json",
+              |  "type": "object",
+              |  "title": "SecondRemote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "id": {
+              |      "type": "string"
+              |    },
+              |    "other": {
+              |      "$$ref": "$baseUrl/remote1.json"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace remote2
+              |
+              |use remote1#Remote
+              |
+              |structure SecondRemote {
+              |    id: String
+              |    other: Remote
               |}
               |""".stripMargin
         ),

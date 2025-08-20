@@ -6,22 +6,20 @@ import scala.jdk.CollectionConverters._
 import cats.data.NonEmptyChain
 import cats.Parallel
 import scala.io.Source
-import org.json.JSONObject
 import cats.Monad
 import io.circe.jawn
 import cats.syntax.all._
 import Extractors._
 import io.circe.Json
 import org.everit.json.schema.Schema
-import javax.xml.validation
 import cats.mtl._
-import cats.mtl.syntax._
 import cats.data.Chain
 import smithytranslate.compiler.json_schema.CompilationUnit
-import java.net.URI
 import scala.util.Try
 import smithytranslate.compiler.ToSmithyError.OpenApiParseError
 import cats.data.WriterT
+import scala.util.Success
+import scala.util.Failure
 
 
 private[compiler] object RemoteRefResolver {
@@ -29,12 +27,6 @@ private[compiler] object RemoteRefResolver {
   sealed trait RemoteRefResolutionFailure extends Throwable {
     def message: String
     override def getMessage(): String = message
-  }
-
-  private case class IntermediateCompilationUnit(ns: NonEmptyChain[String], schema: Schema)
-  private object IntermediateCompilationUnit {
-    def apply(compUnit: CompilationUnit): IntermediateCompilationUnit =
-      new IntermediateCompilationUnit(compUnit.namespace, compUnit.schema)
   }
 
   type TellCompilationUnit[F[_]] = Tell[F, Chain[CompilationUnit]]
@@ -60,10 +52,10 @@ private[compiler] object RemoteRefResolver {
       .map { case (errors, (units, _)) => (errors, units) }
   }
 
+
   private def internalResolveRemoteReferences[F[_]: Parallel: TellCompilationUnit: TellError](namespace: NonEmptyChain[String], schemaJson: Json): F[Unit] = {
     implicit val F: Monad[F] = Parallel[F].monad
-      
-    val initialUnit = CompilationUnit(namespace, LoadSchema(new JSONObject(schemaJson.noSpaces)), schemaJson)
+    
   
     def recordError(e: ToSmithyError): F[Unit] =
       Tell.tell(Chain.one(e))
@@ -71,77 +63,88 @@ private[compiler] object RemoteRefResolver {
     def recordCompilationUnit(compUnit: CompilationUnit): F[Unit] = 
       Tell.tell(Chain.one(compUnit))
     
-    def createIntemediateUnitsForDefs(compilationUnit: CompilationUnit): Vector[IntermediateCompilationUnit] = {
-      JsonSchemaOps
-        .extractDefs(compilationUnit.json)
-        .map { case (_, schema, _) => 
-          IntermediateCompilationUnit(compilationUnit.namespace, schema)
-        }
-    }
+    def recordAndCreateUnits(namespace: Path, jsonString: String): F[Vector[(Path, Schema)]] =
+      jawn.parse(jsonString) match {
+        case Left(err) => recordError(
+          OpenApiParseError(namespace, List(err.getMessage())))
+            .as(Vector.empty)
 
-    def recordAndCreateIntermediates(compilationUnit: CompilationUnit): F[Vector[IntermediateCompilationUnit]] =
-      recordCompilationUnit(compilationUnit)
-        .as(IntermediateCompilationUnit(compilationUnit) +: createIntemediateUnitsForDefs(compilationUnit))
+        case Right(json) =>
+          JsonSchemaOps.createCompilationUnits(namespace, json)
+            .traverse(compUnit => recordCompilationUnit(compUnit).as(compUnit))
+            .map(_.map(compUnit => ((compUnit.namespace, compUnit.schema))))
+      }
+
 
     /**
      * Matches recursive schema nodes and ref nodes. 
-     * When a recursive node is encountered, the sub-schema is returned as another compilation unit with references that may need to be resolved.
+     * When a recursive node is encountered, the sub-schema(s) are returned such that the search for remote refs continues recursively.
      * When a remote ref is encountered, the remote schema is pulled, parsed, recorded for use in compilation, and then the process continues.
+     * When a terminal node is encountered, an empty node is returned signaling the end of that branch of the search
+     *
      */
-    def unfold(compUnit: IntermediateCompilationUnit): F[Vector[IntermediateCompilationUnit]] = {
+    def unfold(input: (Path, Schema)): F[Vector[(Path, Schema)]] = {
+      val (namespace, schema) = input
+        
       val CaseRef = new JsonSchemaCaseRefBuilder(
-        Option(compUnit.schema.getId()),
-        compUnit.ns
+        Option(schema.getId()),
+        namespace
       ) {}
 
-      compUnit.schema match {
+      schema match {
+
+        // Remote ref found. Pull in the associated schema
         case CaseRef(Right(ParsedRef.Remote(uri, id))) => 
-          val ns = id.name.segments.map(_.value.toString)
+          val ns = 
+            NonEmptyChain.fromChainUnsafe(Chain.fromSeq(id.namespace.segments))
 
           Try(
             // TODO: Use some library that leverages effects to fetch the content from the URL
             Source.fromURL(uri.toURL()) 
               .getLines()
               .mkString(System.lineSeparator())
-          ).toEither.fold(
-            err => recordError(ToSmithyError.HttpError(uri, err)).as(Vector.empty),
-            jawn.parse(_) match {
-              case Left(err) => recordError(OpenApiParseError(ns, List(err.getMessage()))).as(Vector.empty)
-              case Right(json) =>
-                val newCompUnit = CompilationUnit(ns, LoadSchema(new JSONObject(json.noSpaces)), json)
-                recordAndCreateIntermediates(newCompUnit)
+          ) match {
+            case Failure(err) =>
+                recordError(ToSmithyError.HttpError(uri, err))
+                  .as(Vector.empty)
+
+            case Success(content) => recordAndCreateUnits(ns, content)
           }
-        )
+
+        // Recursive node, return the sub-schema and its namespace 
+        // so we can continue searching for remote refs
         case CaseArray(_, arrSchema) =>
-          F.pure(Vector(IntermediateCompilationUnit(compUnit.ns, arrSchema)))
+          F.pure(Vector((namespace, arrSchema)))
         case CaseMap(_, mapSchema) =>
-          F.pure(Vector(IntermediateCompilationUnit(compUnit.ns, mapSchema)))
+          F.pure(Vector((namespace, mapSchema)))
         case CaseObject(_, objSchema) =>
           F.pure(
             objSchema.getPropertySchemas()
               .asScala
               .values
               .toVector
-              .map(IntermediateCompilationUnit(compUnit.ns, _))
+              .map((namespace, _))
           )
         case CaseOneOf(_, oneOfSchemas) =>
           F.pure(
             oneOfSchemas
               .toVector
-              .map(IntermediateCompilationUnit(compUnit.ns, _))
+              .map((namespace, _))
           )
         case CaseAllOf(_, allOfSchemas) =>
           F.pure(
             allOfSchemas
               .toVector
-              .map(IntermediateCompilationUnit(compUnit.ns, _))
+              .map((namespace, _))
           )
+
+        // Nonrecursive node, terminal case. Return nothing
         case _ => 
           F.pure(Vector.empty)
       }
     }
 
-    recordAndCreateIntermediates(initialUnit)
+    recordAndCreateUnits(namespace, schemaJson.noSpaces)
       .flatMap(_.flatTraverse(recursion.unfoldPar(unfold)(_)))
       .void
   }

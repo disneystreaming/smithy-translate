@@ -77,9 +77,9 @@ object TestUtils {
         ),
         JsonSchemaCompilerInput.UnparsedSpecs(
           inputs // gather only specs that have a json input
+            .toList
             .mapFilter(input => input.jsonSpec.map((input.filePath, _)))
             .map { case (path, content) => FileContents(path, content) }
-            .toList
         )
       )
     val resultW = result.map(ModelWrapper(_))
@@ -117,11 +117,16 @@ object TestUtils {
       remaining: _*
     )
     res match {
+      case ToSmithyResult.Success(Nil, output) =>
+        Assertions.assertEquals(output, expected)
+      case ToSmithyResult.Success(errs, _) =>
+        Assertions.fail(
+          "Model assembled with errors: \n\t" 
+            + errs.map(_.getMessage).mkString("\n").replaceAll("\n", "\n\t")
+        )
       case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
-      case ToSmithyResult.Success(_, output) =>
-        Assertions.assertEquals(output, expected)
     }
   }
 

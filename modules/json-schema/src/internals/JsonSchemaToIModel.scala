@@ -23,86 +23,58 @@ import cats.data._
 import cats.syntax.all._
 import cats.Monad
 import org.typelevel.ci._
-import org.everit.json.schema.{Schema => ESchema}
 import smithytranslate.compiler.internals.Suppression
 import Extractors._
-import org.json.JSONObject
-import io.circe.jawn
-import io.circe.Json
 import io.circe.ACursor
 import io.circe.JsonObject
 import cats.catsParallelForId
-import scala.io.Source
 import smithytranslate.compiler.internals.Hint.TopLevel
+import smithytranslate.compiler.json_schema.CompilationUnit
 
 private[compiler] object JsonSchemaToIModel {
 
   def compile(
-      namespace: Path,
-      jsonSchema: ESchema,
-      rawJson: Json
+    compilationUnit: CompilationUnit
   ): (Chain[ToSmithyError], IModel) = {
     type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
     val (errors, (data, _)) =
-      compileF[WriterLayer](namespace, jsonSchema, rawJson).run.run
+      compileF[WriterLayer](compilationUnit).run.run
     val definitions = data.collect { case Right(d) => d }
     val suppressions = data.collect { case Left(s) => s }
     (errors, IModel(definitions.toVector, suppressions.toVector))
   }
 
   def compileF[F[_]: Parallel: TellShape: TellError](
-      namespace: Path,
-      jsonSchema: ESchema,
-      rawJson: Json
+    compilationUnit: CompilationUnit
   ): F[Unit] = {
-    val parser = new JsonSchemaToIModel[F](namespace, jsonSchema, rawJson: Json)
+    val parser = new JsonSchemaToIModel[F](compilationUnit)
     parser.recordAll
   }
 
 }
 
 private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
-    namespace: Path,
-    jsonSchema: ESchema,
-    rawJson: Json
+  compilationUnit: CompilationUnit
 ) {
 
   implicit val F: Monad[F] = Parallel[F].monad
 
   private val CaseRef =
     new Extractors.JsonSchemaCaseRefBuilder(
-      Option(jsonSchema.getId()),
-      namespace
+      Option(compilationUnit.schema.getId()),
+      compilationUnit.namespace
     ) {}
 
-  private val allSchemas: Vector[Local] = {
-    val schemaNameSegment =
-      Segment.Derived(CIString(Option(jsonSchema.getTitle).getOrElse("input")))
-    val schemaName = Name(schemaNameSegment)
 
-    val topLevelLocal = Local(schemaName, jsonSchema, rawJson)
+  lazy val recordAll: F[Unit] = 
+    refoldOne(
+      Local(compilationUnit.name, compilationUnit.schema, compilationUnit.json)
+        .addHints(TopLevel)
+    ).void
 
-    val defLocal = 
-      JsonSchemaOps
-        .extractDefs(rawJson)
-        .map { case (name, schema, json) => 
-          Local(name, schema, json)
-        }
-
-    (topLevelLocal +: defLocal).map(_.addHints(Hint.TopLevel))
-  }
-
-  /** Refolds the schema, aggregating found definitions in Tell.
-    */
-  private val refoldSchemas: F[Unit] =
-    allSchemas.parTraverse_(refoldOne)
-
-  val recordAll =
-    refoldSchemas
-
-  private def fold = new PatternFolder[F](namespace).fold _
+  private def fold = new PatternFolder[F](compilationUnit.namespace).fold _
 
   private def refoldOne(start: Local): F[DefId] = {
     // Refolding each top value under openapi's "component/schema"

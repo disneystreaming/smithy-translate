@@ -20,7 +20,6 @@ import cats.data.NonEmptyChain
 import smithytranslate.compiler.internals.json_schema.JsonSchemaToIModel
 import cats.data.NonEmptyList
 import org.everit.json.schema.Schema
-import org.json.JSONObject
 import io.circe.Json
 import smithytranslate.compiler.internals.json_schema._
 import smithytranslate.compiler.internals.IModel
@@ -30,15 +29,8 @@ import JsonSchemaCompilerInput._
 import cats.data.Chain
 import smithytranslate.compiler.ToSmithyError
 import smithytranslate.compiler.FileContents
-import cats.Monad
-import scala.io.Source
-import smithytranslate.compiler.internals.OpenApiRef
-import smithytranslate.compiler.internals.ParsedRef
-import smithytranslate.compiler.internals.json_schema.Local
 import cats.catsParallelForId
 import cats.Id
-import cats.data.WriterT
-import io.circe.JsonObject
 
 /** Converts json schema to a smithy model.
   */
@@ -61,14 +53,13 @@ object JsonSchemaCompiler
               RemoteRefResolver.resolveRemoteReferences[Id](ns, json)
           }
         }
-      case ParsedSpec(path, rawJson, schema) =>
+      case ParsedSpec(path, rawJson, _) =>
         val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        (Chain.nil, Chain(CompilationUnit(ns, schema, rawJson)))
+        RemoteRefResolver.resolveRemoteReferences[Id](ns, rawJson)
     }
 
-    val (compilationErrors, result) = prepared.foldMap { case CompilationUnit(ns, schema, rawJson) =>
-      JsonSchemaToIModel.compile(ns, schema, rawJson)
-    }
+    val (compilationErrors, result) = 
+      prepared.foldMap(JsonSchemaToIModel.compile)
 
     (resolutionErrors ++ compilationErrors, result)
   }
