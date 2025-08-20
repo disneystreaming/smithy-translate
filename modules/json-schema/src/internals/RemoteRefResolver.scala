@@ -40,20 +40,21 @@ private[compiler] object RemoteRefResolver {
     */
   def resolveRemoteReferences[F[_]: Parallel](
       namespace: NonEmptyChain[String],
-      schemaJson: Json
+      schemaJson: Json,
+      allowedRemotes: Vector[String]
   ): F[(Chain[ToSmithyError], Chain[CompilationUnit])] = {
     implicit val F: Monad[F] = Parallel[F].monad
     type ErrorLayer[A] = WriterT[F, Chain[ToSmithyError], A]
     type WriterLayer[A] = WriterT[ErrorLayer, Chain[CompilationUnit], A]
     
-    internalResolveRemoteReferences[WriterLayer](namespace, schemaJson)
+    internalResolveRemoteReferences[WriterLayer](namespace, schemaJson, allowedRemotes)
       .run
       .run
       .map { case (errors, (units, _)) => (errors, units) }
   }
 
 
-  private def internalResolveRemoteReferences[F[_]: Parallel: TellCompilationUnit: TellError](namespace: NonEmptyChain[String], schemaJson: Json): F[Unit] = {
+  private def internalResolveRemoteReferences[F[_]: Parallel: TellCompilationUnit: TellError](namespace: NonEmptyChain[String], schemaJson: Json, allowedRemotes: Vector[String]): F[Unit] = {
     implicit val F: Monad[F] = Parallel[F].monad
     
   
@@ -82,7 +83,6 @@ private[compiler] object RemoteRefResolver {
      * When a recursive node is encountered, the sub-schema(s) are returned such that the search for remote refs continues recursively.
      * When a remote ref is encountered, the remote schema is pulled, parsed, recorded for use in compilation, and then the process continues.
      * When a terminal node is encountered, an empty node is returned signaling the end of that branch of the search
-     *
      */
     def unfold(input: (Path, Schema)): F[Vector[(Path, Schema)]] = {
       val (namespace, schema) = input
@@ -95,7 +95,8 @@ private[compiler] object RemoteRefResolver {
       schema match {
 
         // Remote ref found. Pull in the associated schema
-        case CaseRef(Right(ParsedRef.Remote(uri, id))) => 
+        case CaseRef(Right(ParsedRef.Remote(uri, id))) if allowedRemotes.exists(uri.toString.startsWith(_)) =>
+
           val ns = 
             NonEmptyChain.fromChainUnsafe(Chain.fromSeq(id.namespace.segments))
 

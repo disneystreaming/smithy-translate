@@ -61,20 +61,14 @@ object TestUtils {
   )
 
   def runConversion(
+      opts: ToSmithyCompilerOptions,
       input0: ConversionTestInput,
       remaining: ConversionTestInput*
   ): ConversionResult = {
     val inputs = input0 +: remaining
     val result =
       JsonSchemaCompiler.compile(
-        ToSmithyCompilerOptions(
-          useVerboseNames = false,
-          validateInput = false,
-          validateOutput = false,
-          List.empty,
-          input0.smithyVersion == SmithyVersion.One,
-          debug = true
-        ),
+        opts,
         JsonSchemaCompilerInput.UnparsedSpecs(
           inputs // gather only specs that have a json input
             .toList
@@ -102,6 +96,7 @@ object TestUtils {
     ConversionResult(resultW, expected)
   }
 
+
   def runConversionTest(inputs: NonEmptyList[ConversionTestInput])(
       implicit loc: Location
   ): Unit = runConversionTest(inputs.head, inputs.tail:_*)
@@ -111,24 +106,18 @@ object TestUtils {
       remaining: ConversionTestInput*
   )(implicit
       loc: Location
-  ): Unit = {
-    val ConversionResult(res, expected) = runConversion(
-      input0,
-      remaining: _*
-    )
-    res match {
-      case ToSmithyResult.Success(Nil, output) =>
-        Assertions.assertEquals(output, expected)
-      case ToSmithyResult.Success(errs, _) =>
-        Assertions.fail(
-          "Model assembled with errors: \n\t" 
-            + errs.map(_.getMessage).mkString("\n").replaceAll("\n", "\n\t")
-        )
-      case ToSmithyResult.Failure(err, errors) =>
-        errors.foreach(println)
-        Assertions.fail("Validating model failed: ", err)
-    }
-  }
+  ): Unit = runConversionTestWithOpts(
+    ToSmithyCompilerOptions(
+      useVerboseNames = false,
+      validateInput = false,
+      validateOutput = false,
+      List.empty,
+      input0.smithyVersion == SmithyVersion.One,
+      debug = true
+    ),
+    input0,
+    remaining:_*
+  )
 
   def runConversionTest(
       jsonSpec: String,
@@ -145,5 +134,36 @@ object TestUtils {
         smithyVersion = smithyVersion
       )
     )
+  }
+  
+  def runConversionTestWithOpts(opts: ToSmithyCompilerOptions, inputs: NonEmptyList[ConversionTestInput])(
+      implicit loc: Location
+  ): Unit = runConversionTestWithOpts(opts, inputs.head, inputs.tail:_*)
+
+  
+  def runConversionTestWithOpts(
+      opts: ToSmithyCompilerOptions,
+      input0: ConversionTestInput,
+      remaining: ConversionTestInput*
+  )(implicit
+      loc: Location
+  ): Unit = {
+    val ConversionResult(res, expected) = runConversion(
+      opts,
+      input0,
+      remaining: _*
+    )
+    res match {
+      case ToSmithyResult.Success(Nil, output) =>
+        Assertions.assertEquals(output, expected)
+      case ToSmithyResult.Success(errs, _) =>
+        Assertions.fail(
+          "Model assembled with errors: \n\t" 
+            + errs.map(_.getMessage).mkString("\n").replaceAll("\n", "\n\t")
+        )
+      case ToSmithyResult.Failure(err, errors) =>
+        errors.foreach(println)
+        Assertions.fail("Validating model failed: ", err)
+    }
   }
 }

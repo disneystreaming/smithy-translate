@@ -50,12 +50,12 @@ object JsonSchemaCompiler
               // TODO: Put this in to a ToSmithyError
               throw error
             case Right(json) => 
-              RemoteRefResolver.resolveRemoteReferences[Id](ns, json)
+              RemoteRefResolver.resolveRemoteReferences[Id](ns, json, opts.allowedRemoteRefs)
           }
         }
       case ParsedSpec(path, rawJson, _) =>
         val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        RemoteRefResolver.resolveRemoteReferences[Id](ns, rawJson)
+        RemoteRefResolver.resolveRemoteReferences[Id](ns, rawJson, opts.allowedRemoteRefs)
     }
 
     val (compilationErrors, result) = 
