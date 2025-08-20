@@ -21,7 +21,6 @@ import java.net.InetSocketAddress
 import munit.Location
 import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyCompilerOptions
-import cats.instances.boolean
 import munit.FailException
 
 final class HttpBasedSpec extends munit.FunSuite {
@@ -33,11 +32,9 @@ final class HttpBasedSpec extends munit.FunSuite {
   private case class LocalAndRemoteSchemas(localSchemas: List[(os.RelPath, TranslationPair)], remoteSchemas: List[(os.RelPath, TranslationPair)])
 
 
-  private def withFileServer(
-      port: Int,
-  )(testCode: FileServerMetadata => Unit): Unit = {
+  private def withFileServer(testCode: FileServerMetadata => Unit): Unit = {
     val dir = os.temp.dir()
-    val serverAddress = new InetSocketAddress("localhost", port)
+    val serverAddress = new InetSocketAddress("localhost", 0)
 
     // N.B. : Requires at least JDK 18.
     //        May need to host a file-server some other way. 
@@ -59,8 +56,8 @@ final class HttpBasedSpec extends munit.FunSuite {
     }
   }
 
-  private def httpRefTest(port: Int, compilerOptionsTransform: ToSmithyCompilerOptions => ToSmithyCompilerOptions = identity)(createSchemas: FileServerMetadata => LocalAndRemoteSchemas)(implicit loc: Location): Unit = {
-    withFileServer(port) { case m@FileServerMetadata(_, servingDirectory) =>
+  private def httpRefTest(compilerOptionsTransform: ToSmithyCompilerOptions => ToSmithyCompilerOptions = identity)(createSchemas: FileServerMetadata => LocalAndRemoteSchemas)(implicit loc: Location): Unit = {
+    withFileServer { case m@FileServerMetadata(_, servingDirectory) =>
       val LocalAndRemoteSchemas(localSchemas, remoteSchemas) = createSchemas(m)
       val localDir = os.temp.dir()
 
@@ -112,7 +109,7 @@ final class HttpBasedSpec extends munit.FunSuite {
 
 
   test("single local file - single remote file in root path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
         s"""|{
@@ -163,7 +160,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   }
   
   test("single local file - remote file referencing other remote file in root path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
         s"""|{
@@ -240,7 +237,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   }
   
   test("multiple local - locally available file referenced as remote") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
           s"""|{
@@ -311,7 +308,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   }
   
   test("single local file - single remote file in root path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
         s"""|{
@@ -362,7 +359,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   }
   
   test("single local file - remote file referencing other remote file in root path") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
         s"""|{
@@ -439,7 +436,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   }
   
   test("multiple local - locally available file referenced as remote") {
-    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
           s"""|{
@@ -512,7 +509,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   test("multiple local - locally available file referenced as remote, but not allowed to fetch remote") {
     // This test should pass, because the remotely referenced schema is available in the local sources.
     // This is a fairly common json-schema usecase, where all schemas are copied locally but contain their http refs.
-    httpRefTest(10123, _.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest(_.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
           s"""|{
@@ -585,7 +582,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   test("remote refs not in allow list are ignored") {
     // This is expected to fail, because the refereced remote ref will get filtered out/not retrieved
     intercept[FailException] {
-      httpRefTest(10123, _.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      httpRefTest(_.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
         localSchemas = List(
           os.rel / "local.json" -> TranslationPair(
           s"""|{
