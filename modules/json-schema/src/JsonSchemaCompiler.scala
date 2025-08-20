@@ -46,19 +46,21 @@ object JsonSchemaCompiler
         specs.toVector.parFoldMapA { case FileContents(path, content) =>
           val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
           io.circe.jawn.parse(content) match {
-            case Left(error) => 
+            case Left(error) =>
               // TODO: Put this in to a ToSmithyError
               throw error
-            case Right(json) => 
-              RemoteRefResolver.resolveRemoteReferences[Id](ns, json, opts.allowedRemoteRefs)
+            case Right(json) =>
+              RemoteRefResolver
+                .resolveRemoteReferences[Id](ns, json, opts.allowedRemoteRefs)
           }
         }
       case ParsedSpec(path, rawJson, _) =>
         val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        RemoteRefResolver.resolveRemoteReferences[Id](ns, rawJson, opts.allowedRemoteRefs)
+        RemoteRefResolver
+          .resolveRemoteReferences[Id](ns, rawJson, opts.allowedRemoteRefs)
     }
 
-    val (compilationErrors, result) = 
+    val (compilationErrors, result) =
       prepared.foldMap(JsonSchemaToIModel.compile)
 
     (resolutionErrors ++ compilationErrors, result)

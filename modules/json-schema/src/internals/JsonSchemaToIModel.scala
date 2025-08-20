@@ -34,7 +34,7 @@ import smithytranslate.compiler.json_schema.CompilationUnit
 private[compiler] object JsonSchemaToIModel {
 
   def compile(
-    compilationUnit: CompilationUnit
+      compilationUnit: CompilationUnit
   ): (Chain[ToSmithyError], IModel) = {
     type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
@@ -47,7 +47,7 @@ private[compiler] object JsonSchemaToIModel {
   }
 
   def compileF[F[_]: Parallel: TellShape: TellError](
-    compilationUnit: CompilationUnit
+      compilationUnit: CompilationUnit
   ): F[Unit] = {
     val parser = new JsonSchemaToIModel[F](compilationUnit)
     parser.recordAll
@@ -56,7 +56,7 @@ private[compiler] object JsonSchemaToIModel {
 }
 
 private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
-  compilationUnit: CompilationUnit
+    compilationUnit: CompilationUnit
 ) {
 
   implicit val F: Monad[F] = Parallel[F].monad
@@ -67,8 +67,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       compilationUnit.namespace
     ) {}
 
-
-  lazy val recordAll: F[Unit] = 
+  lazy val recordAll: F[Unit] =
     refoldOne(
       Local(compilationUnit.name, compilationUnit.schema, compilationUnit.json)
         .addHints(TopLevel)
@@ -193,7 +192,8 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       case CaseRef(idOrError) =>
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
-          case Right(ref) => F.pure(OpenApiRef(local.context.removeTopLevel(), ref.id))
+          case Right(ref) =>
+            F.pure(OpenApiRef(local.context.removeTopLevel(), ref.id))
         }
 
       // Special case for `type: [X, null]`

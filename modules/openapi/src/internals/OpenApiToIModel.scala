@@ -492,7 +492,8 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       case CaseRef(idOrError) =>
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
-          case Right(parsedRef)   => F.pure(OpenApiRef(local.context, parsedRef.id))
+          case Right(parsedRef) =>
+            F.pure(OpenApiRef(local.context, parsedRef.id))
         }
 
       // A:

@@ -24,5 +24,5 @@ final case class ToSmithyCompilerOptions(
     transformers: List[ProjectionTransformer],
     useEnumTraitSyntax: Boolean,
     debug: Boolean,
-    allowedRemoteRefs: Vector[String] = Vector.empty[String],
+    allowedRemoteRefs: Vector[String] = Vector.empty[String]
 )

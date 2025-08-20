@@ -34,15 +34,15 @@ object TestUtils {
       smithySpec: String,
       errorSmithySpec: Option[String],
       smithyVersion: SmithyVersion
-  ) 
-  
+  )
+
   object ConversionTestInput {
     def apply(
-      filePath: NonEmptyList[String],
-      jsonSpec: String,
-      smithySpec: String,
-      errorSmithySpec: Option[String] = None,
-      smithyVersion: SmithyVersion = SmithyVersion.Two
+        filePath: NonEmptyList[String],
+        jsonSpec: String,
+        smithySpec: String,
+        errorSmithySpec: Option[String] = None,
+        smithyVersion: SmithyVersion = SmithyVersion.Two
     ): ConversionTestInput = {
       ConversionTestInput(
         filePath,
@@ -53,7 +53,6 @@ object TestUtils {
       )
     }
   }
-
 
   final case class ConversionResult(
       result: ToSmithyResult[ModelWrapper],
@@ -85,7 +84,7 @@ object TestUtils {
       val spec = s"""|$$version: "${i.smithyVersion}"
                      |
                      |${i.smithySpec}""".stripMargin
-      
+
       assembler.addUnparsedModel(name, spec)
       i.errorSmithySpec.foreach(assembler.addUnparsedModel("error.smithy", _))
     }
@@ -97,10 +96,9 @@ object TestUtils {
     ConversionResult(resultW, expected)
   }
 
-
-  def runConversionTest(inputs: NonEmptyList[ConversionTestInput])(
-      implicit loc: Location
-  ): Unit = runConversionTest(inputs.head, inputs.tail:_*)
+  def runConversionTest(inputs: NonEmptyList[ConversionTestInput])(implicit
+      loc: Location
+  ): Unit = runConversionTest(inputs.head, inputs.tail: _*)
 
   def runConversionTest(
       input0: ConversionTestInput,
@@ -117,7 +115,7 @@ object TestUtils {
       debug = true
     ),
     input0,
-    remaining:_*
+    remaining: _*
   )
 
   def runConversionTest(
@@ -136,12 +134,14 @@ object TestUtils {
       )
     )
   }
-  
-  def runConversionTestWithOpts(opts: ToSmithyCompilerOptions, inputs: NonEmptyList[ConversionTestInput])(
-      implicit loc: Location
-  ): Unit = runConversionTestWithOpts(opts, inputs.head, inputs.tail:_*)
 
-  
+  def runConversionTestWithOpts(
+      opts: ToSmithyCompilerOptions,
+      inputs: NonEmptyList[ConversionTestInput]
+  )(implicit
+      loc: Location
+  ): Unit = runConversionTestWithOpts(opts, inputs.head, inputs.tail: _*)
+
   def runConversionTestWithOpts(
       opts: ToSmithyCompilerOptions,
       input0: ConversionTestInput,
@@ -159,7 +159,7 @@ object TestUtils {
         Assertions.assertEquals(output, expected)
       case ToSmithyResult.Success(errs, _) =>
         Assertions.fail(
-          "Model assembled with errors: \n\t" 
+          "Model assembled with errors: \n\t"
             + errs.map(_.getMessage).mkString("\n").replaceAll("\n", "\n\t")
         )
       case ToSmithyResult.Failure(err, errors) =>
