@@ -23,7 +23,7 @@ import smithytranslate.compiler.SmithyVersion
 
 final class HttpBasedSpec extends munit.FunSuite {
 
-  val FileServerLogLevel = SimpleFileServer.OutputLevel.VERBOSE
+  val FileServerLogLevel = SimpleFileServer.OutputLevel.NONE
 
   private case class FileServerMetadata(baseServerUrl: String, servingDirectory: os.Path)
   private case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: String)
@@ -165,10 +165,10 @@ final class HttpBasedSpec extends munit.FunSuite {
             |}""".stripMargin,
         s"""|namespace local
             |
-            |use remote2#SecondRemote
+            |use remote2#Remote2
             |
             |structure Local {
-            |    data: SecondRemote
+            |    data: Remote2
             |}
             |""".stripMargin
         )
@@ -179,7 +179,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |  "$$schema": "http://json-schema.org/draft-07/schema#",
               |  "$$id": "$baseUrl/remote1.json",
               |  "type": "object",
-              |  "title": "Remote",
+              |  "title": "Remote1",
               |  "additionalProperties": false,
               |  "properties": {
               |    "something": {
@@ -189,7 +189,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |}""".stripMargin,
           s"""|namespace remote1
               |
-              |structure Remote {
+              |structure Remote1 {
               |    something: String
               |}
               |""".stripMargin
@@ -199,7 +199,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |  "$$schema": "http://json-schema.org/draft-07/schema#",
               |  "$$id": "$baseUrl/remote2.json",
               |  "type": "object",
-              |  "title": "SecondRemote",
+              |  "title": "Remote2",
               |  "additionalProperties": false,
               |  "properties": {
               |    "id": {
@@ -212,11 +212,82 @@ final class HttpBasedSpec extends munit.FunSuite {
               |}""".stripMargin,
           s"""|namespace remote2
               |
-              |use remote1#Remote
+              |use remote1#Remote1
               |
-              |structure SecondRemote {
+              |structure Remote2 {
               |    id: String
-              |    other: Remote
+              |    other: Remote1
+              |}
+              |""".stripMargin
+        ),
+      )
+    )}
+  }
+  
+  test("multiple local - locally available file referenced as remote".only) {
+    httpRefTest(10123) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      localSchemas = List(
+        os.rel / "local.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "local.json",
+              |  "type": "object",
+              |  "title": "local",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "data": {
+              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace local
+              |
+              |use duplicatedInRemote#DuplicatedInRemote
+              |
+              |structure Local {
+              |    data: DuplicatedInRemote
+              |}
+              |""".stripMargin
+        ),
+        os.rel / "duplicatedInRemote.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/duplicatedInRemote.json",
+              |  "type": "object",
+              |  "title": "DuplicatedInRemote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "something": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace duplicatedInRemote
+              |
+              |structure DuplicatedInRemote {
+              |    something: String
+              |}
+              |""".stripMargin
+        ),
+      ),
+      remoteSchemas = List(
+        os.rel / "duplicatedInRemote.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/duplicatedInRemote.json",
+              |  "type": "object",
+              |  "title": "DuplicatedInRemote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "something": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace duplicatedInRemote
+              |
+              |structure DuplicatedInRemote {
+              |    something: String
               |}
               |""".stripMargin
         ),

@@ -60,8 +60,9 @@ private[compiler] object RemoteRefResolver {
     def recordError(e: ToSmithyError): F[Unit] =
       Tell.tell(Chain.one(e))
 
-    def recordCompilationUnit(compUnit: CompilationUnit): F[Unit] = 
+    def recordCompilationUnit(compUnit: CompilationUnit): F[Unit] = {
       Tell.tell(Chain.one(compUnit))
+    }
     
     def recordAndCreateUnits(namespace: Path, jsonString: String): F[Vector[(Path, Schema)]] =
       jawn.parse(jsonString) match {

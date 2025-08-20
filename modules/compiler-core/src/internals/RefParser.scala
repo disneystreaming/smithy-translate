@@ -78,7 +78,7 @@ private[compiler] abstract class RefParser(ns: Path) {
     }
   }
 
-  def apply(ref: String): Either[ToSmithyError, ParsedRef] =
+  def apply(ref: String): Either[ToSmithyError, ParsedRef] = {
     scala.util
       .Try(java.net.URI.create(ref))
       .toEither
@@ -103,4 +103,5 @@ private[compiler] abstract class RefParser(ns: Path) {
             handleRef(uri, pathSegsIn, fileName, Some(segments), Some(last))
         }
       }
+  }
 }
