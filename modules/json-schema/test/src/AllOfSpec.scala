@@ -143,5 +143,54 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
+  
+  test("unions - single allOf reference") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "example": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/two" }
+         |      ]
+         |    }
+         |  },
+         |  "$defs": {
+         |    "two": {
+         |      "type" : "object",
+         |      "properties" : {
+         |         "vehicle" : {
+         |            "type" : "string"
+         |         },
+         |         "price" : {
+         |            "type" : "integer"
+         |         }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |structure Example with [Two] {}
+                            |
+                            |structure Test {
+                            |  example: Example
+                            |}
+                            |
+                            |@mixin
+                            |structure Two {
+                            |  vehicle: String,
+                            |  price: Integer
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
 
 }

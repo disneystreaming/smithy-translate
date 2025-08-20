@@ -16,6 +16,42 @@
 package smithytranslate.compiler.openapi
 
 final class AllOfSpec extends munit.FunSuite {
+  
+  test("allOf - one ref") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Other:
+                           |      description: other
+                           |      type: object
+                           |      properties:
+                           |        l:
+                           |          type: integer
+                           |    Object:
+                           |      description: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/Other"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |/// object
+                            |structure Object with [Other] {
+                            |}
+                            |
+                            |/// other
+                            |@mixin
+                            |structure Other {
+                            |    l: Integer
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
 
   test("allOf - one ref one embedded") {
     val openapiString = """|openapi: '3.0.'
