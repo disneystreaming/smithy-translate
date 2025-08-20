@@ -85,6 +85,7 @@ object TestUtils {
       val spec = s"""|$$version: "${i.smithyVersion}"
                      |
                      |${i.smithySpec}""".stripMargin
+      
       assembler.addUnparsedModel(name, spec)
       i.errorSmithySpec.foreach(assembler.addUnparsedModel("error.smithy", _))
     }

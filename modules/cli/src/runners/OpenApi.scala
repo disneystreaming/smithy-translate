@@ -52,7 +52,8 @@ object OpenApi {
         validateOutput = opts.validateOutput,
         transformers,
         opts.useEnumTraitSyntax,
-        opts.debug
+        opts.debug,
+        opts.allowedRemoteRefs
       ),
       opts.debug
     )

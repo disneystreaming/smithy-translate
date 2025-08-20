@@ -58,7 +58,8 @@ object ParseAndCompile {
       validateOutput: Boolean,
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
-      debug: Boolean
+      debug: Boolean,
+      allowedRemoteRefs: Vector[String] = Vector.empty[String]
   ): ToSmithyResult[Model] = {
     val includedExtensions = List("json")
     val input = JsonSchemaCompilerInput.UnparsedSpecs(
@@ -70,7 +71,8 @@ object ParseAndCompile {
       validateOutput,
       transformers,
       useEnumTraitSyntax,
-      debug
+      debug,
+      allowedRemoteRefs
     )
     JsonSchemaCompiler.compile(opts, input)
   }

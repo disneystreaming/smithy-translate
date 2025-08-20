@@ -30,7 +30,8 @@ final case class OpenAPIJsonSchemaOpts(
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
     debug: Boolean,
-    force: Boolean
+    force: Boolean,
+    allowedRemoteRefs: Vector[String] = Vector.empty[String]
 )
 
 object OpenAPIJsonSchemaOpts {
@@ -84,6 +85,14 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
+  private val allowedRemotePaths: Opts[Vector[String]] = Opts
+    .options[String](
+      "allowed-remote-paths",
+      help = "A list of allowed remote references, e.g. 'https://example.com/schemas/'"
+    )
+    .map(_.toList.toVector)
+    .withDefault(Vector.empty)
+
   private def getOpts(isOpenapi: Boolean) =
     (
       Opts(isOpenapi),
@@ -95,7 +104,8 @@ object OpenAPIJsonSchemaOpts {
       useEnumTraitSyntax,
       outputJson,
       debug,
-      force
+      force,
+      allowedRemotePaths
     ).mapN(OpenAPIJsonSchemaOpts.apply)
 
   private val openApiToSmithyCmd = Command(
