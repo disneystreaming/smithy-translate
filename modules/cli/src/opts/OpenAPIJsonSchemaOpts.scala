@@ -88,7 +88,7 @@ object OpenAPIJsonSchemaOpts {
   private val allowedRemotePaths: Opts[Vector[String]] = Opts
     .options[String](
       "allowed-remote-paths",
-      help = "A list of allowed remote references, e.g. 'https://example.com/schemas/'"
+      help = "A list of base paths for allowed remote references, e.g. 'https://example.com/schemas/'"
     )
     .map(_.toList.toVector)
     .withDefault(Vector.empty)
