@@ -35,11 +35,11 @@ object CommonArguments {
         val result: Either[String, NamespaceMapping] =
           string.split(':') match {
             case Array(from, to) =>
-              val sourceNs = NonEmptyChain.fromSeq(from.split('.').toList)
-              val targetNs = Chain.fromSeq(to.split('.').toList)
+              val sourceNs = NonEmptyChain.fromSeq(from.split('.').toList.filter(_.nonEmpty))
+              val targetNs = Chain.fromSeq(to.split('.').toList.filter(_.nonEmpty))
 
               (sourceNs, targetNs) match {
-                case (None | Some(Chain("")), _) =>
+                case (None, _) =>
                   Left("Source namespace must not be empty.")
 
                 case (Some(f), t) =>
