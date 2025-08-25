@@ -16,21 +16,15 @@
 package smithytranslate.compiler.json_schema
 
 import cats.syntax.all._
-import cats.data.NonEmptyChain
-import smithytranslate.compiler.internals.json_schema.JsonSchemaToIModel
-import cats.data.NonEmptyList
-import org.everit.json.schema.Schema
-import io.circe.Json
 import smithytranslate.compiler.internals.json_schema._
 import smithytranslate.compiler.internals.IModel
 import smithytranslate.compiler.ToSmithyCompilerOptions
 import smithytranslate.compiler.AbstractToSmithyCompiler
-import JsonSchemaCompilerInput._
 import cats.data.Chain
 import smithytranslate.compiler.ToSmithyError
-import smithytranslate.compiler.FileContents
 import cats.catsParallelForId
 import cats.Id
+import smithytranslate.compiler.internals.NamespaceRemapper
 
 /** Converts json schema to a smithy model.
   */
@@ -41,41 +35,16 @@ object JsonSchemaCompiler
       opts: ToSmithyCompilerOptions,
       input: JsonSchemaCompilerInput
   ): (Chain[ToSmithyError], IModel) = {
-    val (resolutionErrors, prepared) = input match {
-      case UnparsedSpecs(specs) =>
-        specs.toVector.parFoldMapA { case FileContents(path, content) =>
-          val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-          io.circe.jawn.parse(content) match {
-            case Left(error) =>
-              // TODO: Put this in to a ToSmithyError
-              throw error
-            case Right(json) =>
-              RemoteRefResolver
-                .resolveRemoteReferences[Id](ns, json, opts.allowedRemoteRefs)
-          }
-        }
-      case ParsedSpec(path, rawJson, _) =>
-        val ns = NonEmptyChain.fromNonEmptyList(removeFileExtension(path))
-        RemoteRefResolver
-          .resolveRemoteReferences[Id](ns, rawJson, opts.allowedRemoteRefs)
-    }
+    val remapper = new NamespaceRemapper(opts.namespaceRemaps)
+    val (resolutionErrors, prepared) = CompilationUnitResolver
+      .resolve[Id](input, opts.allowedRemoteBaseURLs, remapper)
 
     val (compilationErrors, result) =
-      prepared.foldMap(JsonSchemaToIModel.compile)
+      prepared
+        .distinctBy(unit => (unit.namespace, unit.name.asRef))
+        .foldMap(JsonSchemaToIModel.compile(_, remapper))
 
     (resolutionErrors ++ compilationErrors, result)
   }
 
-  type Input = (NonEmptyChain[String], Schema, Json)
-
-  private def removeFileExtension(
-      path: NonEmptyList[String]
-  ): NonEmptyList[String] = {
-    val lastSplit = path.last.split('.')
-    val newLast =
-      if (lastSplit.size > 1) lastSplit.dropRight(1) else lastSplit
-    NonEmptyList.fromListUnsafe(
-      path.toList.dropRight(1) :+ newLast.mkString(".")
-    )
-  }
 }

@@ -31,11 +31,12 @@ object ToSmithyError {
     override def getMessage(): String = message
   }
 
-  final case class ProcessingError(message: String) extends ToSmithyError {
+  final case class ProcessingError(message: String, errorCause: Option[Throwable] = None) extends ToSmithyError {
     override def getMessage(): String = message
+    override def getCause(): Throwable = errorCause.orNull
   }
     
-  final case class HttpError(uri: URI, error: Throwable) extends ToSmithyError {
+  final case class HttpError(uri: URI, refStack: List[String], error: Throwable) extends ToSmithyError {
     override def getCause(): Throwable = error
     override def getMessage(): String = "Failed to fetch remote schema from " + uri.toString + ". Error: " + error.getMessage
   }

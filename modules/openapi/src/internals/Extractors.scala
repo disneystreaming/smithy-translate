@@ -258,7 +258,10 @@ private[openapi] object CasePrimitive {
  * The most complicated thing
  */
 private[compiler] abstract class CaseRefBuilder(ns: Path)
-    extends smithytranslate.compiler.internals.RefParser(ns) {
+    extends smithytranslate.compiler.internals.RefParser(
+      ns,
+      NamespaceRemapper.empty
+    ) {
   def unapply(sch: Schema[_]): Option[Either[ToSmithyError, ParsedRef]] =
     Option(sch.get$ref).map(this.apply)
 }

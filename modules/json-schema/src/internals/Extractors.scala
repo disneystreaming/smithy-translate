@@ -330,8 +330,14 @@ private[json_schema] object Extractors {
   /*
    * The most complicated thing
    */
-  abstract class JsonSchemaCaseRefBuilder(id: Option[String], ns: Path)
-      extends smithytranslate.compiler.internals.RefParser(ns) {
+  abstract class JsonSchemaCaseRefBuilder(
+      id: Option[String],
+      ns: Path,
+      namespaceRemapper: NamespaceRemapper
+  ) extends smithytranslate.compiler.internals.RefParser(
+        ns,
+        namespaceRemapper
+      ) {
     def unapply(sch: Schema): Option[Either[ToSmithyError, ParsedRef]] =
       sch match {
         case ref: ReferenceSchema =>

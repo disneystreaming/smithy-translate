@@ -34,29 +34,32 @@ import smithytranslate.compiler.json_schema.CompilationUnit
 private[compiler] object JsonSchemaToIModel {
 
   def compile(
-      compilationUnit: CompilationUnit
+      compilationUnit: CompilationUnit,
+      namespaceRemapper: NamespaceRemapper
   ): (Chain[ToSmithyError], IModel) = {
     type ErrorLayer[A] = Writer[Chain[ToSmithyError], A]
     type WriterLayer[A] =
       WriterT[ErrorLayer, Chain[Either[Suppression, Definition]], A]
     val (errors, (data, _)) =
-      compileF[WriterLayer](compilationUnit).run.run
+      compileF[WriterLayer](compilationUnit, namespaceRemapper).run.run
     val definitions = data.collect { case Right(d) => d }
     val suppressions = data.collect { case Left(s) => s }
     (errors, IModel(definitions.toVector, suppressions.toVector))
   }
 
   def compileF[F[_]: Parallel: TellShape: TellError](
-      compilationUnit: CompilationUnit
+      compilationUnit: CompilationUnit,
+      namespaceRemapper: NamespaceRemapper
   ): F[Unit] = {
-    val parser = new JsonSchemaToIModel[F](compilationUnit)
+    val parser = new JsonSchemaToIModel[F](compilationUnit, namespaceRemapper)
     parser.recordAll
   }
 
 }
 
 private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
-    compilationUnit: CompilationUnit
+    compilationUnit: CompilationUnit,
+    namespaceRemapper: NamespaceRemapper
 ) {
 
   implicit val F: Monad[F] = Parallel[F].monad
@@ -64,7 +67,8 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
   private val CaseRef =
     new Extractors.JsonSchemaCaseRefBuilder(
       Option(compilationUnit.schema.getId()),
-      compilationUnit.namespace
+      compilationUnit.namespace,
+      namespaceRemapper
     ) {}
 
   lazy val recordAll: F[Unit] =

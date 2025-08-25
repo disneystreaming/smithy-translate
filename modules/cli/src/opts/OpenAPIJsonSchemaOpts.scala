@@ -18,7 +18,10 @@ package smithytranslate.cli.opts
 import com.monovore.decline.*
 import cats.syntax.all.*
 import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
+import cats.data.ValidatedNel
 import smithytranslate.cli.opts.SmithyTranslateCommand.OpenApiTranslate
+import cats.data.Chain
 
 final case class OpenAPIJsonSchemaOpts(
     isOpenapi: Boolean,
@@ -31,7 +34,8 @@ final case class OpenAPIJsonSchemaOpts(
     outputJson: Boolean,
     debug: Boolean,
     force: Boolean,
-    allowedRemoteRefs: Vector[String] = Vector.empty[String]
+    allowedRemoteBaseURLs: Set[String] = Set.empty,
+    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
 )
 
 object OpenAPIJsonSchemaOpts {
@@ -85,14 +89,54 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
-  private val allowedRemotePaths: Opts[Vector[String]] = Opts
+  private val allowedRemoteBaseURLs: Opts[Set[String]] = Opts
     .options[String](
-      "allowed-remote-paths",
+      "allow-remote-base-url",
       help =
-        "A list of base paths for allowed remote references, e.g. 'https://example.com/schemas/'"
+        "A base path for allowed remote references, e.g. 'https://example.com/schemas/'"
     )
-    .map(_.toList.toVector)
-    .withDefault(Vector.empty)
+    .map(_.toList.toSet)
+    .withDefault(Set.empty)
+
+  private case class NamespaceMapping(
+      original: NonEmptyChain[String],
+      remapped: Chain[String]
+  )
+  private implicit val namespaceMappingArgument: Argument[NamespaceMapping] =
+    new Argument[NamespaceMapping] {
+      val defaultMetavar: String = "source.name.space:target.name.space"
+      def read(string: String): ValidatedNel[String, NamespaceMapping] = {
+        val result: Either[String, NamespaceMapping] =
+          string.split(':') match {
+            case Array(from, to) =>
+              val sourceNs = NonEmptyChain.fromSeq(from.split('.').toList)
+              val targetNs = Chain.fromSeq(to.split('.').toList)
+
+              (sourceNs, targetNs) match {
+                case (Some(f), t) => Right(NamespaceMapping(f, t))
+                case (None, _)    => Left("Source namespace must not be empty.")
+              }
+            case _ =>
+              Left(
+                s"""Invalid namespace remapping. 
+                   |Expected input to be formatted as 'my.source.namespace:my.target.namespace'
+                   |got: '$string'""".stripMargin
+              )
+          }
+
+        result.toValidatedNel
+      }
+    }
+
+  private val namespaceRemaps: Opts[Map[NonEmptyChain[String], Chain[String]]] =
+    Opts
+      .options[NamespaceMapping](
+        "namespace-remap",
+        help =
+          "A namespace remapping rule, of the form 'from1.from2=to1.to2', which remaps the 'from' prefix to the 'to' prefix"
+      )
+      .map(mappings => mappings.map(m => m.original -> m.remapped).toList.toMap)
+      .withDefault(Map.empty)
 
   private def getOpts(isOpenapi: Boolean) =
     (
@@ -106,7 +150,8 @@ object OpenAPIJsonSchemaOpts {
       outputJson,
       debug,
       force,
-      allowedRemotePaths
+      allowedRemoteBaseURLs,
+      namespaceRemaps
     ).mapN(OpenAPIJsonSchemaOpts.apply)
 
   private val openApiToSmithyCmd = Command(

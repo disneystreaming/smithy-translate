@@ -12,20 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package smithytranslate.compiler
+package internals
 
-import software.amazon.smithy.build.ProjectionTransformer
-import cats.data.NonEmptyChain
 import cats.data.Chain
+import cats.data.NonEmptyChain
 
-final case class ToSmithyCompilerOptions(
-    useVerboseNames: Boolean,
-    validateInput: Boolean,
-    validateOutput: Boolean,
-    transformers: List[ProjectionTransformer],
-    useEnumTraitSyntax: Boolean,
-    debug: Boolean,
-    allowedRemoteBaseURLs: Set[String] = Set.empty,
-    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
-)
+object NamespaceRemapper {
+  def empty: NamespaceRemapper = new NamespaceRemapper(Map.empty)
+}
+
+class NamespaceRemapper(remaps: Map[NonEmptyChain[String], Chain[String]]) {
+  def remap(ns: List[String]): List[String] = {
+    remaps
+      .collectFirst {
+        case (key, value) if ns.startsWith(key.toChain.toList) =>
+          (value ++ Chain.fromSeq(ns.drop(key.length.toInt))).toList
+      }
+      .getOrElse(ns)
+  }
+
+}

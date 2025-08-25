@@ -53,7 +53,8 @@ object OpenApi {
         transformers,
         opts.useEnumTraitSyntax,
         opts.debug,
-        opts.allowedRemoteRefs
+        opts.allowedRemoteBaseURLs,
+        opts.namespaceRemaps
       ),
       opts.debug
     )

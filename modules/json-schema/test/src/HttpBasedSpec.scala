@@ -16,12 +16,14 @@
 package smithytranslate.compiler.json_schema
 
 import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
 import com.sun.net.httpserver.SimpleFileServer
 import java.net.InetSocketAddress
 import munit.Location
 import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyCompilerOptions
 import munit.FailException
+import cats.data.Chain
 
 final class HttpBasedSpec extends munit.FunSuite {
 
@@ -99,7 +101,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             transformers = List.empty,
             useEnumTraitSyntax = false,
             debug = true,
-            allowedRemoteRefs = Vector(m.baseServerUrl)
+            allowedRemoteBaseURLs = Set(m.baseServerUrl)
           )
         ),
         NonEmptyList.fromListUnsafe(remoteTestInputs))
@@ -126,7 +128,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |}""".stripMargin,
         s"""|namespace local
             |
-            |use remote#Remote
+            |use localhost.remote#Remote
             |
             |structure Local {
             |    data: Remote
@@ -148,7 +150,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace remote
+          s"""|namespace localhost.remote
               |
               |structure Remote {
               |    id: String,
@@ -177,7 +179,7 @@ final class HttpBasedSpec extends munit.FunSuite {
             |}""".stripMargin,
         s"""|namespace local
             |
-            |use remote2#Remote2
+            |use localhost.remote2#Remote2
             |
             |structure Local {
             |    data: Remote2
@@ -199,7 +201,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace remote1
+          s"""|namespace localhost.remote1
               |
               |structure Remote1 {
               |    something: String
@@ -222,9 +224,9 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace remote2
+          s"""|namespace localhost.remote2
               |
-              |use remote1#Remote1
+              |use localhost.remote1#Remote1
               |
               |structure Remote2 {
               |    id: String
@@ -236,79 +238,8 @@ final class HttpBasedSpec extends munit.FunSuite {
     )}
   }
   
-  test("multiple local - locally available file referenced as remote") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "local.json",
-              |  "type": "object",
-              |  "title": "local",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "data": {
-              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace local
-              |
-              |use duplicatedInRemote#DuplicatedInRemote
-              |
-              |structure Local {
-              |    data: DuplicatedInRemote
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      ),
-      remoteSchemas = List(
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("single local file - single remote file in root path") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+  test("single local file - single remapped remote file into root path") {
+    httpRefTest(_.copy(namespaceRemaps = Map(NonEmptyChain.of("localhost") -> Chain()))) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
         s"""|{
@@ -358,83 +289,6 @@ final class HttpBasedSpec extends munit.FunSuite {
     )}
   }
   
-  test("single local file - remote file referencing other remote file in root path") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "local.json",
-            |  "type": "object",
-            |  "title": "local",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/remote2.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace local
-            |
-            |use remote2#Remote2
-            |
-            |structure Local {
-            |    data: Remote2
-            |}
-            |""".stripMargin
-        )
-      ),
-      remoteSchemas = List(
-        os.rel / "remote1.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote1.json",
-              |  "type": "object",
-              |  "title": "Remote1",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace remote1
-              |
-              |structure Remote1 {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "remote2.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote2.json",
-              |  "type": "object",
-              |  "title": "Remote2",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    },
-              |    "other": {
-              |      "$$ref": "$baseUrl/remote1.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace remote2
-              |
-              |use remote1#Remote1
-              |
-              |structure Remote2 {
-              |    id: String
-              |    other: Remote1
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
   test("multiple local - locally available file referenced as remote") {
     httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
@@ -453,14 +307,14 @@ final class HttpBasedSpec extends munit.FunSuite {
               |}""".stripMargin,
           s"""|namespace local
               |
-              |use duplicatedInRemote#DuplicatedInRemote
+              |use localhost.duplicatedInRemote#DuplicatedInRemote
               |
               |structure Local {
               |    data: DuplicatedInRemote
               |}
               |""".stripMargin
         ),
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
+        os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
           s"""|{
               |  "$$schema": "http://json-schema.org/draft-07/schema#",
               |  "$$id": "$baseUrl/duplicatedInRemote.json",
@@ -473,7 +327,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
+          s"""|namespace localhost.duplicatedInRemote
               |
               |structure DuplicatedInRemote {
               |    something: String
@@ -495,7 +349,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
+          s"""|namespace localhost.duplicatedInRemote
               |
               |structure DuplicatedInRemote {
               |    something: String
@@ -506,10 +360,8 @@ final class HttpBasedSpec extends munit.FunSuite {
     )}
   }
   
-  test("multiple local - locally available file referenced as remote, but not allowed to fetch remote") {
-    // This test should pass, because the remotely referenced schema is available in the local sources.
-    // This is a fairly common json-schema usecase, where all schemas are copied locally but contain their http refs.
-    httpRefTest(_.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+  test("multiple local - locally available file referenced as remote via remap") {
+    httpRefTest(_.copy(namespaceRemaps = Map(NonEmptyChain.of("localhost") -> Chain("foo")))) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
       localSchemas = List(
         os.rel / "local.json" -> TranslationPair(
           s"""|{
@@ -526,14 +378,14 @@ final class HttpBasedSpec extends munit.FunSuite {
               |}""".stripMargin,
           s"""|namespace local
               |
-              |use duplicatedInRemote#DuplicatedInRemote
+              |use foo.duplicatedInRemote#DuplicatedInRemote
               |
               |structure Local {
               |    data: DuplicatedInRemote
               |}
               |""".stripMargin
         ),
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
+        os.rel / "foo" / "duplicatedInRemote.json" -> TranslationPair(
           s"""|{
               |  "$$schema": "http://json-schema.org/draft-07/schema#",
               |  "$$id": "$baseUrl/duplicatedInRemote.json",
@@ -546,7 +398,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
+          s"""|namespace foo.duplicatedInRemote
               |
               |structure DuplicatedInRemote {
               |    something: String
@@ -568,7 +420,80 @@ final class HttpBasedSpec extends munit.FunSuite {
               |    }
               |  }
               |}""".stripMargin,
-          s"""|namespace duplicatedInRemote
+          s"""|namespace foo.duplicatedInRemote
+              |
+              |structure DuplicatedInRemote {
+              |    something: String
+              |}
+              |""".stripMargin
+        ),
+      )
+    )}
+  }
+  
+  test("multiple local - locally available file referenced as remote, but not allowed to fetch remote") {
+    // This test should pass, because the remotely referenced schema is available in the local sources.
+    // This is a fairly common json-schema usecase, where all schemas are copied locally but contain their http refs.
+    httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      localSchemas = List(
+        os.rel / "local.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "local.json",
+              |  "type": "object",
+              |  "title": "local",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "data": {
+              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace local
+              |
+              |use localhost.duplicatedInRemote#DuplicatedInRemote
+              |
+              |structure Local {
+              |    data: DuplicatedInRemote
+              |}
+              |""".stripMargin
+        ),
+        os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/duplicatedInRemote.json",
+              |  "type": "object",
+              |  "title": "DuplicatedInRemote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "something": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace localhost.duplicatedInRemote
+              |
+              |structure DuplicatedInRemote {
+              |    something: String
+              |}
+              |""".stripMargin
+        ),
+      ),
+      remoteSchemas = List(
+        os.rel / "duplicatedInRemote.json" -> TranslationPair(
+          s"""|{
+              |  "$$schema": "http://json-schema.org/draft-07/schema#",
+              |  "$$id": "$baseUrl/duplicatedInRemote.json",
+              |  "type": "object",
+              |  "title": "DuplicatedInRemote",
+              |  "additionalProperties": false,
+              |  "properties": {
+              |    "something": {
+              |      "type": "string"
+              |    }
+              |  }
+              |}""".stripMargin,
+          s"""|namespace localhost.duplicatedInRemote
               |
               |structure DuplicatedInRemote {
               |    something: String
@@ -582,7 +507,7 @@ final class HttpBasedSpec extends munit.FunSuite {
   test("remote refs not in allow list are ignored") {
     // This is expected to fail, because the refereced remote ref will get filtered out/not retrieved
     intercept[FailException] {
-      httpRefTest(_.copy(allowedRemoteRefs = Vector.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+      httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
         localSchemas = List(
           os.rel / "local.json" -> TranslationPair(
           s"""|{
@@ -599,7 +524,7 @@ final class HttpBasedSpec extends munit.FunSuite {
               |}""".stripMargin,
           s"""|namespace local
               |
-              |use remote#Remote
+              |use localhost.remote#Remote
               |
               |structure Local {
               |    data: Remote
@@ -621,7 +546,7 @@ final class HttpBasedSpec extends munit.FunSuite {
                 |    }
                 |  }
                 |}""".stripMargin,
-            s"""|namespace remote
+            s"""|namespace localhost.remote
                 |
                 |structure Remote {
                 |    id: String,
@@ -632,4 +557,5 @@ final class HttpBasedSpec extends munit.FunSuite {
       )}
     }
   }
+  
 }
