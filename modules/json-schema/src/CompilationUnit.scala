@@ -1,4 +1,4 @@
-/* Copyright 2022 Disney Streaming
+/* Copyright 2025 Disney Streaming
  *
  * Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,16 @@
  * limitations under the License.
  */
 
-package smithytranslate.compiler
+package smithytranslate.compiler.json_schema
 
-import software.amazon.smithy.build.ProjectionTransformer
-import cats.data.NonEmptyChain
-import cats.data.Chain
+import io.circe.Json
+import org.everit.json.schema.Schema
+import smithytranslate.compiler.internals.Name
+import smithytranslate.compiler.internals.Path
 
-final case class ToSmithyCompilerOptions(
-    useVerboseNames: Boolean,
-    validateInput: Boolean,
-    validateOutput: Boolean,
-    transformers: List[ProjectionTransformer],
-    useEnumTraitSyntax: Boolean,
-    debug: Boolean,
-    allowedRemoteBaseURLs: Set[String] = Set.empty,
-    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
+case class CompilationUnit(
+    namespace: Path,
+    name: Name,
+    schema: Schema,
+    json: Json
 )

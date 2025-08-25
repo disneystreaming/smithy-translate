@@ -52,7 +52,9 @@ object OpenApi {
         validateOutput = opts.validateOutput,
         transformers,
         opts.useEnumTraitSyntax,
-        opts.debug
+        opts.debug,
+        opts.allowedRemoteBaseURLs,
+        opts.namespaceRemaps
       ),
       opts.debug
     )

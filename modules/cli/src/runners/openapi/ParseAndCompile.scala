@@ -16,6 +16,7 @@
 package smithytranslate.cli.runners.openapi
 
 import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
 import smithytranslate.cli.runners.FileUtils.readAll
 import smithytranslate.compiler.openapi.OpenApiCompiler
 import smithytranslate.cli.transformer.TranslateTransformer
@@ -25,6 +26,7 @@ import smithytranslate.compiler.ToSmithyResult
 import smithytranslate.compiler.ToSmithyCompilerOptions
 import smithytranslate.compiler.openapi.OpenApiCompilerInput
 import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
+import cats.data.Chain
 
 object ParseAndCompile {
   def openapi(
@@ -58,7 +60,9 @@ object ParseAndCompile {
       validateOutput: Boolean,
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
-      debug: Boolean
+      debug: Boolean,
+      allowedRemoteBaseURLs: Set[String] = Set.empty,
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
   ): ToSmithyResult[Model] = {
     val includedExtensions = List("json")
     val input = JsonSchemaCompilerInput.UnparsedSpecs(
@@ -70,7 +74,9 @@ object ParseAndCompile {
       validateOutput,
       transformers,
       useEnumTraitSyntax,
-      debug
+      debug,
+      allowedRemoteBaseURLs,
+      namespaceRemaps
     )
     JsonSchemaCompiler.compile(opts, input)
   }
