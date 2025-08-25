@@ -34,7 +34,7 @@ private[compiler] object ParsedRef {
 /*
  * The most complicated thing
  */
-private[compiler] abstract class RefParser(ns: Path, namespaceRemapper: NamespaceRemapper) {
+private[compiler] abstract class RefParser(ns: Path) {
   
   def apply(ref: String): Either[ToSmithyError, ParsedRef] = {
     scala.util
@@ -45,12 +45,10 @@ private[compiler] abstract class RefParser(ns: Path, namespaceRemapper: Namespac
         Option(uri.getScheme()) match {
           case None | Some("file") => 
             parseURI(ns.toChain, uri)
-              .map(remapNamespace)
               .map(ParsedRef.Local(_))
 
           case Some("http") | Some("https") => 
             parseRemoteURI(uri)
-              .map(remapNamespace)
               .map(ParsedRef.Remote(uri, _))
 
           case _ => Left(ToSmithyError.BadRef(s"Unsupported URI scheme: ${uri.getScheme()}"))
@@ -129,13 +127,4 @@ private[compiler] abstract class RefParser(ns: Path, namespaceRemapper: Namespac
       case (Right(acc), seg) => Right(acc :+ seg)
     }
   }
-
-  // If the beginning of the input namespace matches the keys in any of the namespaceRemapping entries, remap that
-  // prefix to the cooresponding value
-  def remapNamespace(defId: DefId): DefId = {
-    defId.copy(namespace = 
-      Namespace(namespaceRemapper.remap(defId.namespace.segments))
-    )
-  }
-
 }

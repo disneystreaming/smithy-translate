@@ -149,8 +149,7 @@ private[compiler] object CompilationUnitResolver {
 
       val CaseRef = new JsonSchemaCaseRefBuilder(
         Option(schema.getId()),
-        namespace,
-        namespaceRemapper
+        namespace
       ) {}
 
       schema match {
@@ -159,7 +158,9 @@ private[compiler] object CompilationUnitResolver {
         case CaseRef(Right(ParsedRef.Remote(uri, id)))
             if allowedRemoteBaseURLs.exists(uri.toString.startsWith(_)) =>
           val ns =
-            NonEmptyChain.fromChainUnsafe(Chain.fromSeq(id.namespace.segments))
+            NonEmptyChain.fromChainUnsafe(
+              Chain.fromSeq(namespaceRemapper.remap(id.namespace.segments))
+            )
 
           Try(
             // TODO: Use some library that leverages effects to fetch the content from the URL

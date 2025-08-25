@@ -67,8 +67,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
   private val CaseRef =
     new Extractors.JsonSchemaCaseRefBuilder(
       Option(compilationUnit.schema.getId()),
-      compilationUnit.namespace,
-      namespaceRemapper
+      compilationUnit.namespace
     ) {}
 
   lazy val recordAll: F[Unit] =
@@ -197,7 +196,12 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
           case Right(ref) =>
-            F.pure(OpenApiRef(local.context.removeTopLevel(), ref.id))
+            F.pure(
+              OpenApiRef(
+                local.context.removeTopLevel(),
+                namespaceRemapper.remap(ref.id)
+              )
+            )
         }
 
       // Special case for `type: [X, null]`
