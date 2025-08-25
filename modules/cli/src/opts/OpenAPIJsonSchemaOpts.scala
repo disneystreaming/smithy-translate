@@ -22,6 +22,7 @@ import cats.data.NonEmptyChain
 import cats.data.ValidatedNel
 import smithytranslate.cli.opts.SmithyTranslateCommand.OpenApiTranslate
 import cats.data.Chain
+import smithytranslate.cli.opts.CommonArguments.NamespaceMapping
 
 final case class OpenAPIJsonSchemaOpts(
     isOpenapi: Boolean,
@@ -98,35 +99,6 @@ object OpenAPIJsonSchemaOpts {
     .map(_.toList.toSet)
     .withDefault(Set.empty)
 
-  private case class NamespaceMapping(
-      original: NonEmptyChain[String],
-      remapped: Chain[String]
-  )
-  private implicit val namespaceMappingArgument: Argument[NamespaceMapping] =
-    new Argument[NamespaceMapping] {
-      val defaultMetavar: String = "source.name.space:target.name.space"
-      def read(string: String): ValidatedNel[String, NamespaceMapping] = {
-        val result: Either[String, NamespaceMapping] =
-          string.split(':') match {
-            case Array(from, to) =>
-              val sourceNs = NonEmptyChain.fromSeq(from.split('.').toList)
-              val targetNs = Chain.fromSeq(to.split('.').toList)
-
-              (sourceNs, targetNs) match {
-                case (Some(f), t) => Right(NamespaceMapping(f, t))
-                case (None, _)    => Left("Source namespace must not be empty.")
-              }
-            case _ =>
-              Left(
-                s"""Invalid namespace remapping. 
-                   |Expected input to be formatted as 'my.source.namespace:my.target.namespace'
-                   |got: '$string'""".stripMargin
-              )
-          }
-
-        result.toValidatedNel
-      }
-    }
 
   private val namespaceRemaps: Opts[Map[NonEmptyChain[String], Chain[String]]] =
     Opts
