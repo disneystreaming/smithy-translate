@@ -59,52 +59,38 @@ private[compiler] abstract class RefParser(ns: Path, namespaceRemapper: Namespac
   }
 
   private def parseURI(baseNamespace: Chain[String], uri: URI): Either[ToSmithyError, DefId] = {
-    def initBaseNamespace: List[String] = 
-      baseNamespace.initLast.map(_._1.toList).getOrElse(Nil)
-
+    def parseWithPath(
+      pathSegsIn: List[String], 
+      fileNameWithExtension: String, 
+      fragmentOpt: Option[(List[String], String)]
+    ): Either[ToSmithyError, DefId] = {
+      val fileName = removeFileExtension(fileNameWithExtension)
+      val namespaceParts = baseNamespace.initLast.map(_._1.toList).getOrElse(Nil) ++ pathSegsIn :+ fileName
+      normalizeRelativePath(uri, namespaceParts).map { ns =>
+        val name = fragmentOpt match {
+          case Some((segments, last)) => deriveNameFromFragment(segments, last)
+          case None => Name.derived(fileName)
+        }
+        DefId(Namespace(ns.toList), name)
+      }
+    }
+    
     (uri.getPath(), uri.getFragment()) match {
       case ("", NonEmptySegments(segments, last)) =>
         // use the full namespace, because this ref is to a local definition
         val namespace = Namespace(baseNamespace.toList) 
         val name = deriveNameFromFragment(segments, last)
         Right(DefId(namespace, name))
-
+        
       case (NonEmptySegments(pathSegsIn, fileNameWithExtension), null) =>
-        val fileName = removeFileExtension(fileNameWithExtension)
+        parseWithPath(pathSegsIn, fileNameWithExtension, None)
         
-        // we remove the last portion of the namespace, because we are 
-        // referencing a separate file from the relative path of the current 
-        // namespace
-        val namespaceParts = initBaseNamespace ++ pathSegsIn :+ fileName
-
-
-        normalizeRelativePath(uri, namespaceParts)
-          .map(ns => {
-            DefId(Namespace(ns.toList), Name.derived(fileName))
-          })
-
-      case (
-            NonEmptySegments(pathSegsIn, fileNameWithExtension),
-            NonEmptySegments(segments, last)
-          ) =>
+      case (NonEmptySegments(pathSegsIn, fileNameWithExtension), NonEmptySegments(segments, last)) =>
+        parseWithPath(pathSegsIn, fileNameWithExtension, Some((segments, last)))
         
-        val fileName = removeFileExtension(fileNameWithExtension)
-
-        // we remove the last portion of the namespace, because we are 
-        // referencing a separate file from the relative path of the current 
-        // namespace
-        val namespaceParts = initBaseNamespace ++ pathSegsIn :+ fileName
-
-        normalizeRelativePath(uri, namespaceParts)
-          .map { ns =>
-            val name = deriveNameFromFragment(segments, last)
-            DefId(Namespace(ns.toList), name)
-          }
-
       case ("", null) => Left(ToSmithyError.BadRef(uri.toString))
     }
   }
-  
   
   def parseRemoteURI(uri: URI): Either[ToSmithyError, DefId] = {
     // Use the reverse of the host segments as the base namespace
