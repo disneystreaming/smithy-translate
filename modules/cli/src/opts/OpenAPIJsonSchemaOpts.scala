@@ -99,7 +99,6 @@ object OpenAPIJsonSchemaOpts {
     .map(_.toList.toSet)
     .withDefault(Set.empty)
 
-
   private val namespaceRemaps: Opts[Map[NonEmptyChain[String], Chain[String]]] =
     Opts
       .options[NamespaceMapping](

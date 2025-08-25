@@ -39,10 +39,10 @@ object CommonArguments {
               val targetNs = Chain.fromSeq(to.split('.').toList)
 
               (sourceNs, targetNs) match {
-                case (None | Some(Chain("")), _) => 
+                case (None | Some(Chain("")), _) =>
                   Left("Source namespace must not be empty.")
 
-                case (Some(f), t)                => 
+                case (Some(f), t) =>
                   Right(NamespaceMapping(f, t))
               }
             case _ =>
@@ -57,4 +57,3 @@ object CommonArguments {
       }
     }
 }
-

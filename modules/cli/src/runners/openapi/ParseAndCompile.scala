@@ -62,8 +62,7 @@ object ParseAndCompile {
       useEnumTraitSyntax: Boolean,
       debug: Boolean,
       allowedRemoteBaseURLs: Set[String] = Set.empty,
-      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] =
-        Map.empty
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
   ): ToSmithyResult[Model] = {
     val includedExtensions = List("json")
     val input = JsonSchemaCompilerInput.UnparsedSpecs(
