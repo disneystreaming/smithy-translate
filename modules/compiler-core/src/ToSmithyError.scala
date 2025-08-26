@@ -32,7 +32,7 @@ object ToSmithyError {
   }
 
   final case class ProcessingError(message: String, errorCause: Option[Throwable] = None) extends ToSmithyError {
-    override def getMessage(): String = message
+    override def getMessage(): String = message + errorCause.map(e => s"\n\tCause: ${e.getMessage}").getOrElse("")
     override def getCause(): Throwable = errorCause.orNull
   }
     

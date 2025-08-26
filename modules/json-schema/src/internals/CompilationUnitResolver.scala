@@ -31,11 +31,10 @@ import smithytranslate.compiler.json_schema.CompilationUnit
 import scala.util.Try
 import smithytranslate.compiler.ToSmithyError.OpenApiParseError
 import cats.data.WriterT
-import scala.util.Success
-import scala.util.Failure
 import smithytranslate.compiler.ToSmithyError.ProcessingError
 import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
 import cats.data.NonEmptyList
+import java.net.URI
 
 private[compiler] object CompilationUnitResolver {
 
@@ -95,9 +94,7 @@ private[compiler] object CompilationUnitResolver {
         namespace: Path,
         jsonString: String,
         alreadyResolved: Set[Path]
-    ): F[Vector[UnfoldStep]] = {
-      if (alreadyResolved.contains(namespace)) F.pure(Vector.empty)
-      else {
+    ): F[Vector[UnfoldStep]] =
         jawn
           .parse(jsonString)
           .leftMap(err =>
@@ -105,7 +102,7 @@ private[compiler] object CompilationUnitResolver {
               namespace,
               List(
                 err.getMessage(),
-                s"Failure while processing remote refs. Ref stack: ${refStack.mkString("\n")}"
+                s"Failure while parsing json. Ref stack: ${refStack.mkString("\n")}"
               )
             )
           )
@@ -113,7 +110,7 @@ private[compiler] object CompilationUnitResolver {
             Try(JsonSchemaOps.createCompilationUnits(namespace, json)).toEither
               .leftMap(err =>
                 ProcessingError(
-                  s"Failure while processing remote refs. Ref stack: ${refStack.mkString("\n")}",
+                  s"Failure while resolving compilation units. Ref stack: ${refStack.mkString("\n")}",
                   Some(err)
                 )
               )
@@ -136,8 +133,6 @@ private[compiler] object CompilationUnitResolver {
                   )
                 )
           )
-      }
-    }
 
     // Matches recursive schema nodes and ref nodes.
     // When a recursive node is encountered, the sub-schema(s) are returned such that the search for remote refs continues recursively.
@@ -153,34 +148,35 @@ private[compiler] object CompilationUnitResolver {
       ) {}
 
       schema match {
-
         // Remote ref found. Pull in the associated schema
-        case CaseRef(Right(ParsedRef.Remote(uri, id)))
-            if allowedRemoteBaseURLs.exists(uri.toString.startsWith(_)) =>
+        case CaseRef(Right(ParsedRef.Remote(uri, id))) =>
           val ns =
             NonEmptyChain.fromChainUnsafe(
               Chain.fromSeq(namespaceRemapper.remap(id.namespace.segments))
             )
 
-          Try(
-            // TODO: Use some library that leverages effects to fetch the content from the URL
-            Source
-              .fromURL(uri.toURL())
-              .getLines()
-              .mkString(System.lineSeparator())
-          ) match {
-            case Failure(err) =>
-              recordError(
-                ToSmithyError.HttpError(uri, uri.toString :: refStack, err)
+          if (alreadyResolvedNamespaces.contains(ns)) {
+            F.pure(Vector.empty)
+          } else if(!allowedRemoteBaseURLs.exists(uri.toString.startsWith(_))) {
+            recordError(ToSmithyError.HttpError(
+              uri,
+              uri.toString :: refStack,
+              new RuntimeException(
+                s"Remote refs from URL '${uri.toString}' are not allowed. Allowed base URLs: ${allowedRemoteBaseURLs
+                    .mkString(", ")}"
               )
-                .as(Vector.empty)
-
-            case Success(content) =>
-              recordAndCreateUnits(
-                uri.toString :: refStack,
-                ns,
-                content,
-                alreadyResolvedNamespaces
+            )).as(Vector.empty)
+          } else {
+            downloadSchemaFromURI(uri)
+              .leftMap(ToSmithyError.HttpError(uri, uri.toString :: refStack, _))
+              .fold(
+                err => recordError(err).as(Vector.empty),
+                content => recordAndCreateUnits(
+                  uri.toString :: refStack,
+                  ns,
+                  content,
+                  alreadyResolvedNamespaces
+                )
               )
           }
 
@@ -315,5 +311,15 @@ private[compiler] object CompilationUnitResolver {
       .flatMap(_.flatTraverse(recursion.unfoldPar(unfold)(_)))
       .void
   }
+
+  private def downloadSchemaFromURI(uri: URI): Either[Throwable, String] =
+    Try(
+      // TODO: Use some library that leverages effects to fetch the content 
+      //       from the URL
+      Source
+        .fromURL(uri.toURL())
+        .getLines()
+        .mkString(System.lineSeparator())
+    ).toEither
 
 }
