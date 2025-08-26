@@ -95,44 +95,45 @@ private[compiler] object CompilationUnitResolver {
         jsonString: String,
         alreadyResolved: Set[Path]
     ): F[Vector[UnfoldStep]] =
-        jawn
-          .parse(jsonString)
-          .leftMap(err =>
-            OpenApiParseError(
-              namespace,
-              List(
-                err.getMessage(),
-                s"Failure while parsing json. Ref stack: ${refStack.mkString("\n")}"
-              )
+      jawn
+        .parse(jsonString)
+        .leftMap(err =>
+          OpenApiParseError(
+            namespace,
+            List(
+              err.getMessage(),
+              s"Failure while parsing json. Ref stack: ${refStack.mkString("\n")}"
             )
           )
-          .flatMap(json =>
-            Try(JsonSchemaOps.createCompilationUnits(namespace, json)).toEither
-              .leftMap(err =>
-                ProcessingError(
-                  s"Failure while resolving compilation units. Ref stack: ${refStack.mkString("\n")}",
-                  Some(err)
-                )
+        )
+        .flatMap(json =>
+          Try(JsonSchemaOps.createCompilationUnits(namespace, json)).toEither
+            .leftMap(err =>
+              ProcessingError(
+                s"Failure while resolving compilation units. Ref stack: ${refStack
+                    .mkString("\n")}",
+                Some(err)
               )
-          )
-          .fold(
-            recordError(_).as(Vector.empty),
-            compUnits =>
-              compUnits
-                .traverse(compUnit =>
-                  recordCompilationUnit(compUnit).as(compUnit)
-                )
-                .map(
-                  _.map(compUnit =>
-                    UnfoldStep(
-                      refStack,
-                      compUnit.namespace,
-                      compUnit.schema,
-                      alreadyResolved + compUnit.namespace
-                    )
+            )
+        )
+        .fold(
+          recordError(_).as(Vector.empty),
+          compUnits =>
+            compUnits
+              .traverse(compUnit =>
+                recordCompilationUnit(compUnit).as(compUnit)
+              )
+              .map(
+                _.map(compUnit =>
+                  UnfoldStep(
+                    refStack,
+                    compUnit.namespace,
+                    compUnit.schema,
+                    alreadyResolved + compUnit.namespace
                   )
                 )
-          )
+              )
+        )
 
     // Matches recursive schema nodes and ref nodes.
     // When a recursive node is encountered, the sub-schema(s) are returned such that the search for remote refs continues recursively.
@@ -157,26 +158,33 @@ private[compiler] object CompilationUnitResolver {
 
           if (alreadyResolvedNamespaces.contains(ns)) {
             F.pure(Vector.empty)
-          } else if(!allowedRemoteBaseURLs.exists(uri.toString.startsWith(_))) {
-            recordError(ToSmithyError.HttpError(
-              uri,
-              uri.toString :: refStack,
-              new RuntimeException(
-                s"Remote refs from URL '${uri.toString}' are not allowed. Allowed base URLs: ${allowedRemoteBaseURLs
-                    .mkString(", ")}"
+          } else if (
+            !allowedRemoteBaseURLs.exists(uri.toString.startsWith(_))
+          ) {
+            recordError(
+              ToSmithyError.HttpError(
+                uri,
+                uri.toString :: refStack,
+                new RuntimeException(
+                  s"Remote refs from URL '${uri.toString}' are not allowed. Allowed base URLs: ${allowedRemoteBaseURLs
+                      .mkString(", ")}"
+                )
               )
-            )).as(Vector.empty)
+            ).as(Vector.empty)
           } else {
             downloadSchemaFromURI(uri)
-              .leftMap(ToSmithyError.HttpError(uri, uri.toString :: refStack, _))
+              .leftMap(
+                ToSmithyError.HttpError(uri, uri.toString :: refStack, _)
+              )
               .fold(
                 err => recordError(err).as(Vector.empty),
-                content => recordAndCreateUnits(
-                  uri.toString :: refStack,
-                  ns,
-                  content,
-                  alreadyResolvedNamespaces
-                )
+                content =>
+                  recordAndCreateUnits(
+                    uri.toString :: refStack,
+                    ns,
+                    content,
+                    alreadyResolvedNamespaces
+                  )
               )
           }
 
@@ -314,7 +322,7 @@ private[compiler] object CompilationUnitResolver {
 
   private def downloadSchemaFromURI(uri: URI): Either[Throwable, String] =
     Try(
-      // TODO: Use some library that leverages effects to fetch the content 
+      // TODO: Use some library that leverages effects to fetch the content
       //       from the URL
       Source
         .fromURL(uri.toURL())
