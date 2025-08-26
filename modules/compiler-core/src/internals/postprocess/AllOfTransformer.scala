@@ -129,6 +129,7 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
       parent: Structure,
       newDef: Structure
   ): NonTopLevelParentNoRefsResult = {
+
     // Move fields down from parent and remove parent if parent is not a top level
     // shape (meaning it is a fabricated AllOf shape created by the OpenApi => IModel transform)
     val newFields =
@@ -206,7 +207,12 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
   private def removeUnusedMixins(
       allShapes: mutable.Map[DefId, Definition]
   ): Vector[Definition] = {
-    val values = allShapes.values.foldLeft(Vector.empty[Structure]) {
+    val allShapesCleaned =
+      allShapes.map { case (id, defn) =>
+        id -> removeSelfReferentialMixin(defn)
+      }
+
+    val values = allShapesCleaned.values.foldLeft(Vector.empty[Structure]) {
       case (acc, s: Structure) =>
         acc :+ s
       case (acc, _) => acc
@@ -222,7 +228,7 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
     val unused = isAMixin.diff(usedAsMixins)
 
     val idToDef = new mutable.ArrayBuffer[Definition]()
-    allShapes
+    allShapesCleaned
       .foreach { case (id, shp) =>
         idToDef += (if (unused(id))
                       shp.mapHints(_.filterNot(_ == Hint.IsMixin))
@@ -231,6 +237,16 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
 
     idToDef.toVector
   }
+
+  private def removeSelfReferentialMixin(definition: Definition): Definition =
+    definition match {
+      case struct @ Structure(id, _, _, hints) =>
+        struct.copy(hints = hints.filter {
+          case Hint.HasMixin(`id`) => false
+          case _                   => true
+        })
+      case other => other
+    }
 
   private def transform(in: IModel): Vector[Definition] = {
     val allShapes = in.definitions
