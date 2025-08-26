@@ -102,7 +102,7 @@ object OpenAPIJsonSchemaOpts {
   private val namespaceRemaps: Opts[Map[NonEmptyChain[String], Chain[String]]] =
     Opts
       .options[NamespaceMapping](
-        "namespace-remap",
+        "remap-namespace",
         help =
           "A namespace remapping rule, of the form 'from1.from2=to1.to2', which remaps the 'from' prefix to the 'to' prefix"
       )
