@@ -322,7 +322,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
               case Left(error) =>
                 val id = errorId(Context(name, Nil, Nil))
                 recordError(error).as(id)
-              case Right(id) => F.pure(id)
+              case Right(parsedRef) => F.pure(parsedRef.id)
             }
           case Right(schema) => refoldOne(Local(name, schema))
         }
@@ -343,8 +343,8 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
     refOrMessage match {
       case Left(ref) =>
         CaseRef(ref) match {
-          case Right(id) =>
-            F.pure(Some(id))
+          case Right(parsedRef) =>
+            F.pure(Some(parsedRef.id))
           case Left(error) => recordError(error).as(None)
         }
       case Right(message) => recordHttpMessage(message, maybeNamespace)
@@ -492,7 +492,8 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       case CaseRef(idOrError) =>
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
-          case Right(id)   => F.pure(OpenApiRef(local.context, id))
+          case Right(parsedRef) =>
+            F.pure(OpenApiRef(local.context, parsedRef.id))
         }
 
       // A:

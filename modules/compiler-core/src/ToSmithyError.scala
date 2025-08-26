@@ -19,6 +19,7 @@ import scala.util.control.NoStackTrace
 import cats.data.NonEmptyChain
 import cats.syntax.all._
 import software.amazon.smithy.model.validation.ValidationEvent
+import java.net.URI
 
 sealed trait ToSmithyError extends Throwable
 
@@ -30,8 +31,14 @@ object ToSmithyError {
     override def getMessage(): String = message
   }
 
-  final case class ProcessingError(message: String) extends ToSmithyError {
-    override def getMessage(): String = message
+  final case class ProcessingError(message: String, errorCause: Option[Throwable] = None) extends ToSmithyError {
+    override def getMessage(): String = message + errorCause.map(e => s"\n\tCause: ${e.getMessage}").getOrElse("")
+    override def getCause(): Throwable = errorCause.orNull
+  }
+    
+  final case class HttpError(uri: URI, refStack: List[String], error: Throwable) extends ToSmithyError {
+    override def getCause(): Throwable = error
+    override def getMessage(): String = "Failed to fetch remote schema from " + uri.toString + ". Error: " + error.getMessage
   }
 
   final case class SmithyValidationFailed(
@@ -42,8 +49,10 @@ object ToSmithyError {
     }
   }
 
-  final case class BadRef(ref: String) extends ToSmithyError
-
+  final case class BadRef(ref: String) extends ToSmithyError {
+    override def getMessage(): String = s"Unable to parse ref string: $ref"
+  }
+  
   final case class OpenApiParseError(
       namespace: NonEmptyChain[String],
       errorMessages: List[String]
@@ -53,5 +62,4 @@ object ToSmithyError {
       s"Unable to parse openapi file located at ${namespace.mkString_("/")} with errors: ${errorMessages
           .mkString(", ")}"
   }
-
 }

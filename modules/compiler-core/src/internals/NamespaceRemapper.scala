@@ -1,4 +1,4 @@
-/* Copyright 2022 Disney Streaming
+/* Copyright 2025 Disney Streaming
  *
  * Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,20 +12,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package smithytranslate.compiler
+package internals
 
-import software.amazon.smithy.build.ProjectionTransformer
-import cats.data.NonEmptyChain
 import cats.data.Chain
+import cats.data.NonEmptyChain
 
-final case class ToSmithyCompilerOptions(
-    useVerboseNames: Boolean,
-    validateInput: Boolean,
-    validateOutput: Boolean,
-    transformers: List[ProjectionTransformer],
-    useEnumTraitSyntax: Boolean,
-    debug: Boolean,
-    allowedRemoteBaseURLs: Set[String] = Set.empty,
-    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
-)
+final class NamespaceRemapper(
+    remaps: Map[NonEmptyChain[String], Chain[String]]
+) {
+  final def remap(ns: List[String]): List[String] = {
+    remaps
+      .collectFirst {
+        case (key, value) if ns.startsWith(key.toChain.toList) =>
+          (value ++ Chain.fromSeq(ns.drop(key.length.toInt))).toList
+      }
+      .getOrElse(ns)
+  }
+
+  final def remap(defId: DefId): DefId = {
+    defId.copy(namespace = Namespace(remap(defId.namespace.segments)))
+  }
+
+}
