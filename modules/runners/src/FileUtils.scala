@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 package smithytranslate
-package cli
 package runners
-import cats.data
 import cats.data.NonEmptyList
 import smithytranslate.compiler.FileContents
 

@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-package smithytranslate.cli.runners.openapi
+package smithytranslate.runners.openapi
 
-import smithytranslate.compiler.openapi.OpenApiCompiler
 import software.amazon.smithy.model.Model
 import software.amazon.smithy.model.shapes.SmithyIdlModelSerializer
 import scala.jdk.CollectionConverters._

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.cli.transformer
+package smithytranslate.runners.transformer
 
 import java.util.ServiceLoader
 import scala.jdk.CollectionConverters._

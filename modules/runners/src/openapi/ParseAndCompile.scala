@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package smithytranslate.cli.runners.openapi
+package smithytranslate.runners.openapi
 
 import cats.data.NonEmptyList
-import smithytranslate.cli.runners.FileUtils.readAll
+import smithytranslate.runners.FileUtils.readAll
 import smithytranslate.compiler.openapi.OpenApiCompiler
-import smithytranslate.cli.transformer.TranslateTransformer
+import smithytranslate.runners.transformer.TranslateTransformer
 import software.amazon.smithy.model.Model
 import smithytranslate.compiler.json_schema.JsonSchemaCompiler
 import smithytranslate.compiler.ToSmithyResult
