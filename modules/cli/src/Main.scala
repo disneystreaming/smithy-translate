@@ -49,15 +49,40 @@ object Main
         cli map {
           case OpenApiTranslate(opts) =>
             if (opts.isOpenapi)
-              OpenApi.runOpenApi(opts.inputFiles,opts.outputPath,opts.useVerboseNames,opts.validateInput,opts.validateOutput,opts.useEnumTraitSyntax,opts.outputJson,opts.debug)
+              OpenApi.runOpenApi(
+                opts.inputFiles,
+                opts.outputPath,
+                opts.useVerboseNames,
+                opts.validateInput,
+                opts.validateOutput,
+                opts.useEnumTraitSyntax,
+                opts.outputJson,
+                opts.debug
+              )
             else
-              OpenApi.runJsonSchema(opts.inputFiles,opts.outputPath,opts.useVerboseNames,opts.validateInput,opts.validateOutput,opts.useEnumTraitSyntax,opts.outputJson,opts.debug)
+              OpenApi.runJsonSchema(
+                opts.inputFiles,
+                opts.outputPath,
+                opts.useVerboseNames,
+                opts.validateInput,
+                opts.validateOutput,
+                opts.useEnumTraitSyntax,
+                opts.outputJson,
+                opts.debug
+              )
             SmithyBuildJsonWriter.writeDefault(opts.outputPath, opts.force)
 
           case ProtoTranslate(opts) =>
-            Proto.runProto(opts.inputFiles.toList,opts.outputPath,opts.deps,opts.repositories)
+            Proto.runProto(
+              opts.inputFiles.toList,
+              opts.outputPath,
+              opts.deps,
+              opts.repositories
+            )
 
-          case Format(opts) => Formatter.run(opts.smithyFile.toList,opts.noClobber,opts.validateModel)
+          case Format(opts) =>
+            Formatter
+              .run(opts.smithyFile.toList, opts.noClobber, opts.validateModel)
 
           case Version => println(BuildInfo.cliVersion)
         }
