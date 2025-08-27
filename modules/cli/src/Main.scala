@@ -30,8 +30,9 @@ import smithytranslate.cli.opts.SmithyTranslateCommand.{
   ProtoTranslate,
   Version
 }
-import smithytranslate.cli.runners.{OpenApi, Proto}
-import smithytranslate.cli.runners.formatter.Formatter
+import smithytranslate.runners.{OpenApi, Proto}
+import smithytranslate.runners.formatter.Formatter
+import smithytranslate.formatter.parsers.op
 
 object Main
     extends smithytranslate.cli.CommandApp(
@@ -48,15 +49,15 @@ object Main
         cli map {
           case OpenApiTranslate(opts) =>
             if (opts.isOpenapi)
-              OpenApi.runOpenApi(opts)
+              OpenApi.runOpenApi(opts.inputFiles,opts.outputPath,opts.useVerboseNames,opts.validateInput,opts.validateOutput,opts.useEnumTraitSyntax,opts.outputJson,opts.debug)
             else
-              OpenApi.runJsonSchema(opts)
+              OpenApi.runJsonSchema(opts.inputFiles,opts.outputPath,opts.useVerboseNames,opts.validateInput,opts.validateOutput,opts.useEnumTraitSyntax,opts.outputJson,opts.debug)
             SmithyBuildJsonWriter.writeDefault(opts.outputPath, opts.force)
 
           case ProtoTranslate(opts) =>
-            Proto.runFromCli(opts)
+            Proto.runProto(opts.inputFiles.toList,opts.outputPath,opts.deps,opts.repositories)
 
-          case Format(opts) => Formatter.run(opts)
+          case Format(opts) => Formatter.run(opts.smithyFile.toList,opts.noClobber,opts.validateModel)
 
           case Version => println(BuildInfo.cliVersion)
         }
