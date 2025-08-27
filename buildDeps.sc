@@ -58,4 +58,8 @@ object scalapb {
     ivy"com.thesamet.scalapb::compilerplugin:$version"
   val protocCache = ivy"com.thesamet.scalapb::protoc-cache-coursier:0.9.6"
 }
-val coursier = ivy"io.get-coursier::coursier:2.1.8"
+def coursier(scalaVersion: String) =
+  if (scalaVersion.startsWith("3."))
+    ivy"io.get-coursier:coursier_2.13:2.1.8"
+  else
+    ivy"io.get-coursier::coursier:2.1.8"

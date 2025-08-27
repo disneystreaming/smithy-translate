@@ -14,7 +14,6 @@
  */
 package smithytranslate
 package runners
-import cats.data
 import cats.data.NonEmptyList
 import smithytranslate.compiler.FileContents
 

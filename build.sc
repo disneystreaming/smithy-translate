@@ -102,7 +102,7 @@ trait RunnersModule
 
   def publishArtifactName = "smithytranslate-runners"
 
-  def ivyDeps = Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson,    buildDeps.coursier)
+  def ivyDeps = Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson,buildDeps.coursier(scalaVersion()))
 
   def moduleDeps =
     Seq(`compiler-core`(), openapi(), proto(), `json-schema`(), formatter.jvm())
