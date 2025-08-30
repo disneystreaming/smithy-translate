@@ -104,7 +104,7 @@ object OpenAPIJsonSchemaOpts {
       .options[NamespaceMapping](
         "remap-namespace",
         help =
-          "A namespace remapping rule, of the form 'from1.from2=to1.to2', which remaps the 'from' prefix to the 'to' prefix"
+          "A namespace remapping rule, of the form 'from1.from2:to1.to2', which remaps the 'from' prefix to the 'to' prefix"
       )
       .map(mappings => mappings.map(m => m.original -> m.remapped).toList.toMap)
       .withDefault(Map.empty)
