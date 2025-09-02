@@ -94,6 +94,20 @@ trait OpenApiModule
   }
 }
 
+object runners extends Cross[RunnersModule](scalaVersions)
+trait RunnersModule
+    extends CrossScalaModule
+    with BaseScalaModule
+    with BasePublishModule {
+
+  def publishArtifactName = "smithytranslate-runners"
+
+  def ivyDeps = Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson,buildDeps.coursier(scalaVersion()))
+
+  def moduleDeps =
+    Seq(`compiler-core`(), openapi(), proto(), `json-schema`(), formatter.jvm())
+}
+
 object cli
     extends BaseScala213Module
     with buildinfo.BuildInfo
@@ -103,17 +117,11 @@ object cli
 
   def moduleDeps =
     Seq(
-      openapi(scala213),
-      proto(scala213),
-      `json-schema`(scala213),
-      formatter.jvm(scala213)
+      runners(scala213)
     )
 
   def ivyDeps = Agg(
     buildDeps.decline,
-    buildDeps.coursier,
-    buildDeps.lihaoyi.oslib,
-    buildDeps.lihaoyi.ujson,
     buildDeps.smithy.build
   )
 

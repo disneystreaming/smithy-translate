@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package smithytranslate.cli.transformer
+package smithytranslate.runners.transformer
 
 import software.amazon.smithy.build.ProjectionTransformer
 

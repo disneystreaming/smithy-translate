@@ -20,36 +20,38 @@ import cats.data.NonEmptyChain
 import cats.syntax.all._
 import software.amazon.smithy.model.validation.ValidationEvent
 
-sealed trait ToSmithyError extends Throwable
+sealed trait ToSmithyError extends Throwable {
+  // Force all subtypes to provide a message
+  final override def getMessage(): String = message
+  def message: String
+}
 
 object ToSmithyError {
 
   implicit val order: cats.Order[ToSmithyError] = cats.Order.by(_.getMessage())
 
-  final case class Restriction(message: String) extends ToSmithyError {
-    override def getMessage(): String = message
-  }
+  final case class Restriction(message: String) extends ToSmithyError
 
-  final case class ProcessingError(message: String) extends ToSmithyError {
-    override def getMessage(): String = message
-  }
+  final case class ProcessingError(message: String) extends ToSmithyError
 
   final case class SmithyValidationFailed(
       smithyValidationEvents: List[ValidationEvent]
   ) extends ToSmithyError {
-    override def getMessage(): String = {
+    override def message: String = {
       s"Failed to validate the Smithy model:\n${smithyValidationEvents.mkString("\n")}"
     }
   }
 
-  final case class BadRef(ref: String) extends ToSmithyError
+  final case class BadRef(ref: String) extends ToSmithyError {
+    override def message: String = s"Unable to parse ref string: $ref"
+  }
 
   final case class OpenApiParseError(
       namespace: NonEmptyChain[String],
       errorMessages: List[String]
   ) extends ToSmithyError
       with NoStackTrace {
-    override def getMessage(): String =
+    override def message: String =
       s"Unable to parse openapi file located at ${namespace.mkString_("/")} with errors: ${errorMessages
           .mkString(", ")}"
   }
