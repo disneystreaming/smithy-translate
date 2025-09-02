@@ -14,17 +14,16 @@
  */
 
 package smithytranslate
-package cli
 package runners
 package formatter
 
 import os.Path
-import smithytranslate.cli.runners.formatter.FormatterError.{
+import smithytranslate.runners.formatter.FormatterError.{
   InvalidModel,
   UnableToParse,
   UnableToReadFile
 }
-import smithytranslate.cli.runners.formatter.Report.logError
+import smithytranslate.runners.formatter.Report.logError
 
 case class Report(success: List[Path], errors: List[FormatterError]) {
   override def toString: String = {

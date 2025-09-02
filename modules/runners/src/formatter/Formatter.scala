@@ -14,14 +14,12 @@
  */
 
 package smithytranslate
-package cli
 package runners
 package formatter
 
 import cats.implicits.toBifunctorOps
 import os.Path
-import smithytranslate.cli.opts.FormatterOpts.FormatOpts
-import smithytranslate.cli.runners.formatter.FormatterError.{
+import smithytranslate.runners.formatter.FormatterError.{
   InvalidModel,
   UnableToParse,
   UnableToReadFile
@@ -37,15 +35,16 @@ import scala.collection.compat._
 
 object Formatter {
 
-  def run(formatOpts: FormatOpts): Unit = {
-    formatOpts match {
-      case FormatOpts(files, noClobber, validateModel, _) =>
-        files.toList.foreach(
-          reformat(_, noClobber, validateModel).report()
-        )
-
-    }
+  def run(
+      files: List[os.Path],
+      noClobber: Boolean,
+      validateModel: Boolean
+  ): Unit = {
+    files.foreach(
+      reformat(_, noClobber, validateModel).report()
+    )
   }
+
   private def reformat(
       smithyWorkspacePath: os.Path,
       noClobber: Boolean,

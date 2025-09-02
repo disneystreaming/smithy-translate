@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-package smithytranslate.cli.runners
+package smithytranslate.runners
 
-import smithytranslate.cli.opts.ProtoOpts
-import smithytranslate.cli.transformer.TransformerLookup
+import smithytranslate.runners.transformer.TransformerLookup
 import smithytranslate.proto3.*
 import java.net.URLClassLoader
 
@@ -28,7 +27,12 @@ object Proto {
   /** Builds a model from the CLI options, transforms it and then run the
     * conversion.
     */
-  def runFromCli(opts: ProtoOpts): Unit = {
+  def runProto(
+      inputFiles: List[os.Path],
+      outputPath: os.Path,
+      deps: List[String],
+      repositories: List[String]
+  ): Unit = {
     val transformers = TransformerLookup.getAll()
     val currentClassLoader = this.getClass().getClassLoader()
     val modelBuilder =
@@ -38,12 +42,12 @@ object Proto {
         .assemble()
         .unwrap()
         .toBuilder()
-    Deps.forDeps(opts.deps, opts.repositories)(modelBuilder)
+    Deps.forDeps(deps, repositories)(modelBuilder)
 
     val modelAssembler = Model.assembler().addModel(modelBuilder.build())
 
     val model0 =
-      opts.inputFiles
+      inputFiles
         .foldLeft(modelAssembler.discoverModels) { case (m, path) =>
           m.addImport(path.toNIO)
         }
@@ -54,7 +58,7 @@ object Proto {
       transfomer.transform(TransformContext.builder().model(m).build())
     )
 
-    run(model, opts.outputPath)
+    run(model, outputPath)
   }
 
   /** Transforms the given model, then run the conversion.
