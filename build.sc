@@ -40,7 +40,7 @@ trait CompilerCoreModule
     buildDeps.collectionsCompat
   )
 
-  object test extends ScalaTests with BaseMunitTests {
+  object test extends BaseScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(buildDeps.smithy.diff)
   }
 }
@@ -60,20 +60,13 @@ trait JsonSchemaModule
     buildDeps.collectionsCompat
   )
 
-  object test extends ScalaTests with BaseMunitTests {
+  object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.lihaoyi.oslib
     )
-    
-    // Don't force target bytecode in tests.
-    // Our published artifacts target java 11, but the tests need some java 18 apis
-    override def scalacOptions: T[Seq[String]] = 
-      super.scalacOptions()
-        .filterNot(_.startsWith("-release"))
-        .filterNot(_.startsWith("-java-output-version"))
   }
 }
 
@@ -90,7 +83,7 @@ trait OpenApiModule
   def ivyDeps =
     buildDeps.swagger.parser
 
-  object test extends ScalaTests with BaseMunitTests {
+  object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
     def ivyDeps = super.ivyDeps() ++ Agg(
@@ -132,7 +125,7 @@ object cli
     buildDeps.smithy.build
   )
 
-  object test extends ScalaTests with BaseMunitTests {
+  object test extends BaseScalaTests with BaseMunitTests {
     def ivyDeps =
       super.ivyDeps() ++ Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson)
   }
@@ -178,7 +171,7 @@ object formatter extends BaseModule { outer =>
     override def ivyDeps = T { super.ivyDeps() ++ deps }
     override def millSourcePath = outer.millSourcePath
 
-    object test extends ScalaTests with BaseMunitTests {
+    object test extends BaseScalaTests with BaseMunitTests {
       def ivyDeps = super.ivyDeps() ++ Agg(
         buildDeps.smithy.build,
         buildDeps.lihaoyi.oslib
@@ -335,7 +328,7 @@ trait ProtoModule
   )
 
   def moduleDeps = Seq(traits, transitive())
-  object test extends ScalaTests with BaseMunitTests with ScalaPBModule {
+  object test extends BaseScalaTests with BaseMunitTests with ScalaPBModule {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.smithy.build,
       buildDeps.scalapb.compilerPlugin,
@@ -409,7 +402,7 @@ trait TransitiveModule
     buildDeps.smithy.build,
     buildDeps.collectionsCompat
   )
-  object test extends ScalaTests with BaseMunitTests {
+  object test extends BaseScalaTests with BaseMunitTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       buildDeps.scalaJavaCompat
     )

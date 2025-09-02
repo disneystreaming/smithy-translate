@@ -128,6 +128,17 @@ trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
     super.scalacPluginIvyDeps() ++ plugins
   }
 
+  trait BaseScalaTests extends ScalaTests {
+    override def scalacOptions = T {
+      // Don't force target bytecode version in tests.
+      // Our published artifacts target java 11, but the tests need some java 18 apis
+      super.scalacOptions()
+        .filterNot(_.startsWith("-release"))
+        .filterNot(_.startsWith("-java-output-version"))
+    }
+
+  }
+
   def scalacOptions = T {
     super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
   }
