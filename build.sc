@@ -67,6 +67,13 @@ trait JsonSchemaModule
       buildDeps.smithy.build,
       buildDeps.lihaoyi.oslib
     )
+    
+    // Don't force target bytecode in tests.
+    // Our published artifacts target java 11, but the tests need some java 18 apis
+    override def scalacOptions: T[Seq[String]] = 
+      super.scalacOptions()
+        .filterNot(_.startsWith("-release"))
+        .filterNot(_.startsWith("-java-output-version"))
   }
 }
 

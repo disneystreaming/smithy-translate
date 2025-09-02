@@ -183,6 +183,8 @@ case class ScalacOption(
 
 // format: off
 private val allScalacOptions = Seq(
+  ScalacOption("-release:11", isSupported = _ < v300),                                                                     // Emit Java 11 compat bytecode
+  ScalacOption("-java-output-version:11", isSupported = _ >= v300),                                                        // Emit Java 11 compat bytecode
   ScalacOption("-Xsource:3", isSupported = version => v211 <= version && version < v300),                                  // Treat compiler input as Scala source for the specified version, see scala/bug#8126.
   ScalacOption("-deprecation", isSupported = version => version < v213 || v300 <= version),                                // Emit warning and location for usages of deprecated APIs. Not really removed but deprecated in 2.13.
   ScalacOption("-explaintypes", isSupported = _ < v300),                                                                   // Explain type errors in more detail.
@@ -256,6 +258,6 @@ def scalacOptionsFor(scalaVersion: String): Seq[String] = {
   val commonOpts = Seq("-encoding", "utf8")
   val scalaVer = ScalaVersion(scalaVersion)
   val versionedOpts = allScalacOptions.filter(_.isSupported(scalaVer)).map(_.name)
-
+  
   commonOpts ++ versionedOpts
 }
