@@ -12,3 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package smithytranslate.compiler
+package internals
+
+import cats.data.Chain
+import cats.data.NonEmptyChain
+
+final class NamespaceRemapper(
+    remaps: Map[NonEmptyChain[String], Chain[String]]
+) {
+  final def remap(ns: List[String]): List[String] = {
+    remaps
+      .collectFirst {
+        case (key, value) if ns.startsWith(key.toChain.toList) =>
+          (value ++ Chain.fromSeq(ns.drop(key.length.toInt))).toList
+      }
+      .getOrElse(ns)
+  }
+
+  final def remap(defId: DefId): DefId = {
+    defId.copy(namespace = Namespace(remap(defId.namespace.segments)))
+  }
+
+}
