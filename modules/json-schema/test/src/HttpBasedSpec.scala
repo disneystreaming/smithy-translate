@@ -101,7 +101,8 @@ final class HttpBasedSpec extends munit.FunSuite {
             transformers = List.empty,
             useEnumTraitSyntax = false,
             debug = true,
-            allowedRemoteBaseURLs = Set(m.baseServerUrl)
+            allowedRemoteBaseURLs = Set(m.baseServerUrl),
+            Map.empty
           )
         ),
         NonEmptyList.fromListUnsafe(remoteTestInputs))

@@ -58,8 +58,8 @@ object OpenApi {
       useEnumTraitSyntax: Boolean,
       outputJson: Boolean,
       debug: Boolean,
-      allowedRemoteBaseURLs: Set[String] = Set.empty,
-      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
   ): Unit = {
     val transformers = TransformerLookup.getAll()
 
@@ -79,4 +79,26 @@ object OpenApi {
       debug
     )
   }
+  
+  def runJsonSchema(
+      inputFiles: NonEmptyList[os.Path],
+      outputPath: os.Path,
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      outputJson: Boolean,
+      debug: Boolean,
+  ): Unit = runJsonSchema(
+      inputFiles,
+      outputPath,
+      useVerboseNames,
+      validateInput,
+      validateOutput,
+      useEnumTraitSyntax,
+      outputJson,
+      debug,
+      Set.empty,
+      Map.empty
+  )
 }

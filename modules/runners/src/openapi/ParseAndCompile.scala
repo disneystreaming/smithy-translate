@@ -48,7 +48,9 @@ object ParseAndCompile {
       validateOutput,
       transformers,
       useEnumTraitSyntax,
-      debug
+      debug,
+      Set.empty,
+      Map.empty
     )
     OpenApiCompiler.compile(opts, input)
   }
@@ -61,8 +63,8 @@ object ParseAndCompile {
       transformers: List[TranslateTransformer],
       useEnumTraitSyntax: Boolean,
       debug: Boolean,
-      allowedRemoteBaseURLs: Set[String] = Set.empty,
-      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
   ): ToSmithyResult[Model] = {
     val includedExtensions = List("json")
     val input = JsonSchemaCompilerInput.UnparsedSpecs(

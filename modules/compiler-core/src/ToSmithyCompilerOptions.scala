@@ -26,6 +26,27 @@ final case class ToSmithyCompilerOptions(
     transformers: List[ProjectionTransformer],
     useEnumTraitSyntax: Boolean,
     debug: Boolean,
-    allowedRemoteBaseURLs: Set[String] = Set.empty,
-    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
+    allowedRemoteBaseURLs: Set[String],
+    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
 )
+
+object ToSmithyCompilerOptions {
+  def apply(
+    useVerboseNames: Boolean,
+    validateInput: Boolean,
+    validateOutput: Boolean,
+    transformers: List[ProjectionTransformer],
+    useEnumTraitSyntax: Boolean,
+    debug: Boolean,
+  ): ToSmithyCompilerOptions =
+    ToSmithyCompilerOptions(
+      useVerboseNames,
+      validateInput,
+      validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug,
+      Set.empty,
+      Map.empty
+    )
+}

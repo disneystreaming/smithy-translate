@@ -110,9 +110,11 @@ object TestUtils {
       useVerboseNames = false,
       validateInput = false,
       validateOutput = false,
-      List.empty,
-      input0.smithyVersion == SmithyVersion.One,
-      debug = true
+      transformers = List.empty,
+      useEnumTraitSyntax = input0.smithyVersion == SmithyVersion.One,
+      debug = true,
+      allowedRemoteBaseURLs = Set.empty,
+      namespaceRemaps = Map.empty
     ),
     input0,
     remaining: _*

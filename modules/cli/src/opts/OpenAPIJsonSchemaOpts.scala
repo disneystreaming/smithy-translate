@@ -35,8 +35,8 @@ final case class OpenAPIJsonSchemaOpts(
     outputJson: Boolean,
     debug: Boolean,
     force: Boolean,
-    allowedRemoteBaseURLs: Set[String] = Set.empty,
-    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]] = Map.empty
+    allowedRemoteBaseURLs: Set[String],
+    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
 )
 
 object OpenAPIJsonSchemaOpts {
