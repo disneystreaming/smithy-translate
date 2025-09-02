@@ -32,12 +32,12 @@ final case class ToSmithyCompilerOptions(
 
 object ToSmithyCompilerOptions {
   def apply(
-    useVerboseNames: Boolean,
-    validateInput: Boolean,
-    validateOutput: Boolean,
-    transformers: List[ProjectionTransformer],
-    useEnumTraitSyntax: Boolean,
-    debug: Boolean,
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      transformers: List[ProjectionTransformer],
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
   ): ToSmithyCompilerOptions =
     ToSmithyCompilerOptions(
       useVerboseNames,

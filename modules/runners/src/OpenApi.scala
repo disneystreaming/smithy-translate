@@ -15,7 +15,7 @@
 
 package smithytranslate.runners
 
-import cats.data.{ NonEmptyList, NonEmptyChain, Chain }
+import cats.data.{NonEmptyList, NonEmptyChain, Chain}
 import smithytranslate.runners.transformer.TransformerLookup
 import smithytranslate.runners.openapi._
 
@@ -79,7 +79,7 @@ object OpenApi {
       debug
     )
   }
-  
+
   def runJsonSchema(
       inputFiles: NonEmptyList[os.Path],
       outputPath: os.Path,
@@ -88,17 +88,17 @@ object OpenApi {
       validateOutput: Boolean,
       useEnumTraitSyntax: Boolean,
       outputJson: Boolean,
-      debug: Boolean,
+      debug: Boolean
   ): Unit = runJsonSchema(
-      inputFiles,
-      outputPath,
-      useVerboseNames,
-      validateInput,
-      validateOutput,
-      useEnumTraitSyntax,
-      outputJson,
-      debug,
-      Set.empty,
-      Map.empty
+    inputFiles,
+    outputPath,
+    useVerboseNames,
+    validateInput,
+    validateOutput,
+    useEnumTraitSyntax,
+    outputJson,
+    debug,
+    Set.empty,
+    Map.empty
   )
 }
