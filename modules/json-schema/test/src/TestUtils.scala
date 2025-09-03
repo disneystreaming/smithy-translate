@@ -97,8 +97,11 @@ object TestUtils {
       case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
-      case ToSmithyResult.Success(_, output) =>
+      case ToSmithyResult.Success(Nil, output) =>
         Assertions.assertEquals(output, expected)
+      case ToSmithyResult.Success(warnings, _) =>
+        warnings.foreach(println)
+        Assertions.assertEquals(warnings, Nil)
     }
   }
 
