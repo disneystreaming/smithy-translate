@@ -36,8 +36,10 @@ object JsonSchemaCompiler
       input: JsonSchemaCompilerInput
   ): (Chain[ToSmithyError], IModel) = {
     val remapper = new NamespaceRemapper(opts.namespaceRemaps)
-    val (resolutionErrors, prepared) = CompilationUnitResolver
-      .resolve[Id](input, opts.allowedRemoteBaseURLs, remapper)
+
+    val (resolutionErrors, prepared) =
+      CompilationUnitResolver
+        .resolve[Id](input, opts.allowedRemoteBaseURLs, remapper)
 
     val (compilationErrors, result) =
       prepared

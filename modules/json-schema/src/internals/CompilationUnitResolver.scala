@@ -41,7 +41,10 @@ private[compiler] object CompilationUnitResolver {
 
   type TellCompilationUnit[F[_]] = Tell[F, Chain[CompilationUnit]]
 
-  /** Resolves all remote references and returns them as CompilationUnits
+  /** Resolves all remote references and returns them as CompilationUnits.
+    *
+    * N.B.: During the process, this will perform IO operations, despite not
+    * having the proper effect typeclasses.
     *
     * @param namespace
     *   The namespace of the json schema
