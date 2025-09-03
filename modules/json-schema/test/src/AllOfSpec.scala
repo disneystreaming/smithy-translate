@@ -143,7 +143,7 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
-  
+
   test("unions - single allOf reference") {
     val jsonSchString =
       """|{
@@ -186,6 +186,69 @@ final class AllOfSpec extends munit.FunSuite {
                             |structure Two {
                             |  vehicle: String,
                             |  price: Integer
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("unions - Parent type explicitly referenced and extended".only) {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "root": { "$ref": "#/$defs/root" }
+         |  },
+         |  "$defs": {
+         |    "root": { 
+         |      "type": "object",
+         |      "properties": { 
+         |        "s": { 
+         |          "type": "string"
+         |        }
+         |      }
+         |    },
+         |    "subB": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/root" },
+         |        { "type": "object", "properties": { "x": { "type": "integer" } } }
+         |      ]
+         |    },
+         |    "subA": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/root" },
+         |        { "type": "object", "properties": { "x": { "type": "integer" } } }
+         |      ]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Root with [RootMixin] {} 
+                            |
+                            |@mixin
+                            |structure RootMixin {
+                            |  s: String
+                            |}
+                            |
+                            |structure SubA with [RootMixin] {
+                            |  x: Integer
+                            |}
+                            |
+                            |structure SubB with [RootMixin] {
+                            |  x: Integer 
+                            |}
+                            |
+                            |structure Test {
+                            |  root: Root
                             |}
                             |
                             |""".stripMargin
