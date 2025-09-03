@@ -38,9 +38,6 @@ final class HttpBasedSpec extends munit.FunSuite {
     val dir = os.temp.dir()
     val serverAddress = new InetSocketAddress("localhost", 0)
 
-    // N.B. : Requires at least JDK 18.
-    //        May need to host a file-server some other way. 
-    //        Could serve files from memory
     val server = SimpleFileServer.createFileServer(
       serverAddress, 
       dir.toNIO, 
