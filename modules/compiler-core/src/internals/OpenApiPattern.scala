@@ -90,7 +90,7 @@ private[compiler] object OpenApiPattern {
 case class OpenApiPrimitive(context: Context, tpe: Primitive)                                             extends OpenApiPattern[Nothing]
 case class OpenApiRef(context: Context, ref: DefId)                                                       extends OpenApiPattern[Nothing]
 case class OpenApiEnum(context: Context, values: Vector[String])                                          extends OpenApiPattern[Nothing]
-case class OpenApiShortStop(context: Context, error: ToSmithyError)                                          extends OpenApiPattern[Nothing]
+case class OpenApiShortStop(context: Context, error: ToSmithyError)                                       extends OpenApiPattern[Nothing]
 case class OpenApiNull(context: Context)                                                                  extends OpenApiPattern[Nothing]
 case class OpenApiMap[A](context: Context, items: A)                                                      extends OpenApiPattern[A]
 case class OpenApiArray[A](context: Context, items: A)                                                    extends OpenApiPattern[A]

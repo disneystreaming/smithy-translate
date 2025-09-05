@@ -15,7 +15,7 @@
 
 package smithytranslate.runners
 
-import cats.data.NonEmptyList
+import cats.data.{NonEmptyList, NonEmptyChain, Chain}
 import smithytranslate.runners.transformer.TransformerLookup
 import smithytranslate.runners.openapi._
 
@@ -57,7 +57,9 @@ object OpenApi {
       validateOutput: Boolean,
       useEnumTraitSyntax: Boolean,
       outputJson: Boolean,
-      debug: Boolean
+      debug: Boolean,
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
   ): Unit = {
     val transformers = TransformerLookup.getAll()
 
@@ -70,9 +72,33 @@ object OpenApi {
         validateOutput = validateOutput,
         transformers,
         useEnumTraitSyntax,
-        debug
+        debug,
+        allowedRemoteBaseURLs,
+        namespaceRemaps
       ),
       debug
     )
   }
+
+  def runJsonSchema(
+      inputFiles: NonEmptyList[os.Path],
+      outputPath: os.Path,
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      outputJson: Boolean,
+      debug: Boolean
+  ): Unit = runJsonSchema(
+    inputFiles,
+    outputPath,
+    useVerboseNames,
+    validateInput,
+    validateOutput,
+    useEnumTraitSyntax,
+    outputJson,
+    debug,
+    Set.empty,
+    Map.empty
+  )
 }

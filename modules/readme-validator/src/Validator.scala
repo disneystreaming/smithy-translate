@@ -92,9 +92,11 @@ object Validator {
         useVerboseNames = false,
         validateInput = true,
         validateOutput = true,
-        List.empty,
+        transformers = List.empty,
         useEnumTraitSyntax = false,
-        debug = false
+        debug = false,
+        allowedRemoteBaseURLs = Set.empty,
+        namespaceRemaps = Map.empty
       )
     val result =
       OpenApiCompiler.compile(
@@ -143,9 +145,11 @@ object Validator {
         useVerboseNames = false,
         validateInput = true,
         validateOutput = true,
-        List.empty,
+        transformers = List.empty,
         useEnumTraitSyntax = false,
-        debug = false
+        debug = false,
+        allowedRemoteBaseURLs = Set.empty,
+        namespaceRemaps = Map.empty
       )
     val result =
       JsonSchemaCompiler.compile(
