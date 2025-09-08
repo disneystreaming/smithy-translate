@@ -18,7 +18,11 @@ package smithytranslate.cli.opts
 import com.monovore.decline.*
 import cats.syntax.all.*
 import cats.data.NonEmptyList
+import cats.data.NonEmptyChain
+import cats.data.ValidatedNel
 import smithytranslate.cli.opts.SmithyTranslateCommand.OpenApiTranslate
+import cats.data.Chain
+import smithytranslate.cli.opts.CommonArguments.NamespaceMapping
 
 final case class OpenAPIJsonSchemaOpts(
     isOpenapi: Boolean,
@@ -30,7 +34,9 @@ final case class OpenAPIJsonSchemaOpts(
     useEnumTraitSyntax: Boolean,
     outputJson: Boolean,
     debug: Boolean,
-    force: Boolean
+    force: Boolean,
+    allowedRemoteBaseURLs: Set[String],
+    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
 )
 
 object OpenAPIJsonSchemaOpts {
@@ -84,6 +90,26 @@ object OpenAPIJsonSchemaOpts {
     )
     .orFalse
 
+  private val allowedRemoteBaseURLs: Opts[Set[String]] = Opts
+    .options[String](
+      "allow-remote-base-url",
+      help =
+        "A base path for allowed remote references, e.g. 'https://example.com/schemas/'"
+    )
+    .map(_.toList.toSet)
+    .withDefault(Set.empty)
+
+  private val namespaceRemaps: Opts[Map[NonEmptyChain[String], Chain[String]]] =
+    Opts
+      .options[NamespaceMapping](
+        "remap-namespace",
+        help =
+          """A namespace remapping rule in the form of 'from1.from2:to1.to2', which remaps the 'from' prefix to the 'to' prefix.
+            |A prefix can be stripped by specifying no replacement. Eg: 'prefix.to.remove:'""".stripMargin
+      )
+      .map(mappings => mappings.map(m => m.original -> m.remapped).toList.toMap)
+      .withDefault(Map.empty)
+
   private def getOpts(isOpenapi: Boolean) =
     (
       Opts(isOpenapi),
@@ -95,7 +121,9 @@ object OpenAPIJsonSchemaOpts {
       useEnumTraitSyntax,
       outputJson,
       debug,
-      force
+      force,
+      allowedRemoteBaseURLs,
+      namespaceRemaps
     ).mapN(OpenAPIJsonSchemaOpts.apply)
 
   private val openApiToSmithyCmd = Command(

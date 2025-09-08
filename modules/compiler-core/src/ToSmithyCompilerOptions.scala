@@ -16,6 +16,8 @@
 package smithytranslate.compiler
 
 import software.amazon.smithy.build.ProjectionTransformer
+import cats.data.NonEmptyChain
+import cats.data.Chain
 
 final case class ToSmithyCompilerOptions(
     useVerboseNames: Boolean,
@@ -23,5 +25,28 @@ final case class ToSmithyCompilerOptions(
     validateOutput: Boolean,
     transformers: List[ProjectionTransformer],
     useEnumTraitSyntax: Boolean,
-    debug: Boolean
+    debug: Boolean,
+    allowedRemoteBaseURLs: Set[String],
+    namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
 )
+
+object ToSmithyCompilerOptions {
+  def apply(
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      transformers: List[ProjectionTransformer],
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
+  ): ToSmithyCompilerOptions =
+    ToSmithyCompilerOptions(
+      useVerboseNames,
+      validateInput,
+      validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug,
+      Set.empty,
+      Map.empty
+    )
+}

@@ -51,9 +51,11 @@ final class OutputValidationSpec extends munit.FunSuite {
         useVerboseNames = false,
         validateInput = false,
         validateOutput = validateOutput,
-        List.empty,
+        transformers = List.empty,
         useEnumTraitSyntax = false,
-        debug = false
+        debug = false,
+        allowedRemoteBaseURLs = Set.empty,
+        namespaceRemaps = Map.empty
       ),
       input
     )

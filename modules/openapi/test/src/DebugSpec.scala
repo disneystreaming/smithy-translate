@@ -35,9 +35,11 @@ final class DebugSpec extends munit.FunSuite {
       useVerboseNames = false,
       validateInput = false,
       validateOutput = true,
-      List.empty,
+      transformers = List.empty,
       useEnumTraitSyntax = false,
-      debug
+      allowedRemoteBaseURLs = Set.empty,
+      namespaceRemaps = Map.empty,
+      debug = debug,
     )
 
     val input = OpenApiCompilerInput.UnparsedSpecs(

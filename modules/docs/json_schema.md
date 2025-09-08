@@ -23,10 +23,33 @@ Options and flags:
     --enum-trait-syntax
         output enum types with the smithy v1 enum trait (deprecated) syntax
     --json-output
-        changes output format to be json representations of the smithy models
+       changes output format to be json representations of the smithy models
+    --allow-remote-base-url <string>
+        A base path for allowed remote references, e.g. 'https://example.com/schemas/'
+    --remap-namespace <source.name.space:target.name.space>
+        A namespace remapping rule in the form of 'from1.from2:to1.to2', which remaps the 'from' prefix to the 'to' prefix.
+        A prefix can be stripped by specifying no replacement. Eg: 'prefix.to.remove:'
 ```
 
 Run `smithytranslate json-schema-to-smithy --help` for all usage information.
+
+### Remote References
+JSON Schema supports references to remote specs. In smithy-translate, these are all opt-in. If there is a reference that
+begins with `http://` or `https://`, it is considered a remote reference and will only be accessed if the base url is
+included in `--allow-remote-base-url`.  
+
+#### Namespaces of Remote References
+When smithy-translate resolves remote references, it does so using java-style namespaces, using the reverse of the host
+domain.  For example `https://example.com/foo/bar` resolves to the namespace `com.example.foo.bar`.  The
+`--remap-namespace` cli argument can be used to map these to the desired location if your usecase requires it.
+
+#### Resolving Local Files in Place of Remote References
+You may wish to have the entire source JSON Schema spec locally, foregoing all remote references.  This can be
+accomplished by having all of the specs locally in the filesystem, where their path corresponds to the remotely resolved
+namespace, after remapping.
+
+For example, if there is a remote reference to `https://example.com/foo/bar/baz.json` and locally you have a file
+`com/example/foo/bar/baz.json`, the local file will be used, and no remote references will be fetched.
 
 ### Differences from OpenAPI
 
@@ -126,3 +149,4 @@ map TestMap {
  value: String
 }
 ```
+

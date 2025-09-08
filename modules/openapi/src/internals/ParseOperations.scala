@@ -289,11 +289,11 @@ private class ParseOperationsImpl(
         .toLeft(parameter)
         .leftFlatMap(ref =>
           caseRef(ref)
-            .map[models.parameters.Parameter] { defId =>
+            .map[models.parameters.Parameter] { ref =>
               Option(openApi.getComponents())
                 .flatMap(c => Option(c.getParameters()))
                 .flatMap(map =>
-                  Option(map.get(defId.name.segments.last.value.toString))
+                  Option(map.get(ref.id.name.segments.last.value.toString))
                 )
                 .getOrElse(parameter)
             }

@@ -68,7 +68,9 @@ object Main
                 opts.validateOutput,
                 opts.useEnumTraitSyntax,
                 opts.outputJson,
-                opts.debug
+                opts.debug,
+                opts.allowedRemoteBaseURLs,
+                opts.namespaceRemaps
               )
             SmithyBuildJsonWriter.writeDefault(opts.outputPath, opts.force)
 

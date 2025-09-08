@@ -91,9 +91,11 @@ object TestUtils {
           useVerboseNames = false,
           validateInput = false,
           validateOutput = false,
-          List.empty,
-          input0.smithyVersion == SmithyVersion.One,
-          debug = true
+          transformers = List.empty,
+          useEnumTraitSyntax = input0.smithyVersion == SmithyVersion.One,
+          debug = true,
+          allowedRemoteBaseURLs = Set.empty,
+          namespaceRemaps = Map.empty
         ),
         OpenApiCompilerInput.UnparsedSpecs(
           inputs.map(i => FileContents(i.filePath, i.openapiSpec))
