@@ -193,7 +193,7 @@ final class AllOfSpec extends munit.FunSuite {
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
 
-  test("unions - Parent type explicitly referenced and extended".only) {
+  test("unions - Parent type explicitly referenced and extended") {
     val jsonSchString =
       """|{
          |  "$id": "test.json",
@@ -249,6 +249,87 @@ final class AllOfSpec extends munit.FunSuite {
                             |
                             |structure Test {
                             |  root: Root
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("unions - multiple mixins") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "root": { "$ref": "#/$defs/root" },
+         |    "rootTwo": { "$ref": "#/$defs/rootTwo" }
+         |  },
+         |  "$defs": {
+         |    "root": { 
+         |      "type": "object",
+         |      "properties": { 
+         |        "s": { 
+         |          "type": "string"
+         |        }
+         |      }
+         |    },
+         |    "rootTwo": { 
+         |      "type": "object",
+         |      "properties": { 
+         |        "sTwo": { 
+         |          "type": "integer"
+         |        }
+         |      }
+         |    },
+         |    "subB": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/root" },
+         |        { "$ref": "#/$defs/rootTwo" },
+         |        { "type": "object", "properties": { "x": { "type": "integer" } } }
+         |      ]
+         |    },
+         |    "subA": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/root" },
+         |        { "type": "object", "properties": { "x": { "type": "integer" } } }
+         |      ]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Root with [RootMixin] {} 
+                            |
+                            |structure RootTwo with [RootTwoMixin] {}
+                            |
+                            |@mixin
+                            |structure RootMixin {
+                            |  s: String
+                            |}
+                            |
+                            |@mixin
+                            |structure RootTwoMixin {
+                            |    sTwo: Integer
+                            |}
+                            |
+                            |structure SubA with [RootMixin] {
+                            |  x: Integer
+                            |}
+                            |
+                            |structure SubB with [RootMixin, RootTwoMixin] {
+                            |  x: Integer 
+                            |}
+                            |
+                            |structure Test {
+                            |  root: Root
+                            |  rootTwo: RootTwo
                             |}
                             |
                             |""".stripMargin

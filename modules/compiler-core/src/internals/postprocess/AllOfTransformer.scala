@@ -85,20 +85,35 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
       parent.localFields
         .map(f => f.copy(id = f.id.copy(modelId = newMixinParentId)))
 
+    // Check if parent is already using itself as a mixin
+    // this means it was already processed and we don't need to
+    // use the result of it being processed again.
+    // In other words, we can skip steps 1 and 2 below and just do 3
+    val parentSelfMixin =
+      parent.hints.exists {
+        case h: Hint.HasMixin =>
+          h.id == newMixinParentId
+        case _ => false
+      }
+
     // 1. Make a new structure, identical to the parent, postfixed with `Mixin` that has all fields
     val newMixin =
-      parent.copy(
-        id = newMixinParentId,
-        localFields = newFields,
-        hints = parent.hints :+ Hint.IsMixin
-      )
+      if (parentSelfMixin) parent
+      else
+        parent.copy(
+          id = newMixinParentId,
+          localFields = newFields,
+          hints = parent.hints :+ Hint.IsMixin
+        )
 
     // 2. Make existing parent structure have 0 fields and instead mixin the structure made in previous step
     val newParent =
-      parent.copy(
-        localFields = Vector.empty,
-        hints = List(Hint.HasMixin(newMixinParentId))
-      )
+      if (parentSelfMixin) parent
+      else
+        parent.copy(
+          localFields = Vector.empty,
+          hints = List(Hint.HasMixin(newMixinParentId))
+        )
 
     // 3. Update so this structure mixes in new structure instead of bringing in all fields
     val nd =
@@ -175,6 +190,7 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
                 newDef = result.newDef
                 allShapes += (result.newMixin.id -> result.newMixin)
                 allShapes += (result.newParent.id -> result.newParent)
+
               } else {
                 if (parentIsTopLevel) {
                   val result = topLevelParentNoReferences(parent, newDef)
@@ -200,7 +216,6 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
         case other => Vector(other)
       }
     }
-
     removeUnusedMixins(allShapes)
   }
 
