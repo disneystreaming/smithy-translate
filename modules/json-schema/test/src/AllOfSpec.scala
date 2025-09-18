@@ -336,5 +336,153 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
+  
+  test("B mixes in A, C mixes in B, B is directly referenced".only) {
+    // BMixin is generated with no fields; they are generated in B
+    // B mixes in A and BMixin, should only mix in BMixin
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "b": { "$ref": "#/$defs/B" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/B" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "c": { "type": "integer" }
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "properties": {
+         |        "a": { "type": "integer" }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure A {
+                            |    a: Integer
+                            |}
+                            |
+                            |@mixin
+                            |structure BMixin with [A] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |structure B with [BMixin] {}
+                            |
+                            |structure C with [BMixin] {
+                            |  c: Integer
+                            |}
+                            |
+                            |structure Test {
+                            |  b: B
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+  
+  test("B mixes in A, C mixes in B".only) {
+    // B fails to be annotated as a mixin
+    // C fails to mix in B
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "c": { "$ref": "#/$defs/C" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/B" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "c": { "type": "integer" }
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "properties": {
+         |        "a": { "type": "integer" }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure A {
+                            |    a: Integer
+                            |}
+                            |
+                            |
+                            |@mixin
+                            |structure B with [A] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |structure C with [B] {
+                            |  c: Integer
+                            |}
+                            |
+                            |structure Test {
+                            |  c: C
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+  
 
 }
