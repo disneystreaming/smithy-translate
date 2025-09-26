@@ -16,7 +16,7 @@
 package smithytranslate.compiler.openapi
 
 final class AllOfSpec extends munit.FunSuite {
-  
+
   test("allOf - one ref") {
     val openapiString = """|openapi: '3.0.'
                            |info:
