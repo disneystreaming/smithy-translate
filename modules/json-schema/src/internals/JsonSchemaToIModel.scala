@@ -225,7 +225,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       case Extractors.CaseAllOf(hints, all) =>
         F.pure(
           OpenApiAllOf(
-            local.context.addHints(hints),
+            local.context.addHints(hints, retainTopLevel = true),
             all.zipWithIndex.map { case (s, i) =>
               local.down(
                 Name(Segment.Arbitrary(ci"allOf"), Segment.Arbitrary(ci"$i")),

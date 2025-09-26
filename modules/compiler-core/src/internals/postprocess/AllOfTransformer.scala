@@ -16,256 +16,170 @@
 package smithytranslate.compiler.internals
 package postprocess
 
-import cats.syntax.all._
-import scala.annotation.tailrec
-import cats.kernel.Eq
 import org.typelevel.ci._
-import scala.collection.mutable
 
 private[compiler] object AllOfTransformer extends IModelPostProcessor {
 
-  private val DocumentPrimitive =
-    DefId(Namespace(List("smithy", "api")), Name.stdLib("Document"))
-
-  private implicit val defIdEq: Eq[DefId] = Eq.fromUniversalEquals
-
-  // Checks if a given shape is ever referenced outside of being used as a mixin
-  private def isReferencedAsTarget(
-      shape: Definition,
+  // returns all Ids that are ever referenced as a target
+  private def getAllTargets(
       allShapes: Vector[Definition]
-  ): Boolean = {
-    @tailrec
-    def loop(
-        remainingShapes: List[Definition],
-        isReferenced: Boolean = false
-    ): Boolean =
-      remainingShapes match {
-        case _ if isReferenced => isReferenced
-        case Nil               => isReferenced
-        case (s: Shape) :: tail =>
-          val hasRef = s match {
-            case s: Structure =>
-              s.localFields.exists(_.tpe === shape.id)
-            case s: SetDef =>
-              s.member === shape.id
-            case l: ListDef =>
-              l.member === shape.id
-            case m: MapDef =>
-              m.key === shape.id || m.value === shape.id
-            case u: Union =>
-              u.alts.exists(_.tpe === shape.id)
-            case n: Newtype =>
-              n.target === shape.id
-            case _: Enumeration => false
-            case o: OperationDef =>
-              val allRefs = o.input.toVector ++ o.output.toVector ++ o.errors
-              allRefs.contains_(shape.id)
-            case _: ServiceDef => false
-          }
-          loop(tail, hasRef)
-      }
-
-    loop(allShapes.toList)
-  }
-
-  private case class ParentHasOtherRefsResult(
-      newDef: Structure,
-      newMixin: Structure,
-      newParent: Structure
-  )
-
-  private def parentHasOtherReferencesCase(
-      parent: Structure,
-      newDef: Structure
-  ): ParentHasOtherRefsResult = {
-    val newMixinParentId =
-      parent.id.copy(name = parent.id.name :+ Segment.Arbitrary(ci"Mixin"))
-
-    val newFields =
-      parent.localFields
-        .map(f => f.copy(id = f.id.copy(modelId = newMixinParentId)))
-
-    // Check if parent is already using itself as a mixin
-    // this means it was already processed and we don't need to
-    // use the result of it being processed again.
-    // In other words, we can skip steps 1 and 2 below and just do 3
-    val parentSelfMixin =
-      parent.hints.exists {
-        case h: Hint.HasMixin =>
-          h.id == newMixinParentId
-        case _ => false
-      }
-
-    // 1. Make a new structure, identical to the parent, postfixed with `Mixin` that has all fields
-    val newMixin =
-      if (parentSelfMixin) parent
-      else
-        parent.copy(
-          id = newMixinParentId,
-          localFields = newFields,
-          hints = parent.hints :+ Hint.IsMixin
-        )
-
-    // 2. Make existing parent structure have 0 fields and instead mixin the structure made in previous step
-    val newParent =
-      if (parentSelfMixin) parent
-      else
-        parent.copy(
-          localFields = Vector.empty,
-          hints = List(Hint.HasMixin(newMixinParentId))
-        )
-
-    // 3. Update so this structure mixes in new structure instead of bringing in all fields
-    val nd =
-      newDef.copy(hints = newDef.hints :+ Hint.HasMixin(newMixinParentId))
-    ParentHasOtherRefsResult(nd, newMixin, newParent)
-  }
-
-  private case class TopLevelParentNoRefsResult(
-      newDef: Structure,
-      newParent: Structure
-  )
-  private def topLevelParentNoReferences(
-      parent: Structure,
-      newDef: Structure
-  ): TopLevelParentNoRefsResult = {
-    // 1. Make structure parent a mixin
-    val newParent = parent.copy(hints = parent.hints :+ Hint.IsMixin)
-    // 2. Apply as mixin to this structure instead of moving all fields in
-    val nd = newDef.copy(hints = newDef.hints :+ Hint.HasMixin(parent.id))
-    TopLevelParentNoRefsResult(nd, newParent)
-  }
-
-  private case class NonTopLevelParentNoRefsResult(
-      newDef: Structure,
-      removeParent: Structure
-  )
-  private def nonTopLevelParentNoReferences(
-      parent: Structure,
-      newDef: Structure
-  ): NonTopLevelParentNoRefsResult = {
-
-    // Move fields down from parent and remove parent if parent is not a top level
-    // shape (meaning it is a fabricated AllOf shape created by the OpenApi => IModel transform)
-    val newFields =
-      parent.localFields.map(f => f.copy(id = f.id.copy(modelId = newDef.id)))
-
-    val newHints = parent.hints
-    val remove = parent
-    val nd = newDef.copy(
-      localFields = newDef.localFields ++ newFields,
-      hints = newDef.hints ++ newHints
-    )
-    NonTopLevelParentNoRefsResult(nd, remove)
-  }
-
-  private def moveParentFieldsAndCreateMixins(
-      all: Vector[Definition]
-  ): Vector[Definition] = {
-    val allShapes = new mutable.LinkedHashMap[DefId, Definition]()
-    all
-      .map(a => a.id -> a)
-      .foreach { case (id, shape) =>
-        allShapes += (id -> shape)
-      }
-
-    all.foreach { d =>
-      // get latest in case modifications have been made to this definition since the
-      // iterations started
-      allShapes.getOrElse(d.id, d) match {
-        case struct: Structure =>
-          val parents = struct.parents.flatMap(p => allShapes.get(p))
-          var isDocument = false
-          var newDef: Structure = struct
-          parents.foreach {
-            case Newtype(_, DocumentPrimitive, _) =>
-              isDocument = true
-            case parent: Structure =>
-              // FOR EACH structure parent, detect if they are used in any contexts outside of this structure
-              val parentHasOtherReferences =
-                isReferencedAsTarget(parent, all)
-              val parentIsTopLevel = parent.hints.contains(Hint.TopLevel)
-              if (parentHasOtherReferences) {
-                val result = parentHasOtherReferencesCase(parent, newDef)
-                newDef = result.newDef
-                allShapes += (result.newMixin.id -> result.newMixin)
-                allShapes += (result.newParent.id -> result.newParent)
-
-              } else {
-                if (parentIsTopLevel) {
-                  val result = topLevelParentNoReferences(parent, newDef)
-                  newDef = result.newDef
-                  allShapes += (result.newParent.id -> result.newParent)
-                } else {
-                  val result = nonTopLevelParentNoReferences(parent, newDef)
-                  newDef = result.newDef
-                  allShapes.remove(result.removeParent.id)
-                }
-              }
-            case other => other
-          }
-          val n: Definition =
-            if (isDocument)
-              Newtype(
-                newDef.id,
-                DocumentPrimitive,
-                newDef.hints.filterNot(_.isInstanceOf[Hint.HasMixin])
-              )
-            else newDef
-          allShapes += (n.id -> n)
-        case other => Vector(other)
-      }
-    }
-    removeUnusedMixins(allShapes)
-  }
-
-  private def removeUnusedMixins(
-      allShapes: mutable.Map[DefId, Definition]
-  ): Vector[Definition] = {
-    val allShapesCleaned =
-      allShapes.map { case (id, defn) =>
-        id -> removeSelfReferentialMixin(defn)
-      }
-
-    val values = allShapesCleaned.values.foldLeft(Vector.empty[Structure]) {
-      case (acc, s: Structure) =>
-        acc :+ s
-      case (acc, _) => acc
-    }
-    val usedAsMixins: Set[DefId] = values.flatMap { v =>
-      v.hints.collect { case Hint.HasMixin(id) => id }
+  ): Set[DefId] = {
+    allShapes.flatMap {
+      case s: Structure =>
+        s.localFields.map(_.tpe)
+      case s: SetDef =>
+        Vector(s.member)
+      case l: ListDef =>
+        Vector(l.member)
+      case m: MapDef =>
+        Vector(m.key, m.value)
+      case u: Union =>
+        u.alts.map(_.tpe)
+      case n: Newtype =>
+        Vector(n.target)
+      case _: Enumeration => Vector.empty
+      case o: OperationDef =>
+        val allRefs = o.input.toVector ++ o.output.toVector ++ o.errors
+        allRefs
+      case _: ServiceDef => Vector.empty
     }.toSet
-
-    val isAMixin: Set[DefId] = values.flatMap { v =>
-      v.hints.collect { case Hint.IsMixin => v.id }
-    }.toSet
-
-    val unused = isAMixin.diff(usedAsMixins)
-
-    val idToDef = new mutable.ArrayBuffer[Definition]()
-    allShapesCleaned
-      .foreach { case (id, shp) =>
-        idToDef += (if (unused(id))
-                      shp.mapHints(_.filterNot(_ == Hint.IsMixin))
-                    else shp)
-      }
-
-    idToDef.toVector
   }
 
-  private def removeSelfReferentialMixin(definition: Definition): Definition =
-    definition match {
-      case struct @ Structure(id, _, _, hints) =>
-        struct.copy(hints = hints.filter {
-          case Hint.HasMixin(`id`) => false
-          case _                   => true
-        })
-      case other => other
+  // Flatten all-of hierarchy down such that all fields are flattened into a "bottom" Definition
+  // "bottom" definitions would be ones that are TopLevel or are referenced as a target
+  private def flattenMixins(
+      defs: Vector[Definition],
+      allTargets: Set[DefId]
+  ): Vector[Definition] = {
+    val defsById = defs.map(d => d.id -> d).toMap
+    // get all parent fields, including parents of parents
+    def getAllParentFieldsLoop(
+        str: Structure,
+        id: DefId,
+        seen: Set[DefId] = Set.empty
+    ): Vector[Field] = {
+      // this means we are in a loop (cyclic mixin references)
+      if (seen.contains(str.id)) {
+        throw new IllegalArgumentException(
+          "Detected cycle in mixins which is not allowed in the Smithy IDL"
+        )
+      } else {
+        str.parents.flatMap(defsById.get).flatMap {
+          case s: Structure =>
+            s.localFields.map(f =>
+              f.copy(id = f.id.copy(modelId = id))
+            ) ++ getAllParentFieldsLoop(s, id, seen + str.id)
+          case _ => Vector.empty
+        }
+      }
     }
+
+    def moveParentFieldsDown(str: Structure): Structure = {
+      val prnts = str.parents.flatMap(defsById.get)
+      val parentFields = getAllParentFieldsLoop(str, str.id)
+      // retain any parents that are top level OR are referenced as targets
+      // these will be used to create mixins later and remove fields from "child"
+      // structures as appropriate
+      val topLevelParents =
+        prnts
+          .filter(p =>
+            p.hints.contains(Hint.TopLevel) || allTargets.contains(p.id)
+          )
+          .map(_.id)
+      // We are adding ALL parent fields here, the ones that should come from mixins will be
+      // removed later on
+      str.copy(
+        localFields = str.localFields ++ parentFields,
+        parents = topLevelParents
+      )
+    }
+
+    defs.flatMap {
+      case str: Structure =>
+        val strIsReferenced = allTargets.contains(str.id)
+        if (str.hints.contains(Hint.TopLevel) || strIsReferenced)
+          Some(moveParentFieldsDown(str))
+        else None
+      case other => Some(other)
+    }
+  }
+
+  private def process(defs: Vector[Definition]): Vector[Definition] = {
+    val defsById = defs.map(d => d.id -> d).toMap
+    val allTargets = getAllTargets(defs)
+    def processStruct(str: Structure): Structure = {
+      val parents = str.parents.flatMap(defsById.get)
+      // Remove fields from children that are also defined on parents (these will be brought in by mixins)
+      val newFields = str.localFields.flatMap { field =>
+        val parentHasSameField = parents.exists {
+          case s: Structure if s.localFields.contains(field) => true
+          case _                                             => false
+        }
+        if (parentHasSameField) None else Some(field)
+      }
+      // Add mixin hints for parents
+      val hasMixinHints = str.localFields.flatMap { field =>
+        val newMixins = parents.flatMap {
+          case s: Structure if s.localFields.contains(field) => Some(s.id)
+          case _                                             => None
+        }
+        newMixins.map(Hint.HasMixin(_))
+      }
+      // Add Mixin hint if this particular structure is used as a mixin
+      val isUsedAsMixin = defs.exists {
+        case s: Structure if s.parents.contains(str.id) => true
+        case _                                          => false
+      }
+      val isMixinHint = if (isUsedAsMixin) List(Hint.IsMixin) else List.empty
+      str.copy(
+        localFields = newFields,
+        hints = str.hints ++ hasMixinHints ++ isMixinHint
+      )
+    }
+
+    val flattened = flattenMixins(defs, allTargets)
+
+    val intermediate = flattened.map {
+      case s: Structure => processStruct(s)
+      case other        => other
+    }
+
+    // Top level mixins are ones that need to exist as a Shape that can be referenced AND
+    // as a mixin. Shapes that are top level OR that have references fall into this category
+    def splitTopLevelMixins(str: Structure): List[Structure] = {
+      val isTopLevel = str.hints.contains(Hint.TopLevel)
+      val isMixin = str.hints.contains(Hint.IsMixin)
+      val hasReferences = allTargets.contains(str.id)
+      if (isTopLevel && isMixin && hasReferences) {
+        val newMixinId =
+          str.id.copy(name = str.id.name :+ Segment.Arbitrary(ci"Mixin"))
+        List(
+          // First, create a structure that is NOT a mixin, but references the new mixin we are creating
+          str.copy(
+            localFields = Vector.empty,
+            hints = str.hints.filterNot(_ == Hint.IsMixin) :+ Hint.HasMixin(
+              newMixinId
+            )
+          ),
+          // Second, create the mixin with all of the fields
+          str.copy(
+            id = newMixinId,
+            localFields = str.localFields
+              .map(f => f.copy(id = f.id.copy(modelId = newMixinId)))
+          )
+        )
+      } else List(str)
+    }
+
+    intermediate.flatMap {
+      case s: Structure => splitTopLevelMixins(s)
+      case other        => List(other)
+    }
+  }
 
   private def transform(in: IModel): Vector[Definition] = {
     val allShapes = in.definitions
-    moveParentFieldsAndCreateMixins(allShapes)
+    process(allShapes)
   }
 
   def apply(in: IModel): IModel = {

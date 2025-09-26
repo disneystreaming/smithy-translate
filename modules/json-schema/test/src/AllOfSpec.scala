@@ -336,10 +336,8 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
-  
-  test("B mixes in A, C mixes in B, B is directly referenced".only) {
-    // BMixin is generated with no fields; they are generated in B
-    // B mixes in A and BMixin, should only mix in BMixin
+
+  test("B mixes in A, C mixes in B, B is directly referenced") {
     val jsonSchString =
       """|{
          |  "$id": "test.json",
@@ -410,10 +408,8 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
-  
-  test("B mixes in A, C mixes in B".only) {
-    // B fails to be annotated as a mixin
-    // C fails to mix in B
+
+  test("B mixes in A, C mixes in B") {
     val jsonSchString =
       """|{
          |  "$id": "test.json",
@@ -483,6 +479,304 @@ final class AllOfSpec extends munit.FunSuite {
 
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
-  
+
+  test("B mixes in A, A has array reference") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "c": { "$ref": "#/$defs/C" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "array",
+         |      "items": { "$ref": "#/$defs/A" }
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "properties": {
+         |        "a": { "type": "integer" }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure AMixin {
+                            |    a: Integer
+                            |}
+                            |
+                            |structure A with [AMixin] {}
+                            |
+                            |structure B with [AMixin] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |list C {
+                            |  member: A
+                            |}
+                            |
+                            |structure Test {
+                            |  c: C
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("B mixes in A, A has array reference in sub-object") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "c": { "$ref": "#/$defs/C" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "array",
+         |      "items": { 
+         |        "type": "object",
+         |        "properties": {
+         |          "aa": { "$ref": "#/$defs/A" },
+         |          "random": { "type": "string" }
+         |        }
+         |      }
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "properties": {
+         |        "a": { "type": "integer" }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure AMixin {
+                            |    a: Integer
+                            |}
+                            |
+                            |structure A with [AMixin] {}
+                            |
+                            |structure B with [AMixin] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |list C {
+                            |  member: CItem
+                            |}
+                            |
+                            |structure CItem {
+                            |  aa: A
+                            |  random: String
+                            |}
+                            |
+                            |structure Test {
+                            |  c: C
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("B mixes in A, A is used in allof in array") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "c": { "$ref": "#/$defs/C" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "array",
+         |      "items": { 
+         |        "type": "object",
+         |        "allOf": [
+         |          { "$ref": "#/$defs/A" },
+         |          {
+         |            "type": "object",
+         |            "properties": {
+         |              "random": { "type": "string" }
+         |            }
+         |          }
+         |        ]
+         |      }
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "properties": {
+         |        "a": { "type": "integer" }
+         |      }
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure A {
+                            |    a: Integer
+                            |}
+                            |
+                            |structure B with [A] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |list C {
+                            |  member: CItem
+                            |}
+                            |
+                            |structure CItem with [A] {
+                            |  random: String
+                            |}
+                            |
+                            |structure Test {
+                            |  c: C
+                            |}
+                            |
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("B mixes in A, A mixes in C, C mixes B (cyclic mixins)") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type" : "object",
+         |  "properties" : {
+         |    "c": { "$ref": "#/$defs/C" }
+         |  },
+         |  "$defs": {
+         |    "C": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/B" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "c": { "type": "integer" }
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "B": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/A" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "b": { "type": "boolean"}
+         |          }
+         |        }
+         |      ]
+         |    },
+         |    "A": {
+         |      "type": "object",
+         |      "allOf": [
+         |        { "$ref": "#/$defs/C" },
+         |        {
+         |          "type": "object",
+         |          "properties": {
+         |            "a": { "type": "integer"}
+         |          }
+         |        }
+         |      ]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure A with [C] {
+                            |    a: Integer
+                            |}
+                            |
+                            |
+                            |@mixin
+                            |structure B with [A] {
+                            |    b: Boolean
+                            |}
+                            |
+                            |structure C with [B] {
+                            |  c: Integer
+                            |}
+                            |
+                            |structure Test {
+                            |  c: C
+                            |}
+                            |
+                            |""".stripMargin
+
+    util.Try(TestUtils.runConversionTest(jsonSchString, expectedString)) match {
+      case util.Failure(err) =>
+        assertEquals(
+          "Detected cycle in mixins which is not allowed in the Smithy IDL",
+          err.getMessage()
+        )
+      case util.Success(_) =>
+        fail("This test should fail due to cyclical mixins")
+    }
+
+  }
 
 }
