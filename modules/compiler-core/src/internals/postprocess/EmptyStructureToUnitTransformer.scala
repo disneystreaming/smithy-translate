@@ -25,9 +25,15 @@ private[compiler] object EmptyStructureToUnitTransformer
 
   def apply(model: IModel): IModel = {
     val defs = model.definitions.map(d => d.id -> d).toMap
+    // for the purposes of this transformer, we don't care about references from operation shapes
+    // we are just using these to see when we should convert operation input to Unit
+    val allTargets = util.getAllTargets(model.definitions.filter {
+      case _: OperationDef => false
+      case _               => true
+    })
 
     val structuresToRemove = model.definitions.flatMap {
-      case s: Structure if isEmptyStructure(defs, s) =>
+      case s: Structure if isEmptyStructure(defs, s, allTargets) =>
         Some(s.id)
       case _ => None
     }.toSet
@@ -55,11 +61,16 @@ private[compiler] object EmptyStructureToUnitTransformer
   // consider empty if has no fields OR if has one field with Body hint (httpPayload)
   private def isEmptyStructure(
       defs: Map[DefId, Definition],
-      d: Definition
+      d: Definition,
+      allTargets: Set[DefId]
   ): Boolean =
     d match {
       case s: Structure =>
-        (s.localFields.isEmpty && s.parents.isEmpty && s.hints.isEmpty) || {
+        val hasNoHints = s.hints.isEmpty
+        // we also want to remove even if it is top level as long as it is totally empty and is never referenced
+        val topLevelNoRefs =
+          s.hints.forall(_ == Hint.TopLevel) && !allTargets.contains(s.id)
+        (s.localFields.isEmpty && s.parents.isEmpty && (hasNoHints || topLevelNoRefs)) || {
           val isHttpPayload =
             s.localFields.length == 1 && s.localFields.head.hints
               .contains(Hint.Body)
@@ -68,7 +79,7 @@ private[compiler] object EmptyStructureToUnitTransformer
               defs
                 .get(f.tpe)
             )
-            .exists(isEmptyStructure(defs, _))
+            .exists(isEmptyStructure(defs, _, allTargets))
           isHttpPayload && isHttpPayloadEmpty
         }
       case _ => false

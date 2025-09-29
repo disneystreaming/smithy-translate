@@ -271,7 +271,9 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
             recordError(ToSmithyError.Restriction(errorMessage)) *>
               recordRefOrMessage(
                 i.refOrMessage.map(m =>
-                  m.copy(hints = m.hints :+ Hint.ErrorMessage(errorMessage))
+                  m.copy(hints =
+                    m.hints :+ Hint.ErrorMessage(errorMessage) :+ Hint.TopLevel
+                  )
                 ),
                 Some(errorNamespace)
               )
@@ -331,7 +333,12 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         }
       }
       .map { fields =>
-        Structure(defId, fields, Vector.empty, message.hints).some
+        Structure(
+          defId,
+          fields,
+          Vector.empty,
+          message.hints :+ Hint.TopLevel
+        ).some
       }
       .flatMap(_.traverse(recordDef).map(_.as(defId)))
   }

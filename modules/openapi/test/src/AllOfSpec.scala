@@ -17,6 +17,42 @@ package smithytranslate.compiler.openapi
 
 final class AllOfSpec extends munit.FunSuite {
 
+  test("allOf - one ref") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: test
+                           |  version: '1.0'
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    Other:
+                           |      description: other
+                           |      type: object
+                           |      properties:
+                           |        l:
+                           |          type: integer
+                           |    Object:
+                           |      description: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/Other"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |/// object
+                            |structure Object with [Other] {
+                            |}
+                            |
+                            |/// other
+                            |@mixin
+                            |structure Other {
+                            |    l: Integer
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("allOf - one ref one embedded") {
     val openapiString = """|openapi: '3.0.'
                            |info:
@@ -100,6 +136,49 @@ final class AllOfSpec extends munit.FunSuite {
                             |@mixin
                             |structure Two {
                             |    t: Integer,
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("allOf - middle layer") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: doc
+                           |  version: 1.0.0
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    One:
+                           |      type: object
+                           |      properties:
+                           |        one:
+                           |          type: string
+                           |    Two:
+                           |      type: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/One"
+                           |    Three:
+                           |      type: object
+                           |      properties:
+                           |        one:
+                           |          $ref: "#/components/schemas/One"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure OneMixin {
+                            |  one: String
+                            |}
+                            |
+                            |structure One with [OneMixin] {}
+                            |
+                            |structure Two with [OneMixin] {}
+                            |
+                            |structure Three {
+                            |  one: One
                             |}
                             |""".stripMargin
 
