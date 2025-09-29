@@ -23,31 +23,6 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
   private val DocumentPrimitive =
     DefId(Namespace(List("smithy", "api")), Name.stdLib("Document"))
 
-  // returns all Ids that are ever referenced as a target
-  private def getAllTargets(
-      allShapes: Vector[Definition]
-  ): Set[DefId] = {
-    allShapes.flatMap {
-      case s: Structure =>
-        s.localFields.map(_.tpe)
-      case s: SetDef =>
-        Vector(s.member)
-      case l: ListDef =>
-        Vector(l.member)
-      case m: MapDef =>
-        Vector(m.key, m.value)
-      case u: Union =>
-        u.alts.map(_.tpe)
-      case n: Newtype =>
-        Vector(n.target)
-      case _: Enumeration => Vector.empty
-      case o: OperationDef =>
-        val allRefs = o.input.toVector ++ o.output.toVector ++ o.errors
-        allRefs
-      case _: ServiceDef => Vector.empty
-    }.toSet
-  }
-
   // get all parent fields, including parents of parents
   private def getAllParentFieldsLoop(
       str: Structure,
@@ -75,9 +50,9 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
   // "bottom" definitions would be ones that are TopLevel or are referenced as a target
   private def flattenMixins(
       defs: Vector[Definition],
+      defsById: Map[DefId, Definition],
       allTargets: Set[DefId]
   ): Vector[Definition] = {
-    val defsById = defs.map(d => d.id -> d).toMap
     def moveParentFieldsDown(str: Structure): Structure = {
       val prnts = str.parents.flatMap(defsById.get)
       val parentFields = getAllParentFieldsLoop(str, str.id, defsById)
@@ -133,7 +108,7 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
 
   private def process(defs: Vector[Definition]): Vector[Definition] = {
     val defsById = defs.map(d => d.id -> d).toMap
-    val allTargets = getAllTargets(defs)
+    val allTargets = util.getAllTargets(defs)
     def processStruct(str: Structure): Structure = {
       val parents = str.parents.flatMap(defsById.get)
       // Remove fields from children that are also defined on parents (these will be brought in by mixins)
@@ -183,7 +158,7 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
       )
     }
 
-    val flattened = flattenMixins(defs, allTargets)
+    val flattened = flattenMixins(defs, defsById, allTargets)
 
     val intermediate = flattened.map {
       case s: Structure => processStruct(s)
