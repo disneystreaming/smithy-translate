@@ -106,6 +106,39 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
     loop(s.parents, false)
   }
 
+  private def toMixinId(d: DefId): DefId =
+    d.copy(name = d.name :+ Segment.Arbitrary(ci"Mixin"))
+
+  // Top level mixins are ones that need to exist as a Shape that can be referenced AND
+  // as a mixin. Shapes that are top level OR that have references fall into this category
+  private def splitTopLevelMixins(
+      str: Structure,
+      allTargets: Set[DefId]
+  ): List[Structure] = {
+    val isTopLevel = str.hints.contains(Hint.TopLevel)
+    val isMixin = str.hints.contains(Hint.IsMixin)
+    val hasReferences = allTargets.contains(str.id)
+    if (isTopLevel && isMixin && hasReferences) {
+      val newMixinId =
+        toMixinId(str.id)
+      List(
+        // First, create a structure that is NOT a mixin, but references the new mixin we are creating
+        str.copy(
+          localFields = Vector.empty,
+          hints = str.hints.filterNot(_ == Hint.IsMixin) :+ Hint.HasMixin(
+            newMixinId
+          )
+        ),
+        // Second, create the mixin with all of the fields
+        str.copy(
+          id = newMixinId,
+          localFields = str.localFields
+            .map(f => f.copy(id = f.id.copy(modelId = newMixinId)))
+        )
+      )
+    } else List(str)
+  }
+
   private def process(defs: Vector[Definition]): Vector[Definition] = {
     val defsById = defs.map(d => d.id -> d).toMap
     val allTargets = util.getAllTargets(defs)
@@ -165,39 +198,24 @@ private[compiler] object AllOfTransformer extends IModelPostProcessor {
       case other        => other
     }
 
-    // Top level mixins are ones that need to exist as a Shape that can be referenced AND
-    // as a mixin. Shapes that are top level OR that have references fall into this category
-    def splitTopLevelMixins(str: Structure): List[Structure] = {
-      val isTopLevel = str.hints.contains(Hint.TopLevel)
-      val isMixin = str.hints.contains(Hint.IsMixin)
-      val hasReferences = allTargets.contains(str.id)
-      if (isTopLevel && isMixin && hasReferences) {
-        val newMixinId =
-          str.id.copy(name = str.id.name :+ Segment.Arbitrary(ci"Mixin"))
-        List(
-          // First, create a structure that is NOT a mixin, but references the new mixin we are creating
-          str.copy(
-            localFields = Vector.empty,
-            hints = str.hints.filterNot(_ == Hint.IsMixin) :+ Hint.HasMixin(
-              newMixinId
-            )
-          ),
-          // Second, create the mixin with all of the fields
-          str.copy(
-            id = newMixinId,
-            localFields = str.localFields
-              .map(f => f.copy(id = f.id.copy(modelId = newMixinId)))
-          )
-        )
-      } else List(str)
-    }
+    val (splitIds, result) = intermediate.map {
+      case s: Structure =>
+        val split = splitTopLevelMixins(s, allTargets)
+        if (split.size > 1) Some(s.id) -> split else None -> split
+      case other => None -> List(other)
+    }.unzip
 
-    val result = intermediate.flatMap {
-      case s: Structure => splitTopLevelMixins(s)
-      case other        => List(other)
-    }
+    // Need to remap mixin references for any cases where splitting happened in the previous step
+    val mixinRemappings: Map[DefId, DefId] =
+      splitIds.flatten.map(id => id -> toMixinId(id)).toMap
 
-    result.map {
+    val resultWithRemappedMixins = result.flatten.map(_.mapHints(_.map {
+      case Hint.HasMixin(mixinId) =>
+        Hint.HasMixin(mixinRemappings.getOrElse(mixinId, mixinId))
+      case other => other
+    }))
+
+    resultWithRemappedMixins.map {
       case s: Structure =>
         val isDocument = isTransitivelyADocument(s, defsById)
         if (isDocument) {

@@ -102,6 +102,11 @@ object TestUtils {
         )
       )
 
+    // Test that model can be assembled successfully,
+    // if it can't then there's no sense in making
+    // assertions on it that might not even be correct
+    val _ = result.map(r => Model.assembler.addModel(r).assemble.unwrap)
+
     val resultW = result.map(ModelWrapper(_))
     val assembler = Model
       .assembler()

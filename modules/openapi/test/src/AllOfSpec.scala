@@ -142,6 +142,49 @@ final class AllOfSpec extends munit.FunSuite {
     TestUtils.runConversionTest(openapiString, expectedString)
   }
 
+  test("allOf - middle layer") {
+    val openapiString = """|openapi: '3.0.'
+                           |info:
+                           |  title: doc
+                           |  version: 1.0.0
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    One:
+                           |      type: object
+                           |      properties:
+                           |        one:
+                           |          type: string
+                           |    Two:
+                           |      type: object
+                           |      allOf:
+                           |        - $ref: "#/components/schemas/One"
+                           |    Three:
+                           |      type: object
+                           |      properties:
+                           |        one:
+                           |          $ref: "#/components/schemas/One"
+                           |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |@mixin
+                            |structure OneMixin {
+                            |  one: String
+                            |}
+                            |
+                            |structure One with [OneMixin] {}
+                            |
+                            |structure Two with [OneMixin] {}
+                            |
+                            |structure Three {
+                            |  one: One
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
   test("allOf - document ref") {
     val openapiString = """|openapi: '3.0.'
                            |info:
