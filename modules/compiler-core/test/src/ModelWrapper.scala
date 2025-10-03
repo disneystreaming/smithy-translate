@@ -77,8 +77,15 @@ class ModelWrapper(val model: Model) {
               newMember <- changed.getNewShape().asMemberShape().toScala
             } yield oldMember.getTarget() != newMember.getTarget()
 
+            val hasDifferentMixins = {
+              val oldMixins = changed.getOldShape().getMixins().asScala.toSet
+              val newMixins = changed.getNewShape().getMixins().asScala.toSet
+              
+              oldMixins != newMixins
+            }
+
             addedTraits.nonEmpty || removedTraits.nonEmpty || changedTraits.nonEmpty || hasDifferentTargets
-              .exists(identity)
+              .exists(identity) || hasDifferentMixins
           }
       val removed =
         diff.removedShapes().asList
