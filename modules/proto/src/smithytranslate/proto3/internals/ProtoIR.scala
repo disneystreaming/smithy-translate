@@ -45,7 +45,8 @@ private[internals] object ProtoIR {
   final case class Message(
       name: String,
       elements: List[MessageElement],
-      reserved: List[Reserved]
+      reserved: List[Reserved],
+      doc: Option[String] = None
   )
 
   sealed trait MessageElement
@@ -55,13 +56,14 @@ private[internals] object ProtoIR {
     final case class OneofElement(oneof: Oneof) extends MessageElement
   }
 
-  final case class Oneof(name: String, fields: List[Field])
+  final case class Oneof(name: String, fields: List[Field], doc: Option[String] = None)
 
   final case class Field(
       deprecated: Boolean,
       ty: Type,
       name: String,
-      number: Int
+      number: Int,
+      doc: Option[String] = None
   )
 
   sealed trait Reserved
@@ -71,14 +73,15 @@ private[internals] object ProtoIR {
     final case class Range(start: Int, end: Int) extends Reserved
   }
 
-  case class EnumValue(name: String, intValue: Int)
+  case class EnumValue(name: String, intValue: Int, doc: Option[String] = None)
   case class Enum(
       name: String,
       values: List[EnumValue],
-      reserved: List[Reserved]
+      reserved: List[Reserved],
+      doc: Option[String] = None
   )
 
-  final case class Service(name: String, rpcs: List[Rpc])
+  final case class Service(name: String, rpcs: List[Rpc], doc: Option[String] = None)
 
   final case class RpcMessage(fqn: Fqn, importFqn: Fqn)
 
@@ -87,7 +90,8 @@ private[internals] object ProtoIR {
       streamingRequest: Boolean,
       request: RpcMessage,
       streamingResponse: Boolean,
-      response: RpcMessage
+      response: RpcMessage,
+      doc: Option[String] = None
   )
 
   sealed trait Type {

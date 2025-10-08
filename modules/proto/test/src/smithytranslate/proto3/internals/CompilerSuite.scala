@@ -36,11 +36,13 @@ class CompilerSuite extends FunSuite {
             deprecated = false,
             Type.String,
             "value",
-            1
+            1,
+            None
           )
         )
       ),
-      Nil
+      Nil,
+      None
     )
   )
 

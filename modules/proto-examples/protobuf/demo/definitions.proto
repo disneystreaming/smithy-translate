@@ -10,16 +10,22 @@ import "google/protobuf/timestamp.proto";
 
 import "google/protobuf/struct.proto";
 
+// The Hello service
 service Hello {
   rpc SayHello(demo.HelloRequest) returns (demo.HelloResponse);
   rpc Greet(google.protobuf.Empty) returns (demo.HelloResponse);
 }
 
+// Structure to hold information used to say hello
 message HelloRequest {
   reserved 3;
+  // The name to say hello to
   string name = 1;
+  // The language to say hello in
   demo.common.Language lang = 2;
+  // A required integer
   int32 requiredInt = 4;
+  // An optional integer
   int32 int = 5;
 }
 
@@ -28,6 +34,7 @@ message HelloResponse {
   uint64 size = 2;
   demo.UseApiStruct apiStruct = 3;
   oneof apiUnion {
+    // The version of the API
     string version = 4;
     int32 id = 5;
   }
@@ -35,8 +42,11 @@ message HelloResponse {
 }
 
 message UseApiStruct {
+  // A big integer
   string bigInt = 1;
+  // A big decimal
   string bigDec = 2;
+  // A timestamp
   google.protobuf.Timestamp ts = 3;
 }
 

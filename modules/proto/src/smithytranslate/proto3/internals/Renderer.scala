@@ -64,15 +64,18 @@ private[proto3] object Renderer {
       case TopLevelDef.ServiceDef(service) => renderService(service)
     }
 
-  def renderEnumElement(enumValue: EnumValue): Text = {
+  def renderEnumElement(enumValue: EnumValue): Text =
     enumValue match {
-      case EnumValue(identifier, intvalue) =>
-        line(s"$identifier = $intvalue;")
+      case EnumValue(identifier, intvalue, doc) =>
+        many(
+          maybe(doc.map(d => line(s"// ${d}"))),
+          line(s"$identifier = $intvalue;")
+        )
     }
-  }
 
   def renderEnum(enumeration: Enum): Text =
     many(
+      maybe(enumeration.doc.map(d => line(s"// ${d}"))),
       line(s"enum ${enumeration.name} {"),
       indent(renderReserved(enumeration.reserved)),
       indent(enumeration.values.map(renderEnumElement)),
@@ -81,6 +84,7 @@ private[proto3] object Renderer {
 
   def renderMessage(message: Message): Text =
     many(
+      maybe(message.doc.map(d => line(s"// ${d}"))),
       line(s"message ${message.name} {"),
       indent(renderReserved(message.reserved)),
       indent(message.elements.map(renderMessageElement)),
@@ -89,6 +93,7 @@ private[proto3] object Renderer {
 
   def renderOneof(oneof: Oneof): Text =
     many(
+      maybe(oneof.doc.map(d => line(s"// ${d}"))),
       line(s"oneof ${oneof.name} {"),
       indent(oneof.fields.map(renderField)),
       line("}")
@@ -127,19 +132,26 @@ private[proto3] object Renderer {
   def renderField(field: Field): Text = {
     val ty = renderType(field.ty)
     val deprecated = if (field.deprecated) " [deprecated = true]" else ""
-    statement(s"$ty ${field.name} = ${field.number}$deprecated")
+    many(
+      maybe(field.doc.map(d => line(s"// ${d}"))),
+      statement(s"$ty ${field.name} = ${field.number}$deprecated")
+    )
   }
 
   def renderService(service: Service): Text =
     many(
+      maybe(service.doc.map(d => line(s"// ${d}"))),
       line(s"service ${service.name} {"),
       indent(service.rpcs.map(renderRpc)),
       line("}")
     )
 
   def renderRpc(rpc: Rpc): Text =
-    statement(
-      s"rpc ${rpc.name}(${rpc.request.fqn.render}) returns (${rpc.response.fqn.render})"
+    many(
+      maybe(rpc.doc.map(d => line(s"// ${d}"))),
+      statement(
+        s"rpc ${rpc.name}(${rpc.request.fqn.render}) returns (${rpc.response.fqn.render})"
+      )
     )
 
   def renderType(ty: Type): String = {
