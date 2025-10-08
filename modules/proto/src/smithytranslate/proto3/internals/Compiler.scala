@@ -218,7 +218,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
     private def topLevelMessage(shape: Shape, ty: Type) = {
       val name = shape.getId.getName
       val isDeprecated = shape.hasTrait(classOf[DeprecatedTrait])
-      val doc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+      val doc =
+        shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
       val field =
         Field(deprecated = isDeprecated, ty, "value", 1, doc = None)
       val message =
@@ -254,7 +255,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
         val defs = operations.flatMap(_.accept(this))
         val rpcs = operations.flatMap(_.accept(rpcVisitor))
-        val serviceDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+        val serviceDoc =
+          shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
         val service = Service(shape.getId.getName, rpcs, serviceDoc)
 
         List(TopLevelDef.ServiceDef(service)) ++ defs
@@ -267,7 +269,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
       val name = shape.getId.getName
       getEnumTrait(shape).map { (et: EnumTrait) =>
         val reserved = getReservedValues(shape)
-        val enumDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+        val enumDoc =
+          shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
         val elements = et
           .getValues()
           .asScala
@@ -333,12 +336,16 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         Nil
       } else {
         val reserved: List[Reserved] = getReservedValues(shape)
-        val enumDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+        val enumDoc =
+          shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
         val elements: List[EnumValue] =
           shape.members.asScala.toList.zipWithIndex
             .map { case (member, edFieldNumber) =>
               val fieldIndex = findFieldIndex(member).getOrElse(edFieldNumber)
-              val memberDoc = member.getMemberTrait(model, classOf[DocumentationTrait]).toScala.map(_.getValue())
+              val memberDoc = member
+                .getMemberTrait(model, classOf[DocumentationTrait])
+                .toScala
+                .map(_.getValue())
               EnumValue(enumValueName(member), fieldIndex, memberDoc)
             }
         List(
@@ -354,7 +361,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         Nil
       } else {
         val reserved: List[Reserved] = getReservedValues(shape)
-        val enumDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+        val enumDoc =
+          shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
         val elements = shape.members.asScala.toList.map { member =>
           val enumValue =
             member.expectTrait(classOf[EnumValueTrait]).expectIntValue()
@@ -363,7 +371,10 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             .toScala
             .map(_.getNumber())
             .getOrElse(enumValue)
-          val memberDoc = member.getMemberTrait(model, classOf[DocumentationTrait]).toScala.map(_.getValue())
+          val memberDoc = member
+            .getMemberTrait(model, classOf[DocumentationTrait])
+            .toScala
+            .map(_.getValue())
           EnumValue(enumValueName(member), protoIndex, memberDoc)
         }
         List(
@@ -383,7 +394,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
         val element =
           MessageElement.OneofElement(processUnion("definition", shape, 1))
         val name = shape.getId.getName
-        val doc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+        val doc =
+          shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
         val reserved = getReservedValues(shape)
         val message = Message(name, List(element), reserved, doc)
         List(TopLevelDef.MessageDef(message))
@@ -394,7 +406,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
 
     override def structureShape(shape: StructureShape): TopLevelDefs = {
       val name = shape.getId.getName
-      val messageDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+      val messageDoc =
+        shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
       val messageElements =
         shape.members.asScala.toList
           // using foldLeft to accumulate the field count when we fork to
@@ -416,7 +429,10 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
                 }
                 .getOrElse {
                   val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
-                  val fieldDoc = m.getMemberTrait(model, classOf[DocumentationTrait]).toScala.map(_.getValue())
+                  val fieldDoc = m
+                    .getMemberTrait(model, classOf[DocumentationTrait])
+                    .toScala
+                    .map(_.getValue())
                   val fieldType =
                     if (hasProtoWrapped(targetShape)) {
                       Type.RefType(targetShape)
@@ -494,7 +510,10 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
               )
               .get
           val isDeprecated = m.hasTrait(classOf[DeprecatedTrait])
-          val fieldDoc = m.getMemberTrait(model, classOf[DocumentationTrait]).toScala.map(_.getValue())
+          val fieldDoc = m
+            .getMemberTrait(model, classOf[DocumentationTrait])
+            .toScala
+            .map(_.getValue())
           Field(
             deprecated = isDeprecated,
             fieldType,
@@ -503,7 +522,8 @@ private[proto3] class Compiler(model: Model, allShapes: Boolean) {
             fieldDoc
           )
       }
-      val oneofDoc = shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
+      val oneofDoc =
+        shape.getTrait(classOf[DocumentationTrait]).toScala.map(_.getValue())
       Oneof(name, fields, oneofDoc)
     }
   }
