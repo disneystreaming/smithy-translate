@@ -80,7 +80,7 @@ class ModelWrapper(val model: Model) {
             val hasDifferentMixins = {
               val oldMixins = changed.getOldShape().getMixins().asScala.toSet
               val newMixins = changed.getNewShape().getMixins().asScala.toSet
-              
+
               oldMixins != newMixins
             }
 
