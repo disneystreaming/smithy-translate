@@ -35,7 +35,8 @@ class RendererSuite extends FunSuite {
                     deprecated = false,
                     Type.Int32,
                     "a",
-                    1
+                    1,
+                    Some("field a doc")
                   )
                 ),
                 MessageElement.FieldElement(
@@ -43,11 +44,13 @@ class RendererSuite extends FunSuite {
                     deprecated = false,
                     Type.ListType(Type.String),
                     "b",
-                    2
+                    2,
+                    Some("field b doc")
                   )
                 )
               ),
-              Nil
+              Nil,
+              Some("message doc")
             )
           )
         )
@@ -61,8 +64,11 @@ class RendererSuite extends FunSuite {
           |
           |package com.example;
           |
+          |// message doc
           |message Foo {
+          |  // field a doc
           |  int32 a = 1;
+          |  // field b doc
           |  repeated string b = 2;
           |}
           |""".stripMargin
@@ -75,10 +81,10 @@ class RendererSuite extends FunSuite {
       "Foo",
       List(
         MessageElement.FieldElement(
-          Field(deprecated = false, Type.Int32, "a", 1)
+          Field(deprecated = false, Type.Int32, "a", 1, None)
         ),
         MessageElement.FieldElement(
-          Field(deprecated = false, Type.ListType(Type.String), "b", 2)
+          Field(deprecated = false, Type.ListType(Type.String), "b", 2, None)
         )
       ),
       List(
@@ -86,7 +92,8 @@ class RendererSuite extends FunSuite {
         Reserved.Range(5, 8),
         Reserved.Name("c"),
         Reserved.Name("d")
-      )
+      ),
+      None
     )
 
     val result = Text.renderText(Renderer.renderMessage(node))
@@ -105,14 +112,15 @@ class RendererSuite extends FunSuite {
     val node = Enum(
       "SomeEnum",
       List(
-        EnumValue("V1", 1)
+        EnumValue("V1", 1, None)
       ),
       List(
         Reserved.Number(3),
         Reserved.Range(5, 8),
         Reserved.Name("c"),
         Reserved.Name("d")
-      )
+      ),
+      None
     )
 
     val result = Text.renderText(Renderer.renderEnum(node))
@@ -143,19 +151,23 @@ class RendererSuite extends FunSuite {
                         deprecated = false,
                         Type.Int32,
                         "a",
-                        1
+                        1,
+                        None
                       ),
                       Field(
                         deprecated = true,
                         Type.ListType(Type.String),
                         "b",
-                        2
+                        2,
+                        None
                       )
-                    )
+                    ),
+                    None
                   )
                 )
               ),
-              Nil
+              Nil,
+              None
             )
           )
         )
@@ -189,13 +201,14 @@ class RendererSuite extends FunSuite {
             Enum(
               "TopLevelEnum",
               List(
-                EnumValue("FALSE", 0),
-                EnumValue("TRUE", 1)
+                EnumValue("FALSE", 0, None),
+                EnumValue("TRUE", 1, None)
               ),
               List(
                 Reserved.Name("c"),
                 Reserved.Name("d")
-              )
+              ),
+              None
             )
           )
         ),
@@ -208,18 +221,20 @@ class RendererSuite extends FunSuite {
                   Enum(
                     "Corpus",
                     List(
-                      EnumValue("UNIVERSAL", 0),
-                      EnumValue("WEB", 1),
-                      EnumValue("VIDEO", 2)
+                      EnumValue("UNIVERSAL", 0, Some("Not the studio")),
+                      EnumValue("WEB", 1, None),
+                      EnumValue("VIDEO", 2, None)
                     ),
                     List(
                       Reserved.Number(3),
                       Reserved.Range(5, 8)
-                    )
+                    ),
+                    None
                   )
                 )
               ),
-              Nil
+              Nil,
+              None
             )
           )
         )
@@ -242,6 +257,7 @@ class RendererSuite extends FunSuite {
           |message Foo {
           |  enum Corpus {
           |    reserved 3, 5 to 8;
+          |    // Not the studio
           |    UNIVERSAL = 0;
           |    WEB = 1;
           |    VIDEO = 2;
