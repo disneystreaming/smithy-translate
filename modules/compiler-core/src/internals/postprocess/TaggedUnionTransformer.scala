@@ -39,12 +39,12 @@ private[compiler] object TaggedUnionTransformer extends IModelPostProcessor {
     target match {
       case s: Structure =>
         val allParents = allDefinitions.filter(d => s.parents.contains(d.id))
-        allParents.flatMap { parent =>
+        (allParents.flatMap { parent =>
           getFieldsFromAllParentsTransitively(
             parent,
             allDefinitions
           )
-        } ++ s.localFields
+        } ++ s.localFields).distinct
       case _ => Vector.empty
     }
   }

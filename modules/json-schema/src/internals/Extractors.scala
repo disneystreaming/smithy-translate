@@ -229,9 +229,9 @@ private[json_schema] object Extractors {
           val hints = desc.toList
           Some(hints -> PBoolean)
 
-        // M:
-        //   type: object
-        //   additionalProperties: true
+        // // M:
+        // //   type: object
+        // //   additionalProperties: true
         case (obj: ObjectSchema)
             if obj.getPropertySchemas().size() == 0 &&
               obj.permitsAdditionalProperties() &&
@@ -240,7 +240,8 @@ private[json_schema] object Extractors {
           Some(genericHints -> PFreeForm)
 
         // Empty schema in JsonSchema means it can be anything (Document)
-        case _: EmptySchema => Some(genericHints -> PFreeForm)
+        case _: EmptySchema =>
+          Some(genericHints -> PFreeForm)
 
         case _ => None
       }

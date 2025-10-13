@@ -22,25 +22,33 @@ import java.net.InetSocketAddress
 import munit.Location
 import smithytranslate.compiler.SmithyVersion
 import smithytranslate.compiler.ToSmithyCompilerOptions
-import munit.FailException
 import cats.data.Chain
+import software.amazon.smithy.model.validation.ValidatedResultException
 
 final class HttpBasedSpec extends munit.FunSuite {
 
   val FileServerLogLevel = SimpleFileServer.OutputLevel.NONE
 
-  private case class FileServerMetadata(baseServerUrl: String, servingDirectory: os.Path)
-  private case class TranslationPair(jsonSchemaInput: String, expectedSmithyOutput: String)
-  private case class LocalAndRemoteSchemas(localSchemas: List[(os.RelPath, TranslationPair)], remoteSchemas: List[(os.RelPath, TranslationPair)])
-
+  private case class FileServerMetadata(
+      baseServerUrl: String,
+      servingDirectory: os.Path
+  )
+  private case class TranslationPair(
+      jsonSchemaInput: String,
+      expectedSmithyOutput: String
+  )
+  private case class LocalAndRemoteSchemas(
+      localSchemas: List[(os.RelPath, TranslationPair)],
+      remoteSchemas: List[(os.RelPath, TranslationPair)]
+  )
 
   private def withFileServer(testCode: FileServerMetadata => Unit): Unit = {
     val dir = os.temp.dir()
     val serverAddress = new InetSocketAddress("localhost", 0)
 
     val server = SimpleFileServer.createFileServer(
-      serverAddress, 
-      dir.toNIO, 
+      serverAddress,
+      dir.toNIO,
       FileServerLogLevel
     )
     val address = server.getAddress()
@@ -55,8 +63,13 @@ final class HttpBasedSpec extends munit.FunSuite {
     }
   }
 
-  private def httpRefTest(compilerOptionsTransform: ToSmithyCompilerOptions => ToSmithyCompilerOptions = identity)(createSchemas: FileServerMetadata => LocalAndRemoteSchemas)(implicit loc: Location): Unit = {
-    withFileServer { case m@FileServerMetadata(_, servingDirectory) =>
+  private def httpRefTest(
+      compilerOptionsTransform: ToSmithyCompilerOptions => ToSmithyCompilerOptions =
+        identity
+  )(
+      createSchemas: FileServerMetadata => LocalAndRemoteSchemas
+  )(implicit loc: Location): Unit = {
+    withFileServer { case m @ FileServerMetadata(_, servingDirectory) =>
       val LocalAndRemoteSchemas(localSchemas, remoteSchemas) = createSchemas(m)
       val localDir = os.temp.dir()
 
@@ -70,25 +83,25 @@ final class HttpBasedSpec extends munit.FunSuite {
         os.write.over(servingDirectory / path, jsonSchema, createFolders = true)
       }
 
-      val remoteTestInputs = 
-        localSchemas.map { 
+      val remoteTestInputs =
+        localSchemas.map {
           case (path, TranslationPair(jsonSchemaInput, expectedSmithyOutput)) =>
             TestUtils.ConversionTestInput(
               NonEmptyList.fromListUnsafe(path.segments.toList),
               jsonSchemaInput,
               expectedSmithyOutput
             )
-        } ++ 
-        remoteSchemas.map {
-          case (path, TranslationPair(_, expectedSmithyOutput)) =>
-            TestUtils.ConversionTestInput(
-              NonEmptyList.fromListUnsafe(path.segments.toList),
-              None, // This should be picked up from the remote server.
-              expectedSmithyOutput,
-              None,
-              SmithyVersion.Two
-            )
-        }
+        } ++
+          remoteSchemas.map {
+            case (path, TranslationPair(_, expectedSmithyOutput)) =>
+              TestUtils.ConversionTestInput(
+                NonEmptyList.fromListUnsafe(path.segments.toList),
+                None, // This should be picked up from the remote server.
+                expectedSmithyOutput,
+                None,
+                SmithyVersion.Two
+              )
+          }
       TestUtils.runConversionTestWithOpts(
         compilerOptionsTransform(
           ToSmithyCompilerOptions(
@@ -102,432 +115,36 @@ final class HttpBasedSpec extends munit.FunSuite {
             Map.empty
           )
         ),
-        NonEmptyList.fromListUnsafe(remoteTestInputs))
+        NonEmptyList.fromListUnsafe(remoteTestInputs)
+      )
     }
   }
-    
-
 
   test("single local file - single remote file in root path") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "local.json",
-            |  "type": "object",
-            |  "title": "local",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/remote.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace local
-            |
-            |use localhost.remote#Remote
-            |
-            |structure Local {
-            |    data: Remote
-            |}
-            |""".stripMargin
-        )
-      ),
-      remoteSchemas = List(
-        os.rel / "remote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote.json",
-              |  "type": "object",
-              |  "title": "Remote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.remote
-              |
-              |structure Remote {
-              |    id: String,
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("single local file - remote file referencing other remote file in root path") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "local.json",
-            |  "type": "object",
-            |  "title": "local",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/remote2.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace local
-            |
-            |use localhost.remote2#Remote2
-            |
-            |structure Local {
-            |    data: Remote2
-            |}
-            |""".stripMargin
-        )
-      ),
-      remoteSchemas = List(
-        os.rel / "remote1.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote1.json",
-              |  "type": "object",
-              |  "title": "Remote1",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.remote1
-              |
-              |structure Remote1 {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "remote2.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote2.json",
-              |  "type": "object",
-              |  "title": "Remote2",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    },
-              |    "other": {
-              |      "$$ref": "$baseUrl/remote1.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.remote2
-              |
-              |use localhost.remote1#Remote1
-              |
-              |structure Remote2 {
-              |    id: String
-              |    other: Remote1
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("single local file - single remapped remote file into root path") {
-    httpRefTest(_.copy(namespaceRemaps = Map(NonEmptyChain.of("localhost") -> Chain()))) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-        s"""|{
-            |  "$$schema": "http://json-schema.org/draft-07/schema#",
-            |  "$$id": "local.json",
-            |  "type": "object",
-            |  "title": "local",
-            |  "additionalProperties": false,
-            |  "properties": {
-            |    "data": {
-            |      "$$ref": "$baseUrl/remote.json"
-            |    }
-            |  }
-            |}""".stripMargin,
-        s"""|namespace local
-            |
-            |use remote#Remote
-            |
-            |structure Local {
-            |    data: Remote
-            |}
-            |""".stripMargin
-        )
-      ),
-      remoteSchemas = List(
-        os.rel / "remote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/remote.json",
-              |  "type": "object",
-              |  "title": "Remote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "id": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace remote
-              |
-              |structure Remote {
-              |    id: String,
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("multiple local - locally available file referenced as remote") {
-    httpRefTest() { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "local.json",
-              |  "type": "object",
-              |  "title": "local",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "data": {
-              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace local
-              |
-              |use localhost.duplicatedInRemote#DuplicatedInRemote
-              |
-              |structure Local {
-              |    data: DuplicatedInRemote
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      ),
-      remoteSchemas = List(
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("multiple local - locally available file referenced as remote via remap") {
-    httpRefTest(_.copy(namespaceRemaps = Map(NonEmptyChain.of("localhost") -> Chain("foo")))) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "local.json",
-              |  "type": "object",
-              |  "title": "local",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "data": {
-              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace local
-              |
-              |use foo.duplicatedInRemote#DuplicatedInRemote
-              |
-              |structure Local {
-              |    data: DuplicatedInRemote
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "foo" / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace foo.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      ),
-      remoteSchemas = List(
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace foo.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-  
-  test("multiple local - locally available file referenced as remote, but not allowed to fetch remote") {
-    // This test should pass, because the remotely referenced schema is available in the local sources.
-    // This is a fairly common json-schema usecase, where all schemas are copied locally but contain their http refs.
-    httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
-      localSchemas = List(
-        os.rel / "local.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "local.json",
-              |  "type": "object",
-              |  "title": "local",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "data": {
-              |      "$$ref": "$baseUrl/duplicatedInRemote.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace local
-              |
-              |use localhost.duplicatedInRemote#DuplicatedInRemote
-              |
-              |structure Local {
-              |    data: DuplicatedInRemote
-              |}
-              |""".stripMargin
-        ),
-        os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      ),
-      remoteSchemas = List(
-        os.rel / "duplicatedInRemote.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "$baseUrl/duplicatedInRemote.json",
-              |  "type": "object",
-              |  "title": "DuplicatedInRemote",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "something": {
-              |      "type": "string"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace localhost.duplicatedInRemote
-              |
-              |structure DuplicatedInRemote {
-              |    something: String
-              |}
-              |""".stripMargin
-        ),
-      )
-    )}
-  }
-
-  test("remote refs not in allow list are ignored") {
-    // This is expected to fail, because the refereced remote ref will get filtered out/not retrieved
-    intercept[FailException] {
-      httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) { case FileServerMetadata(baseUrl, _) => LocalAndRemoteSchemas(
+    httpRefTest() { case FileServerMetadata(baseUrl, _) =>
+      LocalAndRemoteSchemas(
         localSchemas = List(
           os.rel / "local.json" -> TranslationPair(
-          s"""|{
-              |  "$$schema": "http://json-schema.org/draft-07/schema#",
-              |  "$$id": "local.json",
-              |  "type": "object",
-              |  "title": "local",
-              |  "additionalProperties": false,
-              |  "properties": {
-              |    "data": {
-              |      "$$ref": "$baseUrl/remote.json"
-              |    }
-              |  }
-              |}""".stripMargin,
-          s"""|namespace local
-              |
-              |use localhost.remote#Remote
-              |
-              |structure Local {
-              |    data: Remote
-              |}
-              |""".stripMargin
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "local.json",
+                |  "type": "object",
+                |  "title": "local",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "data": {
+                |      "$$ref": "$baseUrl/remote.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace local
+                |
+                |use localhost.remote#Remote
+                |
+                |structure Local {
+                |    data: Remote
+                |}
+                |""".stripMargin
           )
         ),
         remoteSchemas = List(
@@ -550,10 +167,433 @@ final class HttpBasedSpec extends munit.FunSuite {
                 |    id: String,
                 |}
                 |""".stripMargin
-          ),
+          )
         )
-      )}
+      )
     }
   }
-  
+
+  test(
+    "single local file - remote file referencing other remote file in root path"
+  ) {
+    httpRefTest() { case FileServerMetadata(baseUrl, _) =>
+      LocalAndRemoteSchemas(
+        localSchemas = List(
+          os.rel / "local.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "local.json",
+                |  "type": "object",
+                |  "title": "local",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "data": {
+                |      "$$ref": "$baseUrl/remote2.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace local
+                |
+                |use localhost.remote2#Remote2
+                |
+                |structure Local {
+                |    data: Remote2
+                |}
+                |""".stripMargin
+          )
+        ),
+        remoteSchemas = List(
+          os.rel / "remote1.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/remote1.json",
+                |  "type": "object",
+                |  "title": "Remote1",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "something": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace localhost.remote1
+                |
+                |structure Remote1 {
+                |    something: String
+                |}
+                |""".stripMargin
+          ),
+          os.rel / "remote2.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/remote2.json",
+                |  "type": "object",
+                |  "title": "Remote2",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "id": {
+                |      "type": "string"
+                |    },
+                |    "other": {
+                |      "$$ref": "$baseUrl/remote1.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace localhost.remote2
+                |
+                |use localhost.remote1#Remote1
+                |
+                |structure Remote2 {
+                |    id: String
+                |    other: Remote1
+                |}
+                |""".stripMargin
+          )
+        )
+      )
+    }
+  }
+
+  test("single local file - single remapped remote file into root path") {
+    httpRefTest(
+      _.copy(namespaceRemaps = Map(NonEmptyChain.of("localhost") -> Chain()))
+    ) { case FileServerMetadata(baseUrl, _) =>
+      LocalAndRemoteSchemas(
+        localSchemas = List(
+          os.rel / "local.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "local.json",
+                |  "type": "object",
+                |  "title": "local",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "data": {
+                |      "$$ref": "$baseUrl/remote.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace local
+                |
+                |use remote#Remote
+                |
+                |structure Local {
+                |    data: Remote
+                |}
+                |""".stripMargin
+          )
+        ),
+        remoteSchemas = List(
+          os.rel / "remote.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/remote.json",
+                |  "type": "object",
+                |  "title": "Remote",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "id": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace remote
+                |
+                |structure Remote {
+                |    id: String,
+                |}
+                |""".stripMargin
+          )
+        )
+      )
+    }
+  }
+
+  test("multiple local - locally available file referenced as remote") {
+    httpRefTest() { case FileServerMetadata(baseUrl, _) =>
+      LocalAndRemoteSchemas(
+        localSchemas = List(
+          os.rel / "local.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "local.json",
+                |  "type": "object",
+                |  "title": "local",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "data": {
+                |      "$$ref": "$baseUrl/duplicatedInRemote.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace local
+                |
+                |use localhost.duplicatedInRemote#DuplicatedInRemote
+                |
+                |structure Local {
+                |    data: DuplicatedInRemote
+                |}
+                |""".stripMargin
+          ),
+          os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                |  "type": "object",
+                |  "title": "DuplicatedInRemote",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "something": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace localhost.duplicatedInRemote
+                |
+                |structure DuplicatedInRemote {
+                |    something: String
+                |}
+                |""".stripMargin
+          )
+        ),
+        remoteSchemas = List(
+          os.rel / "duplicatedInRemote.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                |  "type": "object",
+                |  "title": "DuplicatedInRemote",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "something": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace localhost.duplicatedInRemote
+                |
+                |structure DuplicatedInRemote {
+                |    something: String
+                |}
+                |""".stripMargin
+          )
+        )
+      )
+    }
+  }
+
+  test(
+    "multiple local - locally available file referenced as remote via remap"
+  ) {
+    httpRefTest(
+      _.copy(namespaceRemaps =
+        Map(NonEmptyChain.of("localhost") -> Chain("foo"))
+      )
+    ) { case FileServerMetadata(baseUrl, _) =>
+      LocalAndRemoteSchemas(
+        localSchemas = List(
+          os.rel / "local.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "local.json",
+                |  "type": "object",
+                |  "title": "local",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "data": {
+                |      "$$ref": "$baseUrl/duplicatedInRemote.json"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace local
+                |
+                |use foo.duplicatedInRemote#DuplicatedInRemote
+                |
+                |structure Local {
+                |    data: DuplicatedInRemote
+                |}
+                |""".stripMargin
+          ),
+          os.rel / "foo" / "duplicatedInRemote.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                |  "type": "object",
+                |  "title": "DuplicatedInRemote",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "something": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace foo.duplicatedInRemote
+                |
+                |structure DuplicatedInRemote {
+                |    something: String
+                |}
+                |""".stripMargin
+          )
+        ),
+        remoteSchemas = List(
+          os.rel / "duplicatedInRemote.json" -> TranslationPair(
+            s"""|{
+                |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                |  "type": "object",
+                |  "title": "DuplicatedInRemote",
+                |  "additionalProperties": false,
+                |  "properties": {
+                |    "something": {
+                |      "type": "string"
+                |    }
+                |  }
+                |}""".stripMargin,
+            s"""|namespace foo.duplicatedInRemote
+                |
+                |structure DuplicatedInRemote {
+                |    something: String
+                |}
+                |""".stripMargin
+          )
+        )
+      )
+    }
+  }
+
+  test(
+    "multiple local - locally available file referenced as remote, but not allowed to fetch remote"
+  ) {
+    // This test should pass, because the remotely referenced schema is available in the local sources.
+    // This is a fairly common json-schema usecase, where all schemas are copied locally but contain their http refs.
+    httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) {
+      case FileServerMetadata(baseUrl, _) =>
+        LocalAndRemoteSchemas(
+          localSchemas = List(
+            os.rel / "local.json" -> TranslationPair(
+              s"""|{
+                  |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                  |  "$$id": "local.json",
+                  |  "type": "object",
+                  |  "title": "local",
+                  |  "additionalProperties": false,
+                  |  "properties": {
+                  |    "data": {
+                  |      "$$ref": "$baseUrl/duplicatedInRemote.json"
+                  |    }
+                  |  }
+                  |}""".stripMargin,
+              s"""|namespace local
+                  |
+                  |use localhost.duplicatedInRemote#DuplicatedInRemote
+                  |
+                  |structure Local {
+                  |    data: DuplicatedInRemote
+                  |}
+                  |""".stripMargin
+            ),
+            os.rel / "localhost" / "duplicatedInRemote.json" -> TranslationPair(
+              s"""|{
+                  |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                  |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                  |  "type": "object",
+                  |  "title": "DuplicatedInRemote",
+                  |  "additionalProperties": false,
+                  |  "properties": {
+                  |    "something": {
+                  |      "type": "string"
+                  |    }
+                  |  }
+                  |}""".stripMargin,
+              s"""|namespace localhost.duplicatedInRemote
+                  |
+                  |structure DuplicatedInRemote {
+                  |    something: String
+                  |}
+                  |""".stripMargin
+            )
+          ),
+          remoteSchemas = List(
+            os.rel / "duplicatedInRemote.json" -> TranslationPair(
+              s"""|{
+                  |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                  |  "$$id": "$baseUrl/duplicatedInRemote.json",
+                  |  "type": "object",
+                  |  "title": "DuplicatedInRemote",
+                  |  "additionalProperties": false,
+                  |  "properties": {
+                  |    "something": {
+                  |      "type": "string"
+                  |    }
+                  |  }
+                  |}""".stripMargin,
+              s"""|namespace localhost.duplicatedInRemote
+                  |
+                  |structure DuplicatedInRemote {
+                  |    something: String
+                  |}
+                  |""".stripMargin
+            )
+          )
+        )
+    }
+  }
+
+  test("remote refs not in allow list are ignored") {
+    // This is expected to fail, because the refereced remote ref will get filtered out/not retrieved
+    intercept[ValidatedResultException] {
+      httpRefTest(_.copy(allowedRemoteBaseURLs = Set.empty)) {
+        case FileServerMetadata(baseUrl, _) =>
+          LocalAndRemoteSchemas(
+            localSchemas = List(
+              os.rel / "local.json" -> TranslationPair(
+                s"""|{
+                    |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                    |  "$$id": "local.json",
+                    |  "type": "object",
+                    |  "title": "local",
+                    |  "additionalProperties": false,
+                    |  "properties": {
+                    |    "data": {
+                    |      "$$ref": "$baseUrl/remote.json"
+                    |    }
+                    |  }
+                    |}""".stripMargin,
+                s"""|namespace local
+                    |
+                    |use localhost.remote#Remote
+                    |
+                    |structure Local {
+                    |    data: Remote
+                    |}
+                    |""".stripMargin
+              )
+            ),
+            remoteSchemas = List(
+              os.rel / "remote.json" -> TranslationPair(
+                s"""|{
+                    |  "$$schema": "http://json-schema.org/draft-07/schema#",
+                    |  "$$id": "$baseUrl/remote.json",
+                    |  "type": "object",
+                    |  "title": "Remote",
+                    |  "additionalProperties": false,
+                    |  "properties": {
+                    |    "id": {
+                    |      "type": "string"
+                    |    }
+                    |  }
+                    |}""".stripMargin,
+                s"""|namespace localhost.remote
+                    |
+                    |structure Remote {
+                    |    id: String,
+                    |}
+                    |""".stripMargin
+              )
+            )
+          )
+      }
+    }
+  }
+
 }
