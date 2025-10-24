@@ -64,14 +64,20 @@ class RendererSuite extends FunSuite {
           |
           |package com.example;
           |
-          |// message doc
-          |// multi line
+          |/**
+          | * message doc
+          | * multi line
+          | */
           |message Foo {
-          |  // field a doc
-          |  // multi line
+          |  /**
+          |   * field a doc
+          |   * multi line
+          |   */
           |  int32 a = 1;
-          |  // field b doc
-          |  // multi line
+          |  /**
+          |   * field b doc
+          |   * multi line
+          |   */
           |  repeated string b = 2;
           |}
           |""".stripMargin
@@ -264,8 +270,10 @@ class RendererSuite extends FunSuite {
           |message Foo {
           |  enum Corpus {
           |    reserved 3, 5 to 8;
-          |    // Not the studio
-          |    // something
+          |    /**
+          |     * Not the studio
+          |     * something
+          |     */
           |    UNIVERSAL = 0;
           |    WEB = 1;
           |    VIDEO = 2;

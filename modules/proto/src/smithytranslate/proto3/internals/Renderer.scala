@@ -158,7 +158,13 @@ private[proto3] object Renderer {
     maybe(
       maybeDoc
         .map { doc =>
-          Text.Many(doc.linesIterator.map(l => line(s"// $l")).toList)
+          val lines = doc.linesIterator.toList
+          lines match {
+            case head :: Nil =>
+              line(s"// $head")
+            case other =>
+              many(line("/**") +: other.map(l => line(s" * $l")) :+ line(" */"))
+          }
         }
     )
 
