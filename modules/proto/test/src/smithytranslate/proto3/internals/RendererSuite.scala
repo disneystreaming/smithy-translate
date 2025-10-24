@@ -36,7 +36,7 @@ class RendererSuite extends FunSuite {
                     Type.Int32,
                     "a",
                     1,
-                    Some("field a doc")
+                    Some("field a doc\nmulti line")
                   )
                 ),
                 MessageElement.FieldElement(
@@ -45,12 +45,12 @@ class RendererSuite extends FunSuite {
                     Type.ListType(Type.String),
                     "b",
                     2,
-                    Some("field b doc")
+                    Some("field b doc\nmulti line")
                   )
                 )
               ),
               Nil,
-              Some("message doc")
+              Some("message doc\nmulti line")
             )
           )
         )
@@ -64,11 +64,20 @@ class RendererSuite extends FunSuite {
           |
           |package com.example;
           |
-          |// message doc
+          |/**
+          | * message doc
+          | * multi line
+          | */
           |message Foo {
-          |  // field a doc
+          |  /**
+          |   * field a doc
+          |   * multi line
+          |   */
           |  int32 a = 1;
-          |  // field b doc
+          |  /**
+          |   * field b doc
+          |   * multi line
+          |   */
           |  repeated string b = 2;
           |}
           |""".stripMargin
@@ -221,7 +230,11 @@ class RendererSuite extends FunSuite {
                   Enum(
                     "Corpus",
                     List(
-                      EnumValue("UNIVERSAL", 0, Some("Not the studio")),
+                      EnumValue(
+                        "UNIVERSAL",
+                        0,
+                        Some("Not the studio\nsomething")
+                      ),
                       EnumValue("WEB", 1, None),
                       EnumValue("VIDEO", 2, None)
                     ),
@@ -257,7 +270,10 @@ class RendererSuite extends FunSuite {
           |message Foo {
           |  enum Corpus {
           |    reserved 3, 5 to 8;
-          |    // Not the studio
+          |    /**
+          |     * Not the studio
+          |     * something
+          |     */
           |    UNIVERSAL = 0;
           |    WEB = 1;
           |    VIDEO = 2;
