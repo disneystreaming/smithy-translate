@@ -9,14 +9,14 @@ use alloy.proto#protoReservedFields
 use alloy.proto#protoNumType
 use demo.common#Language
 
-@documentation("The Hello service")
+@documentation("The Hello service\nfor testing")
 @protoEnabled
 service Hello {
   version: "2017-12-11",
   operations: [SayHello, Greet]
 }
 
-@documentation("Say hello to the world")
+@documentation("Say hello to the world\nif you want to")
 operation SayHello {
   input: HelloRequest,
   output: HelloResponse
@@ -26,10 +26,10 @@ operation Greet {
   output: HelloResponse
 }
 
-@documentation("Structure to hold information used to say hello")
+@documentation("Structure to hold information used to say hello\nto someone")
 @protoReservedFields([{number: 3}])
 structure HelloRequest {
-    @documentation("The name to say hello to")
+    @documentation("The name to say\nhello to")
     @protoIndex(1)
     @required
     name: String,
@@ -80,8 +80,9 @@ structure UseApiStruct {
 }
 
 @protoInlinedOneOf
+@documentation("API Union\nwhich version")
 union ApiUnion {
-  @documentation("The version of the API")
+  @documentation("The version of the API\nin use")
   @protoIndex(4)
   version: String,
   @protoIndex(5)

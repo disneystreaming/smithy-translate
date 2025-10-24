@@ -68,14 +68,14 @@ private[proto3] object Renderer {
     enumValue match {
       case EnumValue(identifier, intvalue, doc) =>
         many(
-          maybe(doc.map(d => line(s"// ${d}"))),
+          renderDocumentation(doc),
           line(s"$identifier = $intvalue;")
         )
     }
 
   def renderEnum(enumeration: Enum): Text =
     many(
-      maybe(enumeration.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(enumeration.doc),
       line(s"enum ${enumeration.name} {"),
       indent(renderReserved(enumeration.reserved)),
       indent(enumeration.values.map(renderEnumElement)),
@@ -84,7 +84,7 @@ private[proto3] object Renderer {
 
   def renderMessage(message: Message): Text =
     many(
-      maybe(message.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(message.doc),
       line(s"message ${message.name} {"),
       indent(renderReserved(message.reserved)),
       indent(message.elements.map(renderMessageElement)),
@@ -93,7 +93,7 @@ private[proto3] object Renderer {
 
   def renderOneof(oneof: Oneof): Text =
     many(
-      maybe(oneof.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(oneof.doc),
       line(s"oneof ${oneof.name} {"),
       indent(oneof.fields.map(renderField)),
       line("}")
@@ -133,14 +133,14 @@ private[proto3] object Renderer {
     val ty = renderType(field.ty)
     val deprecated = if (field.deprecated) " [deprecated = true]" else ""
     many(
-      maybe(field.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(field.doc),
       statement(s"$ty ${field.name} = ${field.number}$deprecated")
     )
   }
 
   def renderService(service: Service): Text =
     many(
-      maybe(service.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(service.doc),
       line(s"service ${service.name} {"),
       indent(service.rpcs.map(renderRpc)),
       line("}")
@@ -148,10 +148,18 @@ private[proto3] object Renderer {
 
   def renderRpc(rpc: Rpc): Text =
     many(
-      maybe(rpc.doc.map(d => line(s"// ${d}"))),
+      renderDocumentation(rpc.doc),
       statement(
         s"rpc ${rpc.name}(${rpc.request.fqn.render}) returns (${rpc.response.fqn.render})"
       )
+    )
+
+  private def renderDocumentation(maybeDoc: Option[String]): Text =
+    maybe(
+      maybeDoc
+        .map { doc =>
+          Text.Many(doc.linesIterator.map(l => line(s"// $l")).toList)
+        }
     )
 
   def renderType(ty: Type): String = {
