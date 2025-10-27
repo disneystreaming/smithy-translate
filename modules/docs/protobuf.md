@@ -24,7 +24,7 @@ Run `smithytranslate smithy-to-proto --help` for more usage information.
 
 ### Capabilities and Design
 
-The design of the smithy to protobuf translation follows the semantics defined in the [alloy specification](https://github.com/disneystreaming/alloy/blob/main/docs/serialisation/protobuf.md).
+The design of the smithy to protobuf translation follows the semantics defined in the [alloy specification][alloy-spec].
 
 ### Options
 
@@ -80,3 +80,6 @@ message Foo {
   string value = 1;
 }
 ```
+
+
+[alloy-spec]: https://github.com/disneystreaming/alloy/blob/main/modules/docs/serialisation/protobuf.md
