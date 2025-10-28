@@ -162,9 +162,11 @@ trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
     )
 }
 
-trait MimaModule extends Mima { // self: BaseScalaModule =>
+trait MimaModule extends Mima {
 
   def mimaPreviousVersions = getVersionsFromTags
+
+  override def mimaCheckDirection = T { CheckDirection.Backward }
 
   def baseMimaVersion: Version
 
