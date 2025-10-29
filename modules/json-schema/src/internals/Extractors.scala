@@ -352,9 +352,9 @@ private[json_schema] object Extractors {
         case b: java.lang.Boolean => Node.from(b)
         case s: String            => Node.from(s)
         case n: Number            => Node.from(n)
-        case l: java.util.List[_] =>
+        case l: java.util.Collection[_] =>
           Node.fromNodes(
-            l.asScala.map { case e: Object => toNode(e) }.asJava
+            l.asScala.map { case e: Object => toNode(e) }.toList.asJava
           )
         case m: java.util.Map[_, _] =>
           val builder = ObjectNode.builder()
