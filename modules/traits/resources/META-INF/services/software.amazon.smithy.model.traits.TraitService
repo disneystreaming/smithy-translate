@@ -2,3 +2,4 @@ smithytranslate.ErrorMessageTrait$Provider
 smithytranslate.ContentTypeTrait$Provider
 smithytranslate.ContentTypeDiscriminatedTrait$Provider
 smithytranslate.NullFormatTrait$Provider
+smithytranslate.ConstTrait$Provider

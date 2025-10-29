@@ -293,8 +293,9 @@ object traits extends BaseJavaModule with BasePublishModule with MimaModule {
     )
   }
 
-  object test extends Cross[TestModule](scalaVersions)
-  trait TestModule extends CrossScalaModule with JavaTests with BaseMunitTests
+  object test extends ScalaModule with JavaTests with BaseMunitTests {
+    def scalaVersion = scala3
+  }
 }
 
 object `readme-validator` extends BaseScala213Module {

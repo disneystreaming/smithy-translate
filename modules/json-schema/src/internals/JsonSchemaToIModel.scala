@@ -243,6 +243,14 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       case Extractors.CaseNull() =>
         F.pure(OpenApiNull(local.context))
 
+      case CaseConst(hints, prim) =>
+        F.pure(
+          OpenApiPrimitive(
+            local.context.addHints(hints, retainTopLevel = true),
+            prim
+          )
+        )
+
       case s =>
         val error = ToSmithyError.Restriction(s"Schema not supported:\n$s")
         F.pure(OpenApiShortStop(local.context, error))
