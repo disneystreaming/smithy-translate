@@ -17,15 +17,20 @@ package smithytranslate.compiler
 package internals
 package json_schema
 
-import Primitive._
-import org.everit.json.schema.Schema
-import org.everit.json.schema._
 import cats.data.NonEmptyChain
+import cats.syntax.all.*
+import org.everit.json.schema.*
+import org.everit.json.schema.Schema
+import org.json.JSONObject
 import smithytranslate.compiler.ToSmithyError
 import smithytranslate.compiler.internals.GetExtensions
-import scala.jdk.CollectionConverters._
-import cats.syntax.all._
-import scala.collection.compat._
+import software.amazon.smithy.model.node.Node
+import software.amazon.smithy.model.node.ObjectNode
+
+import scala.collection.compat.*
+import scala.jdk.CollectionConverters.*
+
+import Primitive.*
 
 private[json_schema] object Extractors {
 
@@ -324,6 +329,39 @@ private[json_schema] object Extractors {
             case _ => None
           }
         case _ => None
+      }
+    }
+  }
+
+  object CaseConst {
+    def unapply(sch: Schema): Option[(List[Hint], Primitive)] = {
+      sch match {
+        case const: ConstSchema =>
+          val genericHints = getGenericHints(sch)
+          val value = const.getPermittedValue()
+          val constHint = Hint.Const(toNode(value))
+          Some((constHint :: genericHints) -> Primitive.PFreeForm)
+        case _ => None
+      }
+    }
+
+    private def toNode(in: Object): Node = {
+      in match {
+        case null                 => Node.nullNode()
+        case JSONObject.NULL      => Node.nullNode()
+        case b: java.lang.Boolean => Node.from(b)
+        case s: String            => Node.from(s)
+        case n: Number            => Node.from(n)
+        case l: java.util.List[_] =>
+          Node.fromNodes(
+            l.asScala.map { case e: Object => toNode(e) }.asJava
+          )
+        case m: java.util.Map[_, _] =>
+          val builder = ObjectNode.builder()
+          m.asScala.foreach { case (k: String, v: Object) =>
+            builder.withMember(k, toNode(v))
+          }
+          builder.build()
       }
     }
   }

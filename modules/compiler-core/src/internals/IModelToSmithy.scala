@@ -38,6 +38,7 @@ import software.amazon.smithy.model.shapes._
 import software.amazon.smithy.model.shapes.{Shape => JShape}
 
 import scala.jdk.CollectionConverters._
+import smithytranslate.ConstTrait
 
 private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     extends (IModel => Model) {
@@ -438,6 +439,8 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       }
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())
+    case Hint.Const(value) =>
+      List(ConstTrait.builder.withValue(value).build())
     case _ => List.empty
   }
 
