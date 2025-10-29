@@ -440,7 +440,7 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
     case Hint.Tags(values) =>
       List(TagsTrait.builder.values(values.asJava).build())
     case Hint.Const(value) =>
-      List(ConstTrait.builder.withValue(value).build())
+      List(ConstTrait.builder.value(value).build())
     case _ => List.empty
   }
 

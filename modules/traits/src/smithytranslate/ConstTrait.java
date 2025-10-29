@@ -52,7 +52,7 @@ public final class ConstTrait extends AbstractTrait implements ToSmithyBuilder<C
 
     private Node value = null;
 
-    public Builder withValue(Node value) {
+    public Builder value(Node value) {
       this.value = value;
       return this;
     }
@@ -73,7 +73,7 @@ public final class ConstTrait extends AbstractTrait implements ToSmithyBuilder<C
     @Override
     public ConstTrait createTrait(ShapeId target, Node node) {
       Builder builder = builder().sourceLocation(node);
-      builder.withValue(node);
+      builder.value(node);
       return builder.build();
     }
   }

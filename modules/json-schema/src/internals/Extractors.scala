@@ -362,6 +362,10 @@ private[json_schema] object Extractors {
             builder.withMember(k, toNode(v))
           }
           builder.build()
+        case _ =>
+          throw new IllegalArgumentException(
+            s"cannot convert a ${in.getClass()} to a Node"
+          )
       }
     }
   }

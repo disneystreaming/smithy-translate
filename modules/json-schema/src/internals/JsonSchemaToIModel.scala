@@ -252,9 +252,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
         )
 
       case s =>
-        val error = ToSmithyError.Restriction(
-          s"Schema not supported:\n$s\n${s.getClass()}"
-        )
+        val error = ToSmithyError.Restriction(s"Schema not supported:\n$s")
         F.pure(OpenApiShortStop(local.context, error))
     }
   }
