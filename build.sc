@@ -28,7 +28,7 @@ trait CompilerCoreModule
 
   def publishArtifactName = "smithytranslate-compiler-core"
 
-  def baseMimaVersion = Version(0, 7, 2)
+  def baseMimaVersion = T { Version(0, 7, 2) }
 
   def moduleDeps = Seq(traits)
 
@@ -58,7 +58,7 @@ trait JsonSchemaModule
 
   def publishArtifactName = "smithytranslate-json-schema"
 
-  def baseMimaVersion = Version(0, 5, 9)
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.circe.jawn,
@@ -90,7 +90,7 @@ trait OpenApiModule
   def ivyDeps =
     buildDeps.swagger.parser
 
-  def baseMimaVersion = Version(0, 5, 9)
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
@@ -111,7 +111,11 @@ trait RunnersModule
 
   def publishArtifactName = "smithytranslate-runners"
 
-  def ivyDeps = Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson,buildDeps.coursier(scalaVersion()))
+  def ivyDeps = Agg(
+    buildDeps.lihaoyi.oslib,
+    buildDeps.lihaoyi.ujson,
+    buildDeps.coursier(scalaVersion())
+  )
 
   def moduleDeps =
     Seq(`compiler-core`(), openapi(), proto(), `json-schema`(), formatter.jvm())
@@ -227,7 +231,7 @@ object formatter extends BaseModule { outer =>
         with BasePublishModule
         with MimaModule {
 
-      def baseMimaVersion = Version(0, 5, 9)
+      def baseMimaVersion = T { Version(0, 5, 9) }
 
       def publishArtifactName = "smithytranslate-formatter-java-api"
 
@@ -266,7 +270,7 @@ object traits extends BaseJavaModule with BasePublishModule with MimaModule {
 
   def publishArtifactName = "smithytranslate-traits"
 
-  def baseMimaVersion = Version(0, 5, 9)
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model
@@ -339,7 +343,7 @@ trait ProtoModule
 
   def publishArtifactName = "smithytranslate-proto"
 
-  def baseMimaVersion = Version(0, 7, 1)
+  def baseMimaVersion = T { Version(0, 7, 1) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model,
@@ -418,7 +422,7 @@ trait TransitiveModule
 
   def publishArtifactName = "smithytranslate-transitive"
 
-  def baseMimaVersion = Version(0, 5, 9)
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model,

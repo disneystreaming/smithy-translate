@@ -19,6 +19,7 @@ import mill.scalalib.scalafmt.ScalafmtModule
 import mill.contrib.buildinfo.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
 import com.github.lolgab.mill.mima._
+import upickle.default._
 
 import scala.Ordering.Implicits._
 
@@ -168,9 +169,9 @@ trait MimaModule extends Mima {
 
   override def mimaCheckDirection = T { CheckDirection.Backward }
 
-  def baseMimaVersion: Version
+  def baseMimaVersion: T[Version]
 
-  private def getVersionsFromTags: Seq[String] = {
+  private def getVersionsFromTags: T[Seq[String]] = T {
     val versionFromTags =
       os.proc("git", "tag", "--list")
         .call()
@@ -180,7 +181,7 @@ trait MimaModule extends Mima {
         .map(_.trim.stripPrefix("v"))
         .flatMap(Version(_))
 
-    val filteredTags = versionFromTags.filter(_ >= baseMimaVersion)
+    val filteredTags = versionFromTags.filter(_ >= baseMimaVersion())
 
     filteredTags.map(_.toString)
   }
@@ -204,6 +205,8 @@ object Version {
     case ZincWorkerUtil.DottyVersion("0", minor, patch) =>
       Version(3, minor.toInt, patch.toInt)
   }
+
+  implicit val readWriter: ReadWriter[Version] = macroRW[Version]
 
   implicit lazy val ordering: Ordering[Version] =
     (x: Version, y: Version) => {
