@@ -50,5 +50,6 @@ private[compiler] object Hint {
   case object IsMixin extends Hint
   case class HasMixin(id: DefId) extends Hint
   case class Tags(values: List[String]) extends Hint
+  case class Const(value: Node) extends Hint
 }
 // format: on
