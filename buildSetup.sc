@@ -184,10 +184,10 @@ trait MimaModule extends Mima { self: BasePublishModule =>
 
     val filteredTags =
       versionFromTags
-        .filterNot(_ == currentVersion)
+        .filterNot(_.toString == currentVersion)
         .filter(_ >= baseMimaVersion())
 
-    filteredTags.map(_.toString)
+    filteredTags.map(_.toString).toIndexedSeq
   }
 }
 
