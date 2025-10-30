@@ -23,9 +23,12 @@ object `compiler-core` extends Cross[CompilerCoreModule](scalaVersions)
 trait CompilerCoreModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
 
   def publishArtifactName = "smithytranslate-compiler-core"
+
+  def baseMimaVersion = T { Version(0, 7, 2) }
 
   def moduleDeps = Seq(traits)
 
@@ -49,10 +52,13 @@ object `json-schema` extends Cross[JsonSchemaModule](scalaVersions)
 trait JsonSchemaModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
   def moduleDeps = Seq(`compiler-core`())
 
   def publishArtifactName = "smithytranslate-json-schema"
+
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.circe.jawn,
@@ -74,7 +80,8 @@ object openapi extends Cross[OpenApiModule](scalaVersions)
 trait OpenApiModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
 
   def publishArtifactName = "smithytranslate-openapi"
 
@@ -82,6 +89,8 @@ trait OpenApiModule
 
   def ivyDeps =
     buildDeps.swagger.parser
+
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
@@ -102,7 +111,11 @@ trait RunnersModule
 
   def publishArtifactName = "smithytranslate-runners"
 
-  def ivyDeps = Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson,buildDeps.coursier(scalaVersion()))
+  def ivyDeps = Agg(
+    buildDeps.lihaoyi.oslib,
+    buildDeps.lihaoyi.ujson,
+    buildDeps.coursier(scalaVersion())
+  )
 
   def moduleDeps =
     Seq(`compiler-core`(), openapi(), proto(), `json-schema`(), formatter.jvm())
@@ -213,7 +226,13 @@ object formatter extends BaseModule { outer =>
       override def jar: T[PathRef] = assembly
     }
 
-    object `java-api` extends BaseJavaModule with BasePublishModule {
+    object `java-api`
+        extends BaseJavaModule
+        with BasePublishModule
+        with MimaModule {
+
+      def baseMimaVersion = T { Version(0, 5, 9) }
+
       def publishArtifactName = "smithytranslate-formatter-java-api"
 
       override def unmanagedClasspath = T {
@@ -247,9 +266,11 @@ object formatter extends BaseModule { outer =>
   }
 }
 
-object traits extends BaseJavaModule with BasePublishModule {
+object traits extends BaseJavaModule with BasePublishModule with MimaModule {
 
   def publishArtifactName = "smithytranslate-traits"
+
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model
@@ -318,9 +339,12 @@ object proto extends Cross[ProtoModule](scalaVersions)
 trait ProtoModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
 
   def publishArtifactName = "smithytranslate-proto"
+
+  def baseMimaVersion = T { Version(0, 7, 1) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model,
@@ -394,9 +418,12 @@ object transitive extends Cross[TransitiveModule](scalaVersions)
 trait TransitiveModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
 
   def publishArtifactName = "smithytranslate-transitive"
+
+  def baseMimaVersion = T { Version(0, 5, 9) }
 
   def ivyDeps = Agg(
     buildDeps.smithy.model,

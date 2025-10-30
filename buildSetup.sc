@@ -2,6 +2,7 @@ import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`com.lihaoyi::mill-contrib-scalapblib:`
 import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
 import $ivy.`com.lewisjkl::header-mill-plugin::0.0.3`
+import $ivy.`com.github.lolgab::mill-mima::0.1.1`
 import $file.buildDeps
 
 import header._
@@ -17,6 +18,8 @@ import mill.scalalib.publish._
 import mill.scalalib.scalafmt.ScalafmtModule
 import mill.contrib.buildinfo.BuildInfo
 import mill.scalalib.api.ZincWorkerUtil
+import com.github.lolgab.mill.mima._
+import upickle.default._
 
 import scala.Ordering.Implicits._
 
@@ -132,7 +135,8 @@ trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
     override def scalacOptions = T {
       // Don't force target bytecode version in tests.
       // Our published artifacts target java 11, but the tests need some java 18 apis
-      super.scalacOptions()
+      super
+        .scalacOptions()
         .filterNot(_.startsWith("-release"))
         .filterNot(_.startsWith("-java-output-version"))
     }
@@ -159,19 +163,53 @@ trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
     )
 }
 
-case class ScalaVersion(maj: Int, min: Int, patch: Int)
-object ScalaVersion {
-  def apply(scalaVersion: String): ScalaVersion = scalaVersion match {
+trait MimaModule extends Mima {
+
+  def mimaPreviousVersions = getVersionsFromTags
+
+  override def mimaCheckDirection = T { CheckDirection.Backward }
+
+  def baseMimaVersion: T[Version]
+
+  private def getVersionsFromTags: T[Seq[String]] = T {
+    val versionFromTags =
+      os.proc("git", "tag", "--list")
+        .call()
+        .out
+        .text()
+        .split("\n")
+        .map(_.trim.stripPrefix("v"))
+        .flatMap(Version(_))
+
+    val filteredTags = versionFromTags.filter(_ >= baseMimaVersion())
+
+    filteredTags.map(_.toString)
+  }
+}
+
+case class Version(maj: Int, min: Int, patch: Int) {
+  override def toString = s"$maj.$min.$patch"
+}
+object Version {
+  def apply(version: String): Option[Version] = version match {
     case ZincWorkerUtil.ReleaseVersion(major, minor, patch) =>
-      ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case ZincWorkerUtil.MinorSnapshotVersion(major, minor, patch) =>
-      ScalaVersion(major.toInt, minor.toInt, patch.toInt)
-    case ZincWorkerUtil.DottyVersion("0", minor, patch) =>
-      ScalaVersion(3, minor.toInt, patch.toInt)
+      Some(Version(major.toInt, minor.toInt, patch.toInt))
+    case _ => None
   }
 
-  implicit lazy val ordering: Ordering[ScalaVersion] =
-    (x: ScalaVersion, y: ScalaVersion) => {
+  def scalaVersion(scalaVersion: String): Version = scalaVersion match {
+    case ZincWorkerUtil.ReleaseVersion(major, minor, patch) =>
+      Version(major.toInt, minor.toInt, patch.toInt)
+    case ZincWorkerUtil.MinorSnapshotVersion(major, minor, patch) =>
+      Version(major.toInt, minor.toInt, patch.toInt)
+    case ZincWorkerUtil.DottyVersion("0", minor, patch) =>
+      Version(3, minor.toInt, patch.toInt)
+  }
+
+  implicit val readWriter: ReadWriter[Version] = macroRW[Version]
+
+  implicit lazy val ordering: Ordering[Version] =
+    (x: Version, y: Version) => {
       if (
         x.maj > y.maj || (x.maj == y.maj && x.min > y.min) || (x.maj == y.maj && x.min == y.min && x.patch > y.patch)
       ) 1
@@ -182,14 +220,14 @@ object ScalaVersion {
     }
 }
 
-val v211 = ScalaVersion(2, 11, 0)
-val v212 = ScalaVersion(2, 12, 0)
-val v213 = ScalaVersion(2, 13, 0)
-val v300 = ScalaVersion(3, 0, 0)
+val v211 = Version(2, 11, 0)
+val v212 = Version(2, 12, 0)
+val v213 = Version(2, 13, 0)
+val v300 = Version(3, 0, 0)
 
 case class ScalacOption(
     name: String,
-    isSupported: ScalaVersion => Boolean = _ => true
+    isSupported: Version => Boolean = _ => true
 )
 
 // format: off
@@ -220,7 +258,7 @@ private val allScalacOptions = Seq(
   ScalacOption("-Xlint:inaccessible", isSupported = version => v211 <= version && version < v300),                         // Warn about inaccessible types in method signatures.
   ScalacOption("-Xlint:infer-any", isSupported = version => v211 <= version && version < v300),                            // Warn when a type argument is inferred to be `Any`.
   ScalacOption("-Xlint:missing-interpolator", isSupported = version => v211 <= version && version < v300),                 // A string literal appears to be missing an interpolator id.
-  ScalacOption("-Xlint:nullary-override", isSupported = version => v211 <= version && version < ScalaVersion(2, 13, 3)),   // Warn when non-nullary `def f()' overrides nullary `def f'.
+  ScalacOption("-Xlint:nullary-override", isSupported = version => v211 <= version && version < Version(2, 13, 3)),        // Warn when non-nullary `def f()' overrides nullary `def f'.
   ScalacOption("-Xlint:nullary-unit", isSupported = version => v211 <= version && version < v300),                         // Warn when nullary methods return Unit.
   ScalacOption("-Xlint:option-implicit", isSupported = version => v211 <= version && version < v300),                      // Option.apply used implicit view.
   ScalacOption("-Xlint:package-object-classes", isSupported = version => v211 <= version && version < v300),               // Class or object defined in package object.
@@ -240,14 +278,14 @@ private val allScalacOptions = Seq(
   ScalacOption("-Ywarn-nullary-unit", isSupported = _ < v213),                                                             // Warn when nullary methods return Unit.
   ScalacOption("-Ywarn-numeric-widen", isSupported = _ < v213),                                                            // Warn when numerics are widened.
   ScalacOption("-Wnumeric-widen", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
-  ScalacOption("-Xlint:implicit-recursion", isSupported = version => ScalaVersion(2, 13, 3) <= version && version < v300), // Warn when an implicit resolves to an enclosing self-definition
+  ScalacOption("-Xlint:implicit-recursion", isSupported = version => Version(2, 13, 3) <= version && version < v300),      // Warn when an implicit resolves to an enclosing self-definition
   ScalacOption("-Ywarn-unused", isSupported = version => v211 <= version && version < v212),                               // Warn when local and private vals, vars, defs, and types are unused.
   ScalacOption("-Ywarn-unused-import", isSupported = version => v211 <= version && version < v212),                        // Warn if an import selector is not referenced.
   ScalacOption("-Ywarn-unused:implicits", isSupported = version => v212 <= version && version < v213),                     // Warn if an implicit parameter is unused.
   ScalacOption("-Wunused:implicits", isSupported = version => v213 <= version && version < v300),                          // ^ Replaces the above
   ScalacOption("-Wunused:explicits", isSupported = version => v213 <= version && version < v300),                          // Warn if an explicit parameter is unused.
   ScalacOption("-Ywarn-unused:imports", isSupported = version => v212 <= version && version < v213),                       // Warn if an import selector is not referenced.
-//  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),                            // ^ Replaces the above
+//  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),                          // ^ Replaces the above
   ScalacOption("-Ywarn-unused:locals", isSupported = version => v212 <= version && version < v213),                        // Warn if a local definition is unused.
   ScalacOption("-Wunused:locals", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
   ScalacOption("-Ywarn-unused:params", isSupported = version => v212 <= version && version < v213),                        // Warn if a value parameter is unused.
@@ -259,15 +297,15 @@ private val allScalacOptions = Seq(
   ScalacOption("-Ywarn-value-discard", isSupported = _ < v213),                                                            // Warn when non-Unit expression results are unused.
   ScalacOption("-Wvalue-discard", isSupported = version => v213 <= version && version < v300),                             // ^ Replaces the above
   ScalacOption("-Ykind-projector", isSupported = v300 <= _),                                                               // Enables a subset of kind-projector syntax (see https://github.com/lampepfl/dotty/pull/7775)
-  ScalacOption("-Vimplicits", isSupported = version => ScalaVersion(2, 13, 6) <= version && version < v300),               // Enables the tek/splain features to make the compiler print implicit resolution chains when no implicit value can be found
-  ScalacOption("-Vtype-diffs", isSupported = version => ScalaVersion(2, 13, 6) <= version && version < v300),              // Enables the tek/splain features to turn type error messages (found: X, required: Y) into colored diffs between the two types
-  ScalacOption("-Ypartial-unification", isSupported = version => ScalaVersion(2, 11, 9) <= version && version < v213)      // Enable partial unification in type constructor inference
+  ScalacOption("-Vimplicits", isSupported = version => Version(2, 13, 6) <= version && version < v300),                    // Enables the tek/splain features to make the compiler print implicit resolution chains when no implicit value can be found
+  ScalacOption("-Vtype-diffs", isSupported = version => Version(2, 13, 6) <= version && version < v300),                   // Enables the tek/splain features to turn type error messages (found: X, required: Y) into colored diffs between the two types
+  ScalacOption("-Ypartial-unification", isSupported = version => Version(2, 11, 9) <= version && version < v213)           // Enable partial unification in type constructor inference
 )
 // format: off
 
 def scalacOptionsFor(scalaVersion: String): Seq[String] = {
   val commonOpts = Seq("-encoding", "utf8")
-  val scalaVer = ScalaVersion(scalaVersion)
+  val scalaVer = Version.scalaVersion(scalaVersion)
   val versionedOpts = allScalacOptions.filter(_.isSupported(scalaVer)).map(_.name)
   
   commonOpts ++ versionedOpts
