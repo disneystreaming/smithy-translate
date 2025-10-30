@@ -163,7 +163,7 @@ trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
     )
 }
 
-trait MimaModule extends Mima {
+trait MimaModule extends Mima { self: BasePublishModule =>
 
   def mimaPreviousVersions = getVersionsFromTags
 
@@ -172,6 +172,7 @@ trait MimaModule extends Mima {
   def baseMimaVersion: T[Version]
 
   private def getVersionsFromTags: T[Seq[String]] = T {
+    val currentVersion = publishVersion().trim().stripPrefix("v")
     val versionFromTags =
       os.proc("git", "tag", "--list")
         .call()
@@ -181,7 +182,10 @@ trait MimaModule extends Mima {
         .map(_.trim.stripPrefix("v"))
         .flatMap(Version(_))
 
-    val filteredTags = versionFromTags.filter(_ >= baseMimaVersion())
+    val filteredTags =
+      versionFromTags
+        .filterNot(_ == currentVersion)
+        .filter(_ >= baseMimaVersion())
 
     filteredTags.map(_.toString)
   }
