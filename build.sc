@@ -33,7 +33,7 @@ trait CompilerCoreModule
   def moduleDeps = Seq(traits)
 
   def ivyDeps = Agg(
-    ivy"com.fasterxml.jackson.core:jackson-databind:2.19.2",
+    ivy"com.fasterxml.jackson.core:jackson-databind:2.19.4",
     buildDeps.smithy.model,
     buildDeps.smithy.build,
     buildDeps.cats.mtl,
