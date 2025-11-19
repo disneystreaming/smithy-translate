@@ -15,9 +15,7 @@
 
 package smithytranslate.runners.openapi
 
-import cats.data.NonEmptyList
 import cats.data.NonEmptyChain
-import smithytranslate.runners.FileUtils.readAll
 import smithytranslate.runners.transformer.TranslateTransformer
 import smithytranslate.compiler.openapi.OpenApiCompiler
 import software.amazon.smithy.model.Model
@@ -30,7 +28,7 @@ import cats.data.Chain
 
 object ParseAndCompile {
   def openapi(
-      inputPaths: NonEmptyList[os.Path],
+      input: OpenApiCompilerInput.UnparsedSpecs,
       useVerboseNames: Boolean,
       validateInput: Boolean,
       validateOutput: Boolean,
@@ -38,10 +36,6 @@ object ParseAndCompile {
       useEnumTraitSyntax: Boolean,
       debug: Boolean
   ): ToSmithyResult[Model] = {
-    val includedExtensions = List("yaml", "yml", "json")
-    val input = OpenApiCompilerInput.UnparsedSpecs(
-      readAll(inputPaths, includedExtensions)
-    )
     val opts = ToSmithyCompilerOptions(
       useVerboseNames,
       validateInput,
@@ -56,7 +50,7 @@ object ParseAndCompile {
   }
 
   def jsonSchema(
-      inputPaths: NonEmptyList[os.Path],
+      input: JsonSchemaCompilerInput.UnparsedSpecs,
       useVerboseNames: Boolean,
       validateInput: Boolean,
       validateOutput: Boolean,
@@ -66,10 +60,6 @@ object ParseAndCompile {
       allowedRemoteBaseURLs: Set[String],
       namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
   ): ToSmithyResult[Model] = {
-    val includedExtensions = List("json")
-    val input = JsonSchemaCompilerInput.UnparsedSpecs(
-      readAll(inputPaths, includedExtensions)
-    )
     val opts = ToSmithyCompilerOptions(
       useVerboseNames,
       validateInput,

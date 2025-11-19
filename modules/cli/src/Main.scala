@@ -32,6 +32,7 @@ import smithytranslate.cli.opts.SmithyTranslateCommand.{
 }
 import smithytranslate.runners.{OpenApi, Proto}
 import smithytranslate.runners.formatter.Formatter
+import smithytranslate.runners.FileUtils.readAll
 import smithytranslate.formatter.parsers.op
 
 object Main
@@ -46,11 +47,15 @@ object Main
             .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
             .orElse(FormatterOpts.format)
             .orElse(VersionOpts.print)
+        val openApiExtensions = List("yaml", "yml", "json")
+        val jsonSchemaExtensions = List("json")
+
         cli map {
           case OpenApiTranslate(opts) =>
-            if (opts.isOpenapi)
+            if (opts.isOpenapi) {
+              val input = readAll(opts.inputFiles, openApiExtensions)
               OpenApi.runOpenApi(
-                opts.inputFiles,
+                input,
                 opts.outputPath,
                 opts.useVerboseNames,
                 opts.validateInput,
@@ -59,9 +64,10 @@ object Main
                 opts.outputJson,
                 opts.debug
               )
-            else
+            } else {
+              val input = readAll(opts.inputFiles, jsonSchemaExtensions)
               OpenApi.runJsonSchema(
-                opts.inputFiles,
+                input,
                 opts.outputPath,
                 opts.useVerboseNames,
                 opts.validateInput,
@@ -72,6 +78,7 @@ object Main
                 opts.allowedRemoteBaseURLs,
                 opts.namespaceRemaps
               )
+            }
             SmithyBuildJsonWriter.writeDefault(opts.outputPath, opts.force)
 
           case ProtoTranslate(opts) =>

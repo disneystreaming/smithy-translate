@@ -15,14 +15,17 @@
 
 package smithytranslate.runners
 
-import cats.data.{NonEmptyList, NonEmptyChain, Chain}
+import cats.data.{NonEmptyChain, Chain}
 import smithytranslate.runners.transformer.TransformerLookup
 import smithytranslate.runners.openapi._
+import smithytranslate.compiler.FileContents
+import smithytranslate.compiler.openapi.OpenApiCompilerInput
+import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
 
 object OpenApi {
 
   def runOpenApi(
-      inputFiles: NonEmptyList[os.Path],
+      input: List[FileContents],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -37,7 +40,7 @@ object OpenApi {
 
     report(
       ParseAndCompile.openapi(
-        inputFiles,
+        OpenApiCompilerInput.UnparsedSpecs(input.toList),
         useVerboseNames = useVerboseNames,
         validateInput = validateInput,
         validateOutput = validateOutput,
@@ -50,7 +53,7 @@ object OpenApi {
   }
 
   def runJsonSchema(
-      inputFiles: NonEmptyList[os.Path],
+      input: List[FileContents],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -66,7 +69,7 @@ object OpenApi {
     val report = ReportResult(outputPath, outputJson).apply _
     report(
       ParseAndCompile.jsonSchema(
-        inputFiles,
+        JsonSchemaCompilerInput.UnparsedSpecs(input.toList),
         useVerboseNames = useVerboseNames,
         validateInput = validateInput,
         validateOutput = validateOutput,
@@ -81,7 +84,7 @@ object OpenApi {
   }
 
   def runJsonSchema(
-      inputFiles: NonEmptyList[os.Path],
+      input: List[FileContents],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -90,7 +93,7 @@ object OpenApi {
       outputJson: Boolean,
       debug: Boolean
   ): Unit = runJsonSchema(
-    inputFiles,
+    input,
     outputPath,
     useVerboseNames,
     validateInput,
