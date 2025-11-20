@@ -47,15 +47,12 @@ object Main
             .orElse(OpenAPIJsonSchemaOpts.jsonSchemaToSmithy)
             .orElse(FormatterOpts.format)
             .orElse(VersionOpts.print)
-        val openApiExtensions = List("yaml", "yml", "json")
-        val jsonSchemaExtensions = List("json")
 
         cli map {
           case OpenApiTranslate(opts) =>
             if (opts.isOpenapi) {
-              val input = readAll(opts.inputFiles, openApiExtensions)
               OpenApi.runOpenApi(
-                input,
+                opts.inputFiles,
                 opts.outputPath,
                 opts.useVerboseNames,
                 opts.validateInput,
@@ -65,9 +62,8 @@ object Main
                 opts.debug
               )
             } else {
-              val input = readAll(opts.inputFiles, jsonSchemaExtensions)
               OpenApi.runJsonSchema(
-                input,
+                opts.inputFiles,
                 opts.outputPath,
                 opts.useVerboseNames,
                 opts.validateInput,

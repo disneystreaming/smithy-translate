@@ -15,6 +15,7 @@ import mill.scalajslib.ScalaJSModule
 import mill.scalalib._
 import mill.scalalib.publish._
 import mill.contrib.buildinfo.BuildInfo
+import com.github.lolgab.mill.mima._
 
 import scala.Ordering.Implicits._
 import mill.eval.Evaluator
@@ -107,9 +108,21 @@ object runners extends Cross[RunnersModule](scalaVersions)
 trait RunnersModule
     extends CrossScalaModule
     with BaseScalaModule
-    with BasePublishModule {
+    with BasePublishModule
+    with MimaModule {
 
   def publishArtifactName = "smithytranslate-runners"
+
+  def baseMimaVersion = T { Version(0, 7, 2) }
+
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[IncompatibleMethTypeProblem](
+      "smithytranslate.runners.openapi.ParseAndCompile.jsonSchema"
+    ),
+    ProblemFilter.exclude[IncompatibleMethTypeProblem](
+      "smithytranslate.runners.openapi.ParseAndCompile.openapi"
+    )
+  )
 
   def ivyDeps = Agg(
     buildDeps.lihaoyi.oslib,
