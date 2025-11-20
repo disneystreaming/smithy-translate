@@ -47,7 +47,6 @@ abstract class AbstractToSmithyCompiler[Input] protected[compiler] () {
       .map(new IModelToSmithy(opts.useEnumTraitSyntax))
     val translationErrors = errors0.toList
 
-    println(s"going to valiate smithy0: $smithy0")
     val assembled: ValidatedResult[SmithyModel] = validate(smithy0)
     val validationEvents = if (opts.debug) {
       assembled.getValidationEvents()
