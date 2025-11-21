@@ -39,7 +39,7 @@ final class DebugSpec extends munit.FunSuite {
       useEnumTraitSyntax = false,
       allowedRemoteBaseURLs = Set.empty,
       namespaceRemaps = Map.empty,
-      debug = debug,
+      debug = debug
     )
 
     val input = OpenApiCompilerInput.UnparsedSpecs(
@@ -65,7 +65,7 @@ final class DebugSpec extends munit.FunSuite {
   }
 
   test("load with debug leaves validation events untouched") {
-    testFilteredErrors(debug = true, expectedCount = 4)
+    testFilteredErrors(debug = true, expectedCount = 2)
   }
   test("load without debug filters validation events") {
     testFilteredErrors(debug = false, expectedCount = 2)

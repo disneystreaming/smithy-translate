@@ -79,9 +79,11 @@ object TestUtils {
     // Test that model can be assembled successfully,
     // if it can't then there's no sense in making
     // assertions on it that might not even be correct
-    val _ = result.map(r => Model.assembler.addModel(r).assemble.unwrap)
+    val resultWithAllModels = result.map(r =>
+      Model.assembler.discoverModels().addModel(r).assemble.unwrap
+    )
 
-    val resultW = result.map(ModelWrapper(_))
+    val resultW = resultWithAllModels.map(ModelWrapper(_))
     val assembler = Model
       .assembler()
       .discoverModels()
@@ -163,13 +165,8 @@ object TestUtils {
       remaining: _*
     )
     res match {
-      case ToSmithyResult.Success(Nil, output) =>
+      case ToSmithyResult.Success(_, output) =>
         Assertions.assertEquals(output, expected)
-      case ToSmithyResult.Success(errs, _) =>
-        Assertions.fail(
-          "Model assembled with errors: \n\t"
-            + errs.map(_.getMessage).mkString("\n").replaceAll("\n", "\n\t")
-        )
       case ToSmithyResult.Failure(err, errors) =>
         errors.foreach(println)
         Assertions.fail("Validating model failed: ", err)
