@@ -17,8 +17,7 @@ package smithytranslate.compiler.openapi
 
 final class ExtensionsSpec extends munit.FunSuite {
 
-  // re-enable once https://github.com/smithy-lang/smithy/pull/2669 is merged and alloy is updated
-  test("extensions: accurate conversion".ignore) {
+  test("extensions: accurate conversion") {
     val openapiString = """|openapi: '3.0.'
                            |info:
                            |  title: test
