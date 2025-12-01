@@ -95,8 +95,9 @@ abstract class AbstractToSmithyCompiler[Input] protected[compiler] () {
     }
   }
 
-  private def validate(model: SmithyModel): ValidatedResult[SmithyModel] =
+  private def validate(model: SmithyModel): ValidatedResult[SmithyModel] = {
     SmithyModel.assembler().addModel(model).assemble()
+  }
 
   private def transform(
       opts: ToSmithyCompilerOptions
