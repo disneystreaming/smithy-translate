@@ -115,15 +115,6 @@ trait RunnersModule
 
   def baseMimaVersion = T { Version(0, 7, 2) }
 
-  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
-    ProblemFilter.exclude[IncompatibleMethTypeProblem](
-      "smithytranslate.runners.openapi.ParseAndCompile.jsonSchema"
-    ),
-    ProblemFilter.exclude[IncompatibleMethTypeProblem](
-      "smithytranslate.runners.openapi.ParseAndCompile.openapi"
-    )
-  )
-
   def ivyDeps = Agg(
     buildDeps.lihaoyi.oslib,
     buildDeps.lihaoyi.ujson,
