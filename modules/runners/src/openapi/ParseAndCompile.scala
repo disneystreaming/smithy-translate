@@ -52,8 +52,8 @@ object ParseAndCompile {
   }
 
   @deprecated(
-    since = "0.7.5",
-    message = "use alternative method which accepts UnparsedSpecs directly"
+    message = "use alternative method which accepts UnparsedSpecs directly",
+    since = "0.7.5"
   )
   def openapi(
       inputPaths: NonEmptyList[os.Path],
@@ -106,8 +106,8 @@ object ParseAndCompile {
   }
 
   @deprecated(
-    since = "0.7.5",
-    message = "use alternative method which accepts UnparsedSpecs directly"
+    message = "use alternative method which accepts UnparsedSpecs directly",
+    since = "0.7.5"
   )
   def jsonSchema(
       inputPaths: NonEmptyList[os.Path],
