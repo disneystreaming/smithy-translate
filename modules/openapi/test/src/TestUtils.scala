@@ -105,11 +105,9 @@ object TestUtils {
     // Test that model can be assembled successfully,
     // if it can't then there's no sense in making
     // assertions on it that might not even be correct
-    val resultWithAllModels = result.map(r =>
-      Model.assembler.discoverModels().addModel(r).assemble.unwrap
-    )
+    val _ = result.map(r => Model.assembler.addModel(r).assemble.unwrap)
 
-    val resultW = resultWithAllModels.map(ModelWrapper(_))
+    val resultW = result.map(ModelWrapper(_))
     val assembler = Model
       .assembler()
       .discoverModels()

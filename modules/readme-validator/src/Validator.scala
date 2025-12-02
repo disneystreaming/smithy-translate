@@ -91,7 +91,7 @@ object Validator {
       ToSmithyCompilerOptions(
         useVerboseNames = false,
         validateInput = true,
-        validateOutput = false,
+        validateOutput = true,
         transformers = List.empty,
         useEnumTraitSyntax = false,
         debug = false,
@@ -111,14 +111,6 @@ object Validator {
           ValidationError.UnableToProduceOutput(err.getMessage)
         )
       case ToSmithyResult.Success(errors, expectedModel) =>
-        val fullExpectedModel =
-          Model
-            .assembler()
-            .discoverModels()
-            .addModel(expectedModel)
-            .assemble()
-            .unwrap()
-
         val actualModel = Model
           .assembler()
           .discoverModels()
@@ -126,10 +118,10 @@ object Validator {
           .assemble()
           .unwrap()
 
-        if (ModelWrapper(fullExpectedModel) != ModelWrapper(actualModel))
+        if (ModelWrapper(expectedModel) != ModelWrapper(actualModel))
           List(
             ValidationError.OpenapiConversionError(
-              fullExpectedModel,
+              expectedModel,
               actualModel,
               errors
             )
@@ -172,24 +164,16 @@ object Validator {
           ValidationError.UnableToProduceOutput(err.getMessage)
         )
       case ToSmithyResult.Success(errors, expectedModel) =>
-        val fullExpectedModel =
-          Model
-            .assembler()
-            .discoverModels()
-            .addModel(expectedModel)
-            .assemble()
-            .unwrap()
-
         val actualModel = Model
           .assembler()
           .discoverModels()
           .addUnparsedModel(s"$namespace.smithy", actualSmithy)
           .assemble()
           .unwrap()
-        if (ModelWrapper(fullExpectedModel) != ModelWrapper(actualModel))
+        if (ModelWrapper(expectedModel) != ModelWrapper(actualModel))
           List(
             ValidationError.OpenapiConversionError(
-              fullExpectedModel,
+              expectedModel,
               actualModel,
               errors
             )
