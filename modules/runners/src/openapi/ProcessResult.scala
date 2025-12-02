@@ -19,35 +19,28 @@ import software.amazon.smithy.model.Model
 import smithytranslate.compiler.ToSmithyResult
 import smithytranslate.runners.SmithyModelUtils._
 
-final case class ReportResult(outputPath: os.Path, outputJson: Boolean) {
-  def apply(result: ToSmithyResult[Model], debug: Boolean): Unit = {
+object ProcessResult {
+  def apply(
+      result: ToSmithyResult[Model],
+      outputJson: Boolean
+  ): Either[String, Map[String, String]] = {
     result match {
       case ToSmithyResult.Failure(error, modelErrors) =>
         val message = if (modelErrors.isEmpty) {
-          "An error occurred while importing your Open API resources."
+          s"An error occurred while importing your Open API resources.: ${error.getMessage()}"
         } else {
           val errorsSummary = modelErrors.map(_.getMessage).mkString("\n")
           s"""|Failed to validate the produced Smithy model. The following is a list of
               |error messages followed by the validation exception from Smithy:
               |$errorsSummary""".stripMargin
         }
-        System.err.println(message)
-        if (debug) {
-          error.printStackTrace(System.err)
-        } else {
-          System.err.println(error.getMessage())
-        }
-      case ToSmithyResult.Success(modelErrors, model) =>
-        modelErrors.foreach(e => System.err.println(e.getMessage()))
+        Left(message)
+      case ToSmithyResult.Success(_, model) =>
         val smithyFiles =
           if (outputJson) getSmithyJsonFiles(model) else getSmithyFiles(model)
-        smithyFiles.foreach { in =>
-          val path = outputPath / in._1
-          System.err.println(
-            s"Writing $path"
-          )
-          os.write.over(path, in._2, createFolders = true)
-        }
+        Right(smithyFiles.map { case (path, contents) =>
+          (path.toString, contents)
+        })
     }
   }
 

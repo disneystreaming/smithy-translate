@@ -15,9 +15,7 @@
 
 package smithytranslate.runners.openapi
 
-import cats.data.NonEmptyList
 import cats.data.NonEmptyChain
-import smithytranslate.runners.FileUtils.readAll
 import smithytranslate.runners.transformer.TranslateTransformer
 import smithytranslate.compiler.openapi.OpenApiCompiler
 import software.amazon.smithy.model.Model
@@ -27,8 +25,36 @@ import smithytranslate.compiler.ToSmithyCompilerOptions
 import smithytranslate.compiler.openapi.OpenApiCompilerInput
 import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
 import cats.data.Chain
+import smithytranslate.runners.FileUtils.readAll
+import cats.data.NonEmptyList
 
 object ParseAndCompile {
+  def openapi(
+      input: OpenApiCompilerInput.UnparsedSpecs,
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      transformers: List[TranslateTransformer],
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
+  ): ToSmithyResult[Model] = {
+    val opts = ToSmithyCompilerOptions(
+      useVerboseNames,
+      validateInput,
+      validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug,
+      Set.empty,
+      Map.empty
+    )
+    OpenApiCompiler.compile(opts, input)
+  }
+
+  @deprecated(
+    message = "use alternative method which accepts UnparsedSpecs directly",
+    since = "0.7.5"
+  )
   def openapi(
       inputPaths: NonEmptyList[os.Path],
       useVerboseNames: Boolean,
@@ -55,6 +81,34 @@ object ParseAndCompile {
     OpenApiCompiler.compile(opts, input)
   }
 
+  def jsonSchema(
+      input: JsonSchemaCompilerInput.UnparsedSpecs,
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      transformers: List[TranslateTransformer],
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean,
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
+  ): ToSmithyResult[Model] = {
+    val opts = ToSmithyCompilerOptions(
+      useVerboseNames,
+      validateInput,
+      validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug,
+      allowedRemoteBaseURLs,
+      namespaceRemaps
+    )
+    JsonSchemaCompiler.compile(opts, input)
+  }
+
+  @deprecated(
+    message = "use alternative method which accepts UnparsedSpecs directly",
+    since = "0.7.5"
+  )
   def jsonSchema(
       inputPaths: NonEmptyList[os.Path],
       useVerboseNames: Boolean,

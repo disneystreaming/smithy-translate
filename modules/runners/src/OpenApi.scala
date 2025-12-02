@@ -16,13 +16,63 @@
 package smithytranslate.runners
 
 import cats.data.{NonEmptyList, NonEmptyChain, Chain}
+import smithytranslate.runners.FileUtils.readAll
 import smithytranslate.runners.transformer.TransformerLookup
 import smithytranslate.runners.openapi._
+import smithytranslate.compiler.FileContents
+import smithytranslate.compiler.openapi.OpenApiCompilerInput
+import smithytranslate.compiler.json_schema.JsonSchemaCompilerInput
 
 object OpenApi {
 
+  private def processOpenApi(
+      input: List[FileContents],
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean
+  ) = {
+    val transformers = TransformerLookup.getAll()
+
+    ParseAndCompile.openapi(
+      OpenApiCompilerInput.UnparsedSpecs(input.toList),
+      useVerboseNames = useVerboseNames,
+      validateInput = validateInput,
+      validateOutput = validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug
+    )
+  }
+
+  private def processJsonSchema(
+      input: List[FileContents],
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      debug: Boolean,
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
+  ) = {
+    val transformers = TransformerLookup.getAll()
+
+    ParseAndCompile.jsonSchema(
+      JsonSchemaCompilerInput.UnparsedSpecs(input.toList),
+      useVerboseNames = useVerboseNames,
+      validateInput = validateInput,
+      validateOutput = validateOutput,
+      transformers,
+      useEnumTraitSyntax,
+      debug,
+      allowedRemoteBaseURLs,
+      namespaceRemaps
+    )
+  }
+
   def runOpenApi(
-      inputFiles: NonEmptyList[os.Path],
+      inputPaths: NonEmptyList[os.Path],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -31,17 +81,16 @@ object OpenApi {
       outputJson: Boolean,
       debug: Boolean
   ): Unit = {
-    val transformers = TransformerLookup.getAll()
-
     val report = ReportResult(outputPath, outputJson).apply _
+    val includedExtensions = List("yaml", "yml", "json")
+    val input = readAll(inputPaths, includedExtensions)
 
     report(
-      ParseAndCompile.openapi(
-        inputFiles,
+      processOpenApi(
+        input,
         useVerboseNames = useVerboseNames,
         validateInput = validateInput,
         validateOutput = validateOutput,
-        transformers,
         useEnumTraitSyntax,
         debug
       ),
@@ -49,8 +98,30 @@ object OpenApi {
     )
   }
 
+  def transformOpenApi(
+      input: List[FileContents],
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      outputJson: Boolean,
+      debug: Boolean
+  ): Either[String, Map[String, String]] = {
+    ProcessResult(
+      processOpenApi(
+        input,
+        useVerboseNames = useVerboseNames,
+        validateInput = validateInput,
+        validateOutput = validateOutput,
+        useEnumTraitSyntax,
+        debug
+      ),
+      outputJson
+    )
+  }
+
   def runJsonSchema(
-      inputFiles: NonEmptyList[os.Path],
+      inputPaths: NonEmptyList[os.Path],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -61,16 +132,16 @@ object OpenApi {
       allowedRemoteBaseURLs: Set[String],
       namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
   ): Unit = {
-    val transformers = TransformerLookup.getAll()
-
     val report = ReportResult(outputPath, outputJson).apply _
+    val includedExtensions = List("json")
+    val input = readAll(inputPaths, includedExtensions)
+
     report(
-      ParseAndCompile.jsonSchema(
-        inputFiles,
+      processJsonSchema(
+        input,
         useVerboseNames = useVerboseNames,
         validateInput = validateInput,
         validateOutput = validateOutput,
-        transformers,
         useEnumTraitSyntax,
         debug,
         allowedRemoteBaseURLs,
@@ -80,8 +151,34 @@ object OpenApi {
     )
   }
 
+  def transformJsonSchema(
+      input: List[FileContents],
+      useVerboseNames: Boolean,
+      validateInput: Boolean,
+      validateOutput: Boolean,
+      useEnumTraitSyntax: Boolean,
+      outputJson: Boolean,
+      debug: Boolean,
+      allowedRemoteBaseURLs: Set[String],
+      namespaceRemaps: Map[NonEmptyChain[String], Chain[String]]
+  ): Either[String, Map[String, String]] = {
+    ProcessResult(
+      processJsonSchema(
+        input,
+        useVerboseNames = useVerboseNames,
+        validateInput = validateInput,
+        validateOutput = validateOutput,
+        useEnumTraitSyntax,
+        debug,
+        allowedRemoteBaseURLs,
+        namespaceRemaps
+      ),
+      outputJson
+    )
+  }
+
   def runJsonSchema(
-      inputFiles: NonEmptyList[os.Path],
+      inputPaths: NonEmptyList[os.Path],
       outputPath: os.Path,
       useVerboseNames: Boolean,
       validateInput: Boolean,
@@ -90,7 +187,7 @@ object OpenApi {
       outputJson: Boolean,
       debug: Boolean
   ): Unit = runJsonSchema(
-    inputFiles,
+    inputPaths,
     outputPath,
     useVerboseNames,
     validateInput,
