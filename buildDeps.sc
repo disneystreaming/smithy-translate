@@ -3,7 +3,7 @@ import mill.define._
 import mill.scalalib._
 
 object alloy {
-  val alloyVersion = "0.3.34"
+  val alloyVersion = "0.3.36"
   val org = "com.disneystreaming.alloy"
   val core = ivy"$org:alloy-core:$alloyVersion"
   val protobuf = ivy"$org:alloy-protobuf:$alloyVersion"
@@ -24,7 +24,7 @@ object swagger {
   )
 }
 object smithy {
-  val smithyVersion = "1.49.0"
+  val smithyVersion = "1.66.0"
   val model = ivy"software.amazon.smithy:smithy-model:$smithyVersion"
   val build = ivy"software.amazon.smithy:smithy-build:$smithyVersion"
   val diff = ivy"software.amazon.smithy:smithy-diff:$smithyVersion"

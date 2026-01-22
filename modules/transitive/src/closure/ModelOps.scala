@@ -44,7 +44,7 @@ object ModelOps {
     }
 
     def debug: Model = {
-      println(model.prettyPrint)
+      println(this.prettyPrint)
       model
     }
 
