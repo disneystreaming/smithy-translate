@@ -14,6 +14,7 @@
  */
 
 package smithytranslate.compiler.openapi
+
 final class StructureSpec extends munit.FunSuite {
 
   test("structures") {
@@ -233,6 +234,36 @@ final class StructureSpec extends munit.FunSuite {
                             |    s: String,
                             |}
                             |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("structures - recursive") {
+    val openapiString =
+      """|openapi: '3.0.'
+         |info:
+         |  title: test
+         |  version: '1.0'
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Test:
+         |      type: object
+         |      properties:
+         |        t:
+         |          $ref: '#/components/schemas/Test'
+         |        s:
+         |          type: string
+         |""".stripMargin
+
+    val expectedString =
+      """|namespace foo
+         |
+         |structure Test {
+         |    t: Test
+         |    s: String
+         |}
+         |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
   }

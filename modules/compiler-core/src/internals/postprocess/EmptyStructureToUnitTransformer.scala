@@ -62,10 +62,11 @@ private[compiler] object EmptyStructureToUnitTransformer
   private def isEmptyStructure(
       defs: Map[DefId, Definition],
       d: Definition,
-      allTargets: Set[DefId]
+      allTargets: Set[DefId],
+      seen: Set[DefId] = Set.empty
   ): Boolean =
     d match {
-      case s: Structure =>
+      case s: Structure if !seen.contains(s.id) =>
         val hasNoHints = s.hints.isEmpty
         // we also want to remove even if it is top level as long as it is totally empty and is never referenced
         val topLevelNoRefs =
@@ -79,7 +80,7 @@ private[compiler] object EmptyStructureToUnitTransformer
               defs
                 .get(f.tpe)
             )
-            .exists(isEmptyStructure(defs, _, allTargets))
+            .exists(isEmptyStructure(defs, _, allTargets, seen + s.id))
           isHttpPayload && isHttpPayloadEmpty
         }
       case _ => false
