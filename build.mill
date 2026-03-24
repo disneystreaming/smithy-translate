@@ -1,24 +1,24 @@
-import $file.buildSetup
-import $file.buildDeps
+//| mvnDeps:
+//|   - "com.github.lolgab::mill-mima::0.2.1"
+//|   - "com.lewisjkl::header-mill-plugin::0.1.0"
+//|   - "com.lihaoyi::mill-contrib-buildinfo:1.1.2"
+//|   - "com.lihaoyi::mill-contrib-scalapblib:1.1.2"
 
-import mill._
-import buildSetup._
-import buildSetup.ScalaVersions._
-import coursier.maven.MavenRepository
+package build
+
+import mill.*, scalalib.*, scalalib.publish.*
+import mill.scalalib.scalafmt.ScalafmtModule
 import mill.contrib.scalapblib.ScalaPBModule
-import mill.contrib.buildinfo
-import mill.define.Sources
-import mill.define.Task
-import mill.scalalib.Assembly
-import mill.util.Jvm
-import mill.scalajslib.ScalaJSModule
-import mill.scalalib._
-import mill.scalalib.publish._
 import mill.contrib.buildinfo.BuildInfo
-import com.github.lolgab.mill.mima._
+import mill.scalajslib.ScalaJSModule
+import mill.scalajslib.api.ModuleKind
+import com.github.lolgab.mill.mima.*
+import header.*
 
-import scala.Ordering.Implicits._
-import mill.eval.Evaluator
+import scala.Ordering.Implicits.*
+import ScalaVersions.*
+
+// ─── Modules ───────────────────────────────────────────────────
 
 object `compiler-core` extends Cross[CompilerCoreModule](scalaVersions)
 trait CompilerCoreModule
@@ -29,23 +29,23 @@ trait CompilerCoreModule
 
   def publishArtifactName = "smithytranslate-compiler-core"
 
-  def baseMimaVersion = T { Version(0, 7, 2) }
+  def baseMimaVersion = Task { Version(0, 7, 2) }
 
   def moduleDeps = Seq(traits)
 
-  def ivyDeps = Agg(
-    ivy"com.fasterxml.jackson.core:jackson-databind:2.20.2",
-    buildDeps.smithy.model,
-    buildDeps.smithy.build,
-    buildDeps.cats.mtl,
-    buildDeps.ciString,
-    buildDeps.slf4j,
-    buildDeps.alloy.core,
-    buildDeps.collectionsCompat
+  def mvnDeps = Seq(
+    mvn"com.fasterxml.jackson.core:jackson-databind:2.20.2",
+    Deps.smithyModel,
+    Deps.smithyBuild,
+    Deps.catsMtl,
+    Deps.ciString,
+    Deps.slf4j,
+    Deps.alloyCore,
+    Deps.collectionsCompat
   )
 
   object test extends BaseScalaTests with BaseMunitTests {
-    def ivyDeps = super.ivyDeps() ++ Agg(buildDeps.smithy.diff)
+    def mvnDeps = super.mvnDeps() ++ Seq(Deps.smithyDiff)
   }
 }
 
@@ -59,20 +59,20 @@ trait JsonSchemaModule
 
   def publishArtifactName = "smithytranslate-json-schema"
 
-  def baseMimaVersion = T { Version(0, 5, 9) }
+  def baseMimaVersion = Task { Version(0, 5, 9) }
 
-  def ivyDeps = Agg(
-    buildDeps.circe.jawn,
-    buildDeps.everit.jsonSchema,
-    buildDeps.collectionsCompat
+  def mvnDeps = Seq(
+    Deps.circeJawn,
+    Deps.everitJsonSchema,
+    Deps.collectionsCompat
   )
 
   object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      buildDeps.smithy.build,
-      buildDeps.lihaoyi.oslib
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.smithyBuild,
+      Deps.oslib
     )
   }
 }
@@ -88,18 +88,18 @@ trait OpenApiModule
 
   def moduleDeps = Seq(`compiler-core`())
 
-  def ivyDeps =
-    buildDeps.swagger.parser
+  def mvnDeps =
+    Deps.swaggerParser
 
-  def baseMimaVersion = T { Version(0, 5, 9) }
+  def baseMimaVersion = Task { Version(0, 5, 9) }
 
   object test extends BaseScalaTests with BaseMunitTests {
     def moduleDeps = super.moduleDeps ++ Seq(`compiler-core`().test)
 
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      buildDeps.smithy.build,
-      buildDeps.smithy.diff,
-      buildDeps.scalaJavaCompat
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.smithyBuild,
+      Deps.smithyDiff,
+      Deps.scalaJavaCompat
     )
   }
 }
@@ -113,12 +113,12 @@ trait RunnersModule
 
   def publishArtifactName = "smithytranslate-runners"
 
-  def baseMimaVersion = T { Version(0, 7, 2) }
+  def baseMimaVersion = Task { Version(0, 7, 2) }
 
-  def ivyDeps = Agg(
-    buildDeps.lihaoyi.oslib,
-    buildDeps.lihaoyi.ujson,
-    buildDeps.coursier(scalaVersion())
+  def mvnDeps = Seq(
+    Deps.oslib,
+    Deps.ujson,
+    Deps.coursier(scalaVersion())
   )
 
   def moduleDeps =
@@ -127,7 +127,7 @@ trait RunnersModule
 
 object cli
     extends BaseScala213Module
-    with buildinfo.BuildInfo
+    with BuildInfo
     with BasePublishModule {
 
   def publishArtifactName = "smithytranslate-cli"
@@ -137,24 +137,24 @@ object cli
       runners(scala213)
     )
 
-  def ivyDeps = Agg(
-    buildDeps.decline,
-    buildDeps.smithy.build
+  def mvnDeps = Seq(
+    Deps.decline,
+    Deps.smithyBuild
   )
 
   object test extends BaseScalaTests with BaseMunitTests {
-    def ivyDeps =
-      super.ivyDeps() ++ Agg(buildDeps.lihaoyi.oslib, buildDeps.lihaoyi.ujson)
+    def mvnDeps =
+      super.mvnDeps() ++ Seq(Deps.oslib, Deps.ujson)
   }
 
   def buildInfoPackageName = "smithytranslate.cli.internal"
 
   def buildInfoMembers = Seq(
-    BuildInfo.Value("alloyVersion", buildDeps.alloy.alloyVersion),
+    BuildInfo.Value("alloyVersion", Deps.alloyVersion),
     BuildInfo.Value("cliVersion", publishVersion().toString)
   )
 
-  def runProtoAux = T.task { (inputs: List[os.Path], output: os.Path) =>
+  def runProtoAux = Task.Anon { (inputs: List[os.Path], output: os.Path) =>
     val inputArgs = inputs.flatMap { p =>
       "--input" :: p.toString() :: Nil
     }.toList
@@ -171,9 +171,9 @@ object cli
 
 object formatter extends BaseModule { outer =>
 
-  val deps = Agg(
-    ivy"org.typelevel::cats-parse::1.1.0",
-    buildDeps.collectionsCompat
+  val deps = Seq(
+    mvn"org.typelevel::cats-parse::1.1.0",
+    Deps.collectionsCompat
   )
 
   object jvm extends Cross[JvmModule](scalaVersions)
@@ -185,40 +185,44 @@ object formatter extends BaseModule { outer =>
 
     def publishArtifactName = "smithytranslate-formatter"
 
-    override def ivyDeps = T { super.ivyDeps() ++ deps }
-    override def millSourcePath = outer.millSourcePath
+    override def mvnDeps = Task { super.mvnDeps() ++ deps }
+    override def moduleDir = outer.moduleDir
 
     object test extends BaseScalaTests with BaseMunitTests {
-      def ivyDeps = super.ivyDeps() ++ Agg(
-        buildDeps.smithy.build,
-        buildDeps.lihaoyi.oslib
+      def mvnDeps = super.mvnDeps() ++ Seq(
+        Deps.smithyBuild,
+        Deps.oslib
       )
     }
 
     object `parser-test` extends BaseScalaModule {
       def scalaVersion = jvmOuter.scalaVersion
       def moduleDeps = Seq(jvmOuter)
-      override def millSourcePath = outer.millSourcePath / "parser-test"
+      override def moduleDir = outer.moduleDir / "parser-test"
 
-      def ivyDeps = Agg(
-        buildDeps.decline,
-        buildDeps.lihaoyi.oslib
+      def mvnDeps = Seq(
+        Deps.decline,
+        Deps.oslib
       )
     }
 
     object shaded extends BaseJavaModule with BasePublishModule {
 
-      override def millSourcePath = outer.millSourcePath / "shaded"
+      override def moduleDir = outer.moduleDir / "shaded"
+
+      // Override publishVersion to use parent module's version,
+      // since this module's moduleDir doesn't exist as a git directory
+      override def publishVersion = jvmOuter.publishVersion
 
       def publishArtifactName = "smithytranslate-formatter-shaded"
 
       override def localClasspath: T[Seq[PathRef]] =
         jvmOuter.localClasspath()
 
-      override def resolvedRunIvyDeps: T[Agg[PathRef]] =
-        jvmOuter.resolvedRunIvyDeps()
+      override def resolvedRunMvnDeps: T[Seq[PathRef]] =
+        jvmOuter.resolvedRunMvnDeps()
 
-      override def publishXmlDeps = T.task { Agg.empty[Dependency] }
+      override def publishXmlDeps = Task.Anon { Seq.empty[Dependency] }
 
       override def assemblyRules: Seq[Assembly.Rule] =
         super.assemblyRules ++ Seq(
@@ -235,22 +239,27 @@ object formatter extends BaseModule { outer =>
         with BasePublishModule
         with MimaModule {
 
-      def baseMimaVersion = T { Version(0, 5, 9) }
+      def baseMimaVersion = Task { Version(0, 5, 9) }
+
+      // Override publishVersion to use parent module's version,
+      // since this module's moduleDir doesn't exist as a git directory
+      override def publishVersion = jvmOuter.publishVersion
 
       def publishArtifactName = "smithytranslate-formatter-java-api"
 
-      override def unmanagedClasspath = T {
-        super.unmanagedClasspath() ++ Agg(jvmOuter.shaded.jar())
+      override def unmanagedClasspath = Task {
+        super.unmanagedClasspath() ++ Seq(jvmOuter.shaded.jar())
       }
-      override def publishXmlDeps = T.task {
-        Agg(
+      override def publishXmlDeps = Task.Anon {
+        val meta = jvmOuter.shaded.artifactMetadata()
+        Seq(
           mill.scalalib.publish.Dependency(
-            jvmOuter.shaded.publishSelfDependency(),
+            Artifact(meta.group, meta.id, meta.version),
             Scope.Compile
           )
         )
       }
-      override def millSourcePath = outer.millSourcePath / "java-api"
+      override def moduleDir = outer.moduleDir / "java-api"
     }
   }
 
@@ -259,12 +268,12 @@ object formatter extends BaseModule { outer =>
 
     def publishArtifactName = "smithytranslate-formatter"
 
-    override def ivyDeps = T { super.ivyDeps() ++ deps }
-    override def millSourcePath = outer.millSourcePath
+    override def mvnDeps = Task { super.mvnDeps() ++ deps }
+    override def moduleDir = outer.moduleDir
 
-    def jsSources = T { PathRef(millSourcePath / "src-js") }
+    def jsSources = Task.Source(moduleDir / "src-js")
 
-    override def sources = T {
+    override def sources = Task {
       super.sources() :+ jsSources()
     }
   }
@@ -274,27 +283,29 @@ object traits extends BaseJavaModule with BasePublishModule with MimaModule {
 
   def publishArtifactName = "smithytranslate-traits"
 
-  def baseMimaVersion = T { Version(0, 5, 9) }
+  def baseMimaVersion = Task { Version(0, 5, 9) }
 
-  def ivyDeps = Agg(
-    buildDeps.smithy.model
+  def mvnDeps = Seq(
+    Deps.smithyModel
   )
 
   /** Exclude smithy file from source jars to avoid conflict with smithy files
     * packaged into the main jar (happens when scanning the classpath via the
     * ModelAssembler if sources jars were resolved).
     */
-  override def sourceJar: T[PathRef] = T {
+  override def sourceJar = Task {
     def underMetaInfSmithy(p: os.RelPath): Boolean =
       Seq("META-INF", "smithy").forall(p.segments.contains)
 
-    Jvm.createJar(
+    val jarPath = mill.util.Jvm.createJar(
+      Task.dest / "sources.jar",
       (allSources() ++ resources())
         .map(_.path)
-        .filter(os.exists),
+        .filter(os.exists(_)),
       manifest(),
       fileFilter = (_, relPath) => !underMetaInfSmithy(relPath)
     )
+    PathRef(jarPath)
   }
 
   object test extends ScalaModule with JavaTests with BaseMunitTests {
@@ -311,12 +322,12 @@ object `readme-validator` extends BaseScala213Module {
       `compiler-core`(scala213).test
     )
 
-  def ivyDeps = Agg(
-    buildDeps.cats.parse,
-    buildDeps.lihaoyi.oslib
+  def mvnDeps = Seq(
+    Deps.catsParse,
+    Deps.oslib
   )
 
-  def validate() = T.command {
+  def validate() = Task.Command {
     val args = docs.docFiles().map(_.path.toString)
     mill.util.Jvm.callProcess(
       mainClass = finalMainClass(),
@@ -330,12 +341,13 @@ object docs extends BasePublishModule {
 
   override def publishArtifactName = "smithytranslate-docs"
 
-  def docFiles =
-    T.sources(os.walk(millSourcePath).map(mill.api.PathRef(_)))
+  def docSource = Task.Source(moduleDir)
 
-  override def resources = T.sources {
-    docFiles()
+  def docFiles = Task {
+    os.walk(docSource().path).map(PathRef(_))
   }
+
+  override def resources = Task.Sources(moduleDir)
 
 }
 
@@ -348,23 +360,23 @@ trait ProtoModule
 
   def publishArtifactName = "smithytranslate-proto"
 
-  def baseMimaVersion = T { Version(0, 7, 1) }
+  def baseMimaVersion = Task { Version(0, 7, 1) }
 
-  def ivyDeps = Agg(
-    buildDeps.smithy.model,
-    buildDeps.alloy.core,
-    buildDeps.collectionsCompat
+  def mvnDeps = Seq(
+    Deps.smithyModel,
+    Deps.alloyCore,
+    Deps.collectionsCompat
   )
 
   def moduleDeps = Seq(traits, transitive())
   object test extends BaseScalaTests with BaseMunitTests with ScalaPBModule {
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      buildDeps.smithy.build,
-      buildDeps.scalapb.compilerPlugin,
-      buildDeps.scalapb.protocCache.withDottyCompat(scalaVersion()),
-      buildDeps.alloy.protobuf
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.smithyBuild,
+      Deps.scalapbCompilerPlugin,
+      Deps.scalapbProtocCache.withDottyCompat(scalaVersion()),
+      Deps.alloyProtobuf
     )
-    def scalaPBVersion = buildDeps.scalapb.version
+    def scalaPBVersion = Deps.scalapbVersion
 
     // There are no sources to generate in this module.
     // We use scalaPB to unpack some files.
@@ -372,37 +384,41 @@ trait ProtoModule
     // that ensures the directory existed before running the
     // compiler and that breaks this build.
     // See: https://github.com/com-lihaoyi/mill/pull/2126/files
-    def compileScalaPB = T {
-      val out = T.dest
+    def compileScalaPB = Task {
+      val out = Task.dest
       PathRef(out)
     }
 
     override def scalaPBOptions = "scala3_sources"
 
-    def protobufDefinitions = T.sources { Seq(scalaPBUnpackProto()) }
+    def protobufDefinitions = Task { Seq(scalaPBUnpackProto()) }
 
-    def resources = T.sources {
+    override def resources = Task {
       super.resources() ++ protobufDefinitions()
     }
   }
 }
 
 object `proto-examples` extends BaseScala213Module with ScalaPBModule {
-  def scalaPBVersion = buildDeps.scalapb.version
+  def scalaPBVersion = Deps.scalapbVersion
 
-  def smithyFiles = T.sources {
-    os.walk(millSourcePath / "smithy", skip = !_.last.endsWith(".smithy"))
+  def smithyDir = Task.Source(moduleDir / "smithy")
+
+  def smithyFiles = Task {
+    os.walk(smithyDir().path, skip = !_.last.endsWith(".smithy"))
       .map(p => PathRef(p))
   }
 
-  def cliRunOutput = millSourcePath / "protobuf"
+  def cliRunOutput = moduleDir / "protobuf"
 
-  def scalaPBSources = T.sources { runCli()() }
+  def cliRunOutputSource = Task.Source(cliRunOutput)
+
+  override def scalaPBSources = Task { Seq(cliRunOutputSource()) }
 
   // required to include wrappers proto definitions
-  def scalaPBIncludePath = T.sources { Seq(scalaPBUnpackProto()) }
+  override def scalaPBIncludePath = Task { Seq(scalaPBUnpackProto()) }
 
-  def runCli() = T.command {
+  def runCli() = Task.Command {
     os.remove.all(cliRunOutput)
     os.makeDir.all(cliRunOutput)
     val input = smithyFiles().toList.map(_.path)
@@ -411,10 +427,10 @@ object `proto-examples` extends BaseScala213Module with ScalaPBModule {
     cliRunOutput
   }
 
-  def ivyDeps = Agg(
-    buildDeps.grpc.netty,
-    buildDeps.grpc.services,
-    buildDeps.scalapb.runtimeGrpc
+  def mvnDeps = Seq(
+    Deps.grpcNetty,
+    Deps.grpcServices,
+    Deps.scalapbRuntimeGrpc
   )
 }
 
@@ -427,16 +443,16 @@ trait TransitiveModule
 
   def publishArtifactName = "smithytranslate-transitive"
 
-  def baseMimaVersion = T { Version(0, 5, 9) }
+  def baseMimaVersion = Task { Version(0, 5, 9) }
 
-  def ivyDeps = Agg(
-    buildDeps.smithy.model,
-    buildDeps.smithy.build,
-    buildDeps.collectionsCompat
+  def mvnDeps = Seq(
+    Deps.smithyModel,
+    Deps.smithyBuild,
+    Deps.collectionsCompat
   )
   object test extends BaseScalaTests with BaseMunitTests {
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      buildDeps.scalaJavaCompat
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.scalaJavaCompat
     )
   }
 }
