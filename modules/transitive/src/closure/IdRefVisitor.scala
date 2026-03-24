@@ -36,7 +36,7 @@ private[closure] final class IdRefVisitor(
 
   private def visitSeqShape(member: MemberShape): List[Shape] =
     value.asArrayNode().toScala match {
-      case None => List.empty
+      case None        => List.empty
       case Some(value) =>
         value
           .getElements()
@@ -68,7 +68,7 @@ private[closure] final class IdRefVisitor(
   override def stringShape(shape: StringShape): List[Shape] = {
     if (isInsideIdRefMember || shape.hasTrait(classOf[IdRefTrait])) {
       value.asStringNode().toScala match {
-        case None => List.empty
+        case None             => List.empty
         case Some(stringNode) =>
           val shape = model.expectShape(ShapeId.from(stringNode.getValue()))
           val stringNodeShapes = if (visitedShapes.contains(shape)) {
@@ -96,7 +96,7 @@ private[closure] final class IdRefVisitor(
       val entries: Map[String, Node] = obj.getStringMap().asScala.toMap
       entries.flatMap { case (name, node) =>
         members.get(name) match {
-          case None => List.empty
+          case None         => List.empty
           case Some(member) =>
             member.accept(
               new IdRefVisitor(

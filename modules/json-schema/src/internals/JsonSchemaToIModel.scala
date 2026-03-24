@@ -195,7 +195,7 @@ private class JsonSchemaToIModel[F[_]: Parallel: TellShape: TellError](
       case CaseRef(idOrError) =>
         idOrError match {
           case Left(error) => F.pure(OpenApiShortStop(local.context, error))
-          case Right(ref) =>
+          case Right(ref)  =>
             F.pure(
               OpenApiRef(
                 local.context.removeTopLevel(),

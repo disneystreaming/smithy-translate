@@ -21,7 +21,11 @@ import scala.io.Source
 import scala.jdk.CollectionConverters._
 
 import software.amazon.smithy.model.Model
-import software.amazon.smithy.model.traits.{ Trait, TraitDefinition, TraitService }
+import software.amazon.smithy.model.traits.{
+  Trait,
+  TraitDefinition,
+  TraitService
+}
 import software.amazon.smithy.model.shapes.ShapeId
 
 final class TraitProviderSpec extends munit.FunSuite {
@@ -123,7 +127,7 @@ final class TraitProviderSpec extends munit.FunSuite {
       lines.map(_.split("\\$").head).filter { fqn =>
         fqn.split('.') match {
           case Array(Namespace, _) => true
-          case _ => false
+          case _                   => false
         }
       }
     val classes = classesFQN.map(

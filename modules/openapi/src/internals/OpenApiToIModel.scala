@@ -130,7 +130,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
           Segment.Derived(CIString(name))
         )
         (bodies.toList match {
-          case Nil => None
+          case Nil                       => None
           case (contentType, sch) :: Nil =>
             Some(
               Local(segments, sch).addHints(Hint.ContentTypeLabel(contentType))

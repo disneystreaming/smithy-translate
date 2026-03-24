@@ -89,7 +89,7 @@ final class TimeTypeSpec extends munit.FunSuite {
       "@alloy#monthDayFormat"
     )
   }
-  
+
   test("duration newtype definition") {
     runNewtypeTest(
       "duration",

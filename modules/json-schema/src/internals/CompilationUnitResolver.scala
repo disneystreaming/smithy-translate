@@ -299,7 +299,7 @@ private[compiler] object CompilationUnitResolver {
 
       pathAndContent.parFoldMapA { case (path, content) =>
         getRemappedNamespaceFromPath(path).flatMap {
-          case None => Vector.empty[UnfoldStep].pure[F]
+          case None     => Vector.empty[UnfoldStep].pure[F]
           case Some(ns) =>
             recordAndCreateUnits(
               List(ns.toList.mkString("/")),

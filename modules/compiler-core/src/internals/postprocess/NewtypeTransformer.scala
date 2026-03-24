@@ -60,7 +60,7 @@ private[compiler] object NewtypeTransformer extends IModelPostProcessor {
     val (removeDefs, newDefs) = model.definitions.map {
       case n @ Newtype(_, _, h) if shouldRemainNewtype(h) => createOne(n)
       case _: Newtype                                     => createNone
-      case Structure(id, localFields, parents, hints) =>
+      case Structure(id, localFields, parents, hints)     =>
         val (remove, newFields) = localFields.map {
           case Field(id, tpe, hints) =>
             val DerefResult(t, h) = dereference(tpe)

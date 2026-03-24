@@ -39,7 +39,7 @@ private[compiler] object EmptyStructureToUnitTransformer
     }.toSet
     val amendedDefs = model.definitions.flatMap {
       case s: Structure if structuresToRemove(s.id) => None
-      case op: OperationDef =>
+      case op: OperationDef                         =>
         val changeInput: OperationDef => OperationDef = o =>
           if (o.input.exists(structuresToRemove)) o.copy(input = Some(unit))
           else o

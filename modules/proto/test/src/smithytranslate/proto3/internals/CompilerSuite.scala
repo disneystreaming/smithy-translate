@@ -128,7 +128,9 @@ class CompilerSuite extends FunSuite {
     )
   }
 
-  test("hasProtoCompact returns true when PROTOBUF value present in protoOffsetDateTimeFormat trait") {
+  test(
+    "hasProtoCompact returns true when PROTOBUF value present in protoOffsetDateTimeFormat trait"
+  ) {
     val spec =
       """$version: "2"
         |
@@ -151,7 +153,10 @@ class CompilerSuite extends FunSuite {
       .validate()
       .get()
 
-    val timerShape = assembledSpec.expectShape(ShapeId.fromParts("example", "Timer"), classOf[StructureShape])
+    val timerShape = assembledSpec.expectShape(
+      ShapeId.fromParts("example", "Timer"),
+      classOf[StructureShape]
+    )
 
     val result = for {
       member <- timerShape.getMember("start").toScala

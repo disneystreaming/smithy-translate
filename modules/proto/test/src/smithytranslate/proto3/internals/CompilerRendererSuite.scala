@@ -1663,22 +1663,23 @@ class CompilerRendererSuite extends FunSuite {
                     |}
                     |""".stripMargin
 
-    val expected = """|syntax = "proto3";
-                      |
-                      |package test;
-                      |
-                      |import "alloy/protobuf/wrappers.proto";
-                      |
-                      |import "alloy/protobuf/types.proto";
-                      |
-                      |message MyStructure {
-                      |  string basic = 1;
-                      |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
-                      |  alloy.protobuf.CompactOffsetDateTime defaultWithNoFormat = 3;
-                      |  alloy.protobuf.CompactOffsetDateTime compact = 4;
-                      |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 5;
-                      |}
-                      |""".stripMargin
+    val expected =
+      """|syntax = "proto3";
+         |
+         |package test;
+         |
+         |import "alloy/protobuf/wrappers.proto";
+         |
+         |import "alloy/protobuf/types.proto";
+         |
+         |message MyStructure {
+         |  string basic = 1;
+         |  alloy.protobuf.OffsetDateTimeValue wrapped = 2;
+         |  alloy.protobuf.CompactOffsetDateTime defaultWithNoFormat = 3;
+         |  alloy.protobuf.CompactOffsetDateTime compact = 4;
+         |  alloy.protobuf.CompactOffsetDateTimeValue wrappedCompact = 5;
+         |}
+         |""".stripMargin
 
     convertCheck(
       source,

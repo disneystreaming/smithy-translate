@@ -40,7 +40,7 @@ private[internals] object MetadataProcessor {
       }
 
     protoOptionsNode match {
-      case None => Map.empty
+      case None               => Map.empty
       case Some(protoOptions) =>
         val listOfNamespaceNodes = protoOptions.asScala.toList
           .flatMap(_.asObjectNode().toScala.toList)
