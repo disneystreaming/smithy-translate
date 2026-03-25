@@ -47,7 +47,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./mill -k --ticker false __.test
+          ./mill -k --ticker false __.testForked
           ./mill -k --ticker false cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
           ./mill -k --ticker false cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
           ./mill -k --ticker false proto-examples.compileScalaPB # trigger smithy-to-proto run
