@@ -32,16 +32,20 @@ object ToSmithyError {
   implicit val order: cats.Order[ToSmithyError] = cats.Order.by(_.getMessage())
 
   final case class Restriction(message: String) extends ToSmithyError
-  
-  final case class ProcessingError(message: String, errorCause: Option[Throwable] = None) extends ToSmithyError {
+
+  final case class ProcessingError(
+      message: String,
+      errorCause: Option[Throwable] = None
+  ) extends ToSmithyError {
     override def getCause(): Throwable = errorCause.orNull
   }
 
-  final case class HttpError(uri: URI, refStack: List[String], error: Throwable) extends ToSmithyError {
-    override def message: String = "Failed to fetch remote schema from " + uri.toString + ". Error: " + error.getMessage
+  final case class HttpError(uri: URI, refStack: List[String], error: Throwable)
+      extends ToSmithyError {
+    override def message: String =
+      "Failed to fetch remote schema from " + uri.toString + ". Error: " + error.getMessage
     override def getCause(): Throwable = error
   }
-
 
   final case class SmithyValidationFailed(
       smithyValidationEvents: List[ValidationEvent]

@@ -55,7 +55,7 @@ object NodeWriter {
     }
 
   implicit val nodeArrayWriter: Writer[NodeArray] = Writer.write {
-    case NodeArray(ws, Nil) => s"[${ws.write}]"
+    case NodeArray(ws, Nil)   => s"[${ws.write}]"
     case NodeArray(ws, elems) =>
       val comments = ws +: elems.map(_.ws0)
       val useNewLine =
@@ -80,7 +80,7 @@ object NodeWriter {
     }
 
   implicit val nodeObjectWriter: Writer[NodeObject] = Writer.write {
-    case NodeObject(ws, None) => addBrackets(ws.write)
+    case NodeObject(ws, None)               => addBrackets(ws.write)
     case NodeObject(ws, Some((nokvp, Nil))) =>
       addBrackets(indent(s"${ws.write}${nokvp.write}", "\n", 4))
     case NodeObject(ws, Some((nokvp, rest))) =>
@@ -125,7 +125,7 @@ object NodeWriter {
     case NodeObjectKey.IdentifierNok(identifier) => identifier.write
   }
   implicit val escapeCarWriter: Writer[EscapedChar] = Writer.write {
-    case CharCase(char) => s"\\${char.write}"
+    case CharCase(char)                 => s"\\${char.write}"
     case UnicodeEscape(hex, hex2, hex3) =>
       s"\\u${hex.write}${hex2.write}${hex3.write}"
   }

@@ -55,10 +55,9 @@ object SmithyModelUtils {
       .serialize(filter(model))
       .asScala
       .toMap
-      .filterNot { case (path, _) =>
-        path.toString.endsWith("smithytranslate.smithy") ||
-        path.toString.endsWith("proto.smithy") ||
-        path.toString.endsWith("alloy.smithy")
+      .filterNot { case (_, contents) =>
+        contents.contains("namespace smithytranslate") ||
+        contents.contains("namespace alloy")
       }
       .map { in =>
         val subPath =

@@ -1,0 +1,312 @@
+package build
+
+import mill.*, scalalib.*, scalalib.publish.*
+import mill.scalalib.scalafmt.ScalafmtModule
+import mill.scalajslib.ScalaJSModule
+import mill.scalajslib.api.ModuleKind
+import com.github.lolgab.mill.mima.*
+import header.*
+
+import scala.Ordering.Implicits.*
+
+// ─── Scala versions ────────────────────────────────────────────
+
+object ScalaVersions {
+  val scala212 = "2.12.21"
+  val scala213 = "2.13.18"
+  val scala3 = "3.3.7"
+
+  val scalaVersions = List(scala213, scala212, scala3)
+}
+
+// ─── Base traits ───────────────────────────────────────────────
+
+trait BaseModule extends Module with HeaderModule {
+
+  def moduleDir: os.Path = {
+    val originalPath = super.moduleDir
+    (originalPath / os.up) / "modules" / originalPath.last
+  }
+
+  def includeFileExtensions: List[String] = List("scala", "java")
+  def license: HeaderLicense = HeaderLicense.Custom(
+    """|Copyright 2022 Disney Streaming
+       |
+       |Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
+       |you may not use this file except in compliance with the License.
+       |You may obtain a copy of the License at
+       |
+       |   https://disneystreaming.github.io/TOST-1.0.txt
+       |
+       |Unless required by applicable law or agreed to in writing, software
+       |distributed under the License is distributed on an "AS IS" BASIS,
+       |WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+       |See the License for the specific language governing permissions and
+       |limitations under the License.
+       |""".stripMargin
+  )
+}
+
+trait BasePublishModule
+    extends BaseModule
+    with PublishModule
+    with mill.util.VcsVersion {
+
+  def publishArtifactName: T[String]
+  override final def artifactName = publishArtifactName
+
+  override def publishVersion = Task {
+    if (isCI()) vcsState().format() else "dev-SNAPSHOT"
+  }
+
+  def isCI = Task.Input { Task.ctx().env.contains("CI") }
+
+  def pomSettings = PomSettings(
+    description = "A smithy-translation toolkit",
+    organization = "com.disneystreaming.smithy",
+    url = "https://github.com/disneystreaming/smithy-translate",
+    licenses = Seq(
+      License(
+        id = "TOST-1.0",
+        name = "TOMORROW OPEN SOURCE TECHNOLOGY LICENSE 1.0",
+        url = "https://disneystreaming.github.io/TOST-1.0.txt",
+        isOsiApproved = false,
+        isFsfLibre = false,
+        distribution = "repo"
+      )
+    ),
+    versionControl = VersionControl(
+      Some("https://github.com/disneystreaming/smithy-translate")
+    ),
+    developers = Seq(
+      Developer(
+        "baccata",
+        "Olivier Mélois",
+        "https://github.com/baccata"
+      ),
+      Developer(
+        "lewisjkl",
+        "Jeff Lewis",
+        "http://github.com/lewisjkl"
+      ),
+      Developer(
+        "daddykotex",
+        "David Francoeur",
+        "http://github.com/daddykotex"
+      ),
+      Developer(
+        "yisraelU",
+        "Yisrael Union",
+        "http://github.com/yisraelU"
+      )
+    )
+  )
+
+  override def javacOptions = Task {
+    super.javacOptions() ++ Seq(
+      "--release",
+      "8"
+    )
+  }
+}
+
+trait BaseScala213Module extends BaseScalaModule {
+  override def scalaVersion = ScalaVersions.scala213
+}
+
+trait BaseScalaModule extends ScalaModule with BaseModule with ScalafmtModule {
+
+  override def scalacPluginMvnDeps = Task {
+    val sv = scalaVersion()
+    val plugins =
+      if (sv.startsWith("2.")) Seq(mvn"org.typelevel:::kind-projector:0.13.4")
+      else Seq.empty
+    super.scalacPluginMvnDeps() ++ plugins
+  }
+
+  trait BaseScalaTests extends ScalaTests {
+    override def scalacOptions = Task {
+      // Don't force target bytecode version in tests.
+      // Our published artifacts target java 11, but the tests need some java 18 apis
+      super
+        .scalacOptions()
+        .filterNot(_.startsWith("-release"))
+        .filterNot(_.startsWith("-java-output-version"))
+    }
+
+  }
+
+  def scalacOptions = Task {
+    super.scalacOptions() ++ scalacOptionsFor(scalaVersion())
+  }
+}
+
+trait BaseScalaJSModule extends BaseScalaModule with ScalaJSModule {
+  def scalaJSVersion = "1.20.2"
+  def moduleKind = ModuleKind.CommonJSModule
+}
+
+trait BaseJavaModule extends BaseModule with JavaModule {}
+
+trait BaseMunitTests extends ScalafmtModule with TestModule.Munit {
+  def mvnDeps =
+    Seq(
+      mvn"org.scalameta::munit::${Deps.munitVersion}",
+      mvn"org.scalameta::munit-scalacheck::${Deps.munitVersion}"
+    )
+}
+
+trait MimaModule extends Mima { self: BasePublishModule =>
+
+  def mimaPreviousVersions = getVersionsFromTags
+
+  override def mimaCheckDirection = Task { CheckDirection.Backward }
+
+  def baseMimaVersion: T[Version]
+
+  private def getVersionsFromTags: T[Seq[String]] = Task {
+    val currentVersion = publishVersion().trim().stripPrefix("v")
+    val versionFromTags =
+      os.proc("git", "tag", "--list")
+        .call()
+        .out
+        .text()
+        .split("\n")
+        .map(_.trim.stripPrefix("v"))
+        .flatMap(Version(_))
+
+    val filteredTags =
+      versionFromTags
+        .filterNot(_.toString == currentVersion)
+        .filter(_ >= baseMimaVersion())
+
+    filteredTags.map(_.toString).toIndexedSeq
+  }
+}
+
+// ─── Version helper ────────────────────────────────────────────
+
+case class Version(maj: Int, min: Int, patch: Int) {
+  override def toString = s"$maj.$min.$patch"
+}
+object Version {
+  def apply(version: String): Option[Version] = version match {
+    case s"$major.$minor.$patch" =>
+      for {
+        ma <- major.toIntOption
+        mi <- minor.toIntOption
+        pa <- patch.toIntOption
+      } yield Version(ma, mi, pa)
+    case _ => None
+  }
+
+  def scalaVersion(scalaVersion: String): Version = {
+    val parts = scalaVersion.split('.').map(_.toInt)
+    Version(parts(0), parts(1), parts(2))
+  }
+
+  implicit val readWriter: upickle.default.ReadWriter[Version] =
+    upickle.default.macroRW[Version]
+
+  implicit lazy val ordering: Ordering[Version] =
+    (x: Version, y: Version) => {
+      if (
+        x.maj > y.maj || (x.maj == y.maj && x.min > y.min) || (x.maj == y.maj && x.min == y.min && x.patch > y.patch)
+      ) 1
+      else if (
+        x.maj < y.maj || (x.maj == y.maj && x.min < y.min) || (x.maj == y.maj && x.min == y.min && x.patch < y.patch)
+      ) -1
+      else 0
+    }
+}
+
+val v211 = Version(2, 11, 0)
+val v212 = Version(2, 12, 0)
+val v213 = Version(2, 13, 0)
+val v300 = Version(3, 0, 0)
+
+case class ScalacOption(
+    name: String,
+    isSupported: Version => Boolean = _ => true
+)
+
+// format: off
+private val allScalacOptions = Seq(
+  ScalacOption("-release:11", isSupported = _ < v300),
+  ScalacOption("-java-output-version:11", isSupported = _ >= v300),
+  ScalacOption("-Xsource:3", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-deprecation", isSupported = version => version < v213 || v300 <= version),
+  ScalacOption("-explaintypes", isSupported = _ < v300),
+  ScalacOption("-explain-types", isSupported = v300 <= _),
+  ScalacOption("-explain", isSupported = v300 <= _),
+  ScalacOption("-feature"),
+  ScalacOption("-language:existentials", isSupported = _ < v300),
+  ScalacOption("-language:experimental.macros", isSupported = _ < v300),
+  ScalacOption("-language:higherKinds", isSupported = _ < v300),
+  ScalacOption("-language:implicitConversions", isSupported = _ < v300),
+  ScalacOption("-language:existentials,experimental.macros,higherKinds,implicitConversions", isSupported = v300 <= _),
+  ScalacOption("-unchecked"),
+  ScalacOption("-Xcheckinit", isSupported = _ < v300),
+  ScalacOption("-Xfatal-warnings", isSupported = _ < v300),
+  ScalacOption("-Xlint", isSupported = _ < v211),
+  ScalacOption("-Xlint:adapted-args", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:by-name-right-associative", isSupported = version => v211 <= version && version < v213),
+  ScalacOption("-Xlint:constant", isSupported = version => v212 <= version && version < v300),
+  ScalacOption("-Xlint:delayedinit-select", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:deprecation", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Xlint:doc-detached", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:inaccessible", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:infer-any", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:missing-interpolator", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:nullary-override", isSupported = version => v211 <= version && version < Version(2, 13, 3)),
+  ScalacOption("-Xlint:nullary-unit", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:option-implicit", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:package-object-classes", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:poly-implicit-overload", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:private-shadow", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:stars-align", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:type-parameter-shadow", isSupported = version => v211 <= version && version < v300),
+  ScalacOption("-Xlint:unsound-match", isSupported = version => v211 <= version && version < v213),
+  ScalacOption("-Wunused:nowarn", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Yno-adapted-args", isSupported = _ < v213),
+  ScalacOption("-Ywarn-dead-code", isSupported = _ < v213),
+  ScalacOption("-Wdead-code", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-extra-implicit", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wextra-implicit", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-inaccessible", isSupported = _ < v211),
+  ScalacOption("-Ywarn-nullary-override", isSupported = _ < v213),
+  ScalacOption("-Ywarn-nullary-unit", isSupported = _ < v213),
+  ScalacOption("-Ywarn-numeric-widen", isSupported = _ < v213),
+  ScalacOption("-Wnumeric-widen", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Xlint:implicit-recursion", isSupported = version => Version(2, 13, 3) <= version && version < v300),
+  ScalacOption("-Ywarn-unused", isSupported = version => v211 <= version && version < v212),
+  ScalacOption("-Ywarn-unused-import", isSupported = version => v211 <= version && version < v212),
+  ScalacOption("-Ywarn-unused:implicits", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wunused:implicits", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Wunused:explicits", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-unused:imports", isSupported = version => v212 <= version && version < v213),
+//  ScalacOption("-Wunused:imports", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-unused:locals", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wunused:locals", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-unused:params", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wunused:params", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-unused:patvars", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wunused:patvars", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-unused:privates", isSupported = version => v212 <= version && version < v213),
+  ScalacOption("-Wunused:privates", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ywarn-value-discard", isSupported = _ < v213),
+  ScalacOption("-Wvalue-discard", isSupported = version => v213 <= version && version < v300),
+  ScalacOption("-Ykind-projector", isSupported = v300 <= _),
+  ScalacOption("-Vimplicits", isSupported = version => Version(2, 13, 6) <= version && version < v300),
+  ScalacOption("-Vtype-diffs", isSupported = version => Version(2, 13, 6) <= version && version < v300),
+  ScalacOption("-Ypartial-unification", isSupported = version => Version(2, 11, 9) <= version && version < v213)
+)
+// format: on
+
+def scalacOptionsFor(scalaVersion: String): Seq[String] = {
+  val commonOpts = Seq("-encoding", "utf8")
+  val scalaVer = Version.scalaVersion(scalaVersion)
+  val versionedOpts = allScalacOptions.filter(_.isSupported(scalaVer)).map(_.name)
+
+  commonOpts ++ versionedOpts
+}

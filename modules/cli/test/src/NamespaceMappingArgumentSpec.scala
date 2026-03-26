@@ -36,7 +36,9 @@ class NamespaceMappingArgumentSpec extends munit.FunSuite {
     }
   }
 
-  test("NamespaceMapping Argument should - Parse a valid source:target with single part namespaces") {
+  test(
+    "NamespaceMapping Argument should - Parse a valid source:target with single part namespaces"
+  ) {
     CommonArguments.namespaceMappingArgument.read("a:b") match {
       case Validated.Valid(mapping) =>
         assertEquals(
@@ -51,7 +53,9 @@ class NamespaceMappingArgumentSpec extends munit.FunSuite {
     }
   }
 
-  test("NamespaceMapping Argument should - successfully parse with an empty target") {
+  test(
+    "NamespaceMapping Argument should - successfully parse with an empty target"
+  ) {
     CommonArguments.namespaceMappingArgument.read("a.b.c:") match {
       case Validated.Valid(mapping) =>
         assertEquals(
@@ -65,17 +69,23 @@ class NamespaceMappingArgumentSpec extends munit.FunSuite {
     }
   }
 
-  test("NamespaceMapping Argument should - fail to parse an invalid input missing colon") {
+  test(
+    "NamespaceMapping Argument should - fail to parse an invalid input missing colon"
+  ) {
     CommonArguments.namespaceMappingArgument.read("a.b.c") match {
-      case Validated.Valid(mapping) => fail(s"Parsed invalid input successfully: $mapping")
+      case Validated.Valid(mapping) =>
+        fail(s"Parsed invalid input successfully: $mapping")
       case Validated.Invalid(_) =>
     }
   }
 
-  test("NamespaceMapping Argument should - fail to parse an invalid input with empty source") {
+  test(
+    "NamespaceMapping Argument should - fail to parse an invalid input with empty source"
+  ) {
     CommonArguments.namespaceMappingArgument.read(":a.b.c") match {
-      case Validated.Valid(mapping) => fail(s"Parsed invalid input successfully: $mapping")
-      case Validated.Invalid(_) => 
+      case Validated.Valid(mapping) =>
+        fail(s"Parsed invalid input successfully: $mapping")
+      case Validated.Invalid(_) =>
     }
   }
 }

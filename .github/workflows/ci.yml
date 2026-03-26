@@ -37,27 +37,27 @@ jobs:
             java-version: 21
 
       - name: Check formatting
-        run: ./mill -k --disable-ticker __.checkFormat
+        run: ./mill -k --ticker false __.checkFormat
 
       - name: Check headers
-        run: ./mill -k --disable-ticker __.headerCheck
+        run: ./mill -k --ticker false __.headerCheck
 
       - name: Compile
-        run: ./mill -k --disable-ticker __.compile
+        run: ./mill -k --ticker false __.compile
 
       - name: Run tests
         run: |
-          ./mill -k --disable-ticker __.test
-          ./mill -k --disable-ticker cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
-          ./mill -k --disable-ticker cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
-          ./mill -k --disable-ticker proto-examples.compileScalaPB # trigger smithy-to-proto run
+          ./mill -k --ticker false __.testForked
+          ./mill -k --ticker false cli.run openapi-to-smithy --input modules/openapi/fullTests/testInputs modules/openapi/fullTests/testOutputs
+          ./mill -k --ticker false cli.run json-schema-to-smithy --input modules/json-schema/fullTests/testInputs modules/json-schema/fullTests/testOutputs
+          ./mill -k --ticker false proto-examples.compileScalaPB # trigger smithy-to-proto run
 
       - name: Run MiMa checks
         run: |
-          ./mill -k --disable-ticker __.mimaReportBinaryIssues
+          ./mill -k --ticker false __.mimaReportBinaryIssues
 
       - name: Validate README.md
-        run: ./mill -k --disable-ticker readme-validator.validate
+        run: ./mill -k --ticker false readme-validator.validate
 
       - name: Check for untracked changes
         run: |
@@ -67,18 +67,8 @@ jobs:
       - name: Publish ${{ github.ref }}
         if: startsWith(github.ref, 'refs/tags/v') ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.publishSnapshot == 'true')
-        run: |
-              ./mill -i \
-              mill.contrib.sonatypecentral.SonatypeCentralPublishModule/publishAll \
-              --username $SONATYPE_USERNAME \
-              --password $SONATYPE_PASSWORD \
-              --gpgArgs --no-tty,--pinentry-mode,loopback,--batch,--yes,-a,-b \
-              --publishArtifacts __.publishArtifacts \
-              --readTimeout  36000 \
-              --awaitTimeout 36000 \
-              --connectTimeout 36000 \
-              --shouldRelease true
+        run: ./mill -k --ticker false mill.javalib.SonatypeCentralPublishModule/
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PGP_SECRET }}
-          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_USERNAME }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_USERNAME }}

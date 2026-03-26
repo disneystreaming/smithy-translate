@@ -42,17 +42,15 @@ private[compiler] object SimplifyNameTransformer extends IModelPostProcessor {
         )
           d.copy(name =
             Name(
-              d.name.segments.last.mapValue(s =>
-                CIString(s.toString.capitalize)
-              )
+              d.name.segments.last
+                .mapValue(s => CIString(s.toString.capitalize))
             )
           )
         else
           d.copy(name =
             d.name.copy(segments =
-              d.name.segments.map(s =>
-                s.mapValue(s => CIString(s.toString.capitalize))
-              )
+              d.name.segments
+                .map(s => s.mapValue(s => CIString(s.toString.capitalize)))
             )
           )
       }
@@ -113,7 +111,7 @@ private[compiler] object SimplifyNameTransformer extends IModelPostProcessor {
           id = n.id.simplify,
           target = n.target.simplify
         )
-      case e: Enumeration => e.copy(id = e.id.simplify)
+      case e: Enumeration  => e.copy(id = e.id.simplify)
       case o: OperationDef =>
         val newE = o.errors.map(_.simplify)
         val newI = o.input.map(_.simplify)

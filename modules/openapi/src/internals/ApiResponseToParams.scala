@@ -72,7 +72,7 @@ private[openapi] object ApiResponseToParams
     val allParams = maybeBodyParam.toVector ++ headerParams
     maybeRef match {
       case Some(ref) => Left(ref)
-      case None =>
+      case None      =>
         val exts = GetExtensions.from(HasExtensions.unsafeFrom(response))
         val httpMessageInfo = HttpMessageInfo(opName, allParams, exts)
         Right(httpMessageInfo)

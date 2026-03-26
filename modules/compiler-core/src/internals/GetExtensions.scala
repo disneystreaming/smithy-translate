@@ -81,7 +81,7 @@ private[compiler] object GetExtensions {
     case b: jackson.BooleanNode => Node.from(b.booleanValue)
     case n: jackson.NumericNode => Node.from(n.numberValue)
     case _: jackson.NullNode    => Node.nullNode()
-    case a: jackson.ArrayNode =>
+    case a: jackson.ArrayNode   =>
       Node.fromNodes(a.elements().asScala.toList.map(jacksonToSmithy).asJava)
     case o: jackson.ObjectNode =>
       Node.objectNode {

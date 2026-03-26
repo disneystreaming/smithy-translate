@@ -35,7 +35,7 @@ private[postprocess] object util {
         u.alts.map(_.tpe)
       case n: Newtype =>
         Vector(n.target)
-      case _: Enumeration => Vector.empty
+      case _: Enumeration  => Vector.empty
       case o: OperationDef =>
         val allRefs = o.input.toVector ++ o.output.toVector ++ o.errors
         allRefs

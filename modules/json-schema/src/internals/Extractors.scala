@@ -347,11 +347,11 @@ private[json_schema] object Extractors {
 
     private def toNode(in: Object): Node = {
       in match {
-        case null                 => Node.nullNode()
-        case JSONObject.NULL      => Node.nullNode()
-        case b: java.lang.Boolean => Node.from(b)
-        case s: String            => Node.from(s)
-        case n: Number            => Node.from(n)
+        case null                       => Node.nullNode()
+        case JSONObject.NULL            => Node.nullNode()
+        case b: java.lang.Boolean       => Node.from(b)
+        case s: String                  => Node.from(s)
+        case n: Number                  => Node.from(n)
         case l: java.util.Collection[_] =>
           Node.fromNodes(
             l.asScala.map { case e: Object => toNode(e) }.toList.asJava
