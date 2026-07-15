@@ -141,4 +141,33 @@ final class ConstraintSpec extends munit.FunSuite {
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
 
+  test("min max : double when number and some arbitrary range") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "number",
+         |      "maximum": 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    max: 1.0
+                            |  )
+                            |  number: Double
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
 }

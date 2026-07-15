@@ -96,7 +96,7 @@ private[json_schema] object Extractors {
               case DoubleRange(min, max) =>
                 (PDouble, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
 
-              case _ if s.requiresInteger() => (PInt, None, None) 
+              case _ if s.requiresInteger()  => (PInt, None, None)
               case _ if !s.requiresInteger() => (PDouble, None, None)
             }
 
@@ -456,7 +456,7 @@ private[json_schema] object Extractors {
 
   object IntRange {
     def unapply(sch: Schema): Option[(Option[Int], Option[Int])] = sch match {
-      case s: NumberSchema if s.isRequiresNumber() =>
+      case s: NumberSchema if s.requiresInteger() =>
         val min = Option(s.getMinimum())
         val max = Option(s.getMaximum())
         (min, max) match {
@@ -473,7 +473,7 @@ private[json_schema] object Extractors {
   object DoubleRange {
     def unapply(sch: Schema): Option[(Option[Double], Option[Double])] =
       sch match {
-        case s: NumberSchema if !s.isRequiresNumber() =>
+        case s: NumberSchema if !s.requiresInteger() =>
           val min = Option(s.getMinimum())
           val max = Option(s.getMaximum())
           Some((min.map(_.doubleValue()), max.map(_.doubleValue())))
