@@ -17,7 +17,7 @@ package smithytranslate.compiler.json_schema
 
 final class ConstraintSpec extends munit.FunSuite {
 
-  test("min max : integer") {
+  test("min max : int with long bounds") {
     val jsonSchString =
       """|{
          |  "$id": "test.json",
@@ -38,10 +38,103 @@ final class ConstraintSpec extends munit.FunSuite {
                             |
                             |structure Test {
                             |  @range(
-                            |    min: -2147483648,
-                            |    max: 2147483647
+                            |    min: -9223372036854775808,
+                            |    max: 9223372036854775807
+                            |  )
+                            |  number: Long
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("min max : integer with small whole-number bounds") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": 1,
+         |      "maximum": 10
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    min: 1,
+                            |    max: 10
                             |  )
                             |  number: Integer
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("min max : long with big max and small min bounds") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": 1,
+         |      "maximum": 9223372036854775807
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    min: 1,
+                            |    max: 9223372036854775807
+                            |  )
+                            |  number: Long
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("min max : long with small max and big min bounds") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": -9223372036854775808,
+         |      "maximum": 1
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    min: -9223372036854775808,
+                            |    max: 1
+                            |  )
+                            |  number: Long
                             |}
                             |""".stripMargin
 
