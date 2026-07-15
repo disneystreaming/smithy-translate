@@ -440,7 +440,7 @@ private[json_schema] object Extractors {
 
   object LongRange {
     def unapply(sch: Schema): Option[(Option[Long], Option[Long])] = sch match {
-      case s: NumberSchema if s.isRequiresNumber() =>
+      case s: NumberSchema if s.requiresInteger() =>
         val min = Option(s.getMinimum())
         val max = Option(s.getMaximum())
         (min, max) match {
