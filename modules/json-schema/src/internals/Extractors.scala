@@ -84,31 +84,29 @@ private[json_schema] object Extractors {
         // N:
         //   type: number
         case (s: NumberSchema) =>
-          val prim =
-            if (s.requiresInteger()) Some(PInt)
-            else Some(PDouble)
 
-          val (typedMin, typedMax): (Double, Double) = prim match {
-            case Some(PInt) => (Int.MinValue.toDouble, Int.MaxValue.toDouble)
-            case _          => (Double.MinValue, Double.MaxValue)
-          }
+          val (prim, min, max) =
+            s match {
+              case LongRange(min, max) =>
+                (PLong, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
 
-          val max = Option(s.getMaximum())
-            .map(_.doubleValue())
-            .map(_.min(typedMax))
-            .map(BigDecimal(_))
+              case IntRange(min, max) =>
+                (PInt, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
 
-          val min = Option(s.getMinimum())
-            .map(_.doubleValue())
-            .map(_.max(typedMin))
-            .map(BigDecimal(_))
+              case DoubleRange(min, max) =>
+                (PDouble, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
+
+              case _ if s.requiresInteger()  => (PInt, None, None)
+              case _ if !s.requiresInteger() => (PDouble, None, None)
+            }
 
           val range =
             if (max.nonEmpty || min.nonEmpty) Some(Hint.Range(min, max))
             else None
+
           val hints: List[Hint] = List(desc, range).flatten
 
-          prim.map(hints -> _)
+          Some(hints -> prim)
 
         // S:
         //  type: string
@@ -438,6 +436,62 @@ private[json_schema] object Extractors {
 
   object int {
     def unapply(str: String): Option[Int] = str.toIntOption
+  }
+
+  object LongRange {
+    def unapply(sch: Schema): Option[(Option[Long], Option[Long])] = sch match {
+      case s: NumberSchema if s.requiresInteger() =>
+        val min = Option(s.getMinimum())
+        val max = Option(s.getMaximum())
+        (min, max) match {
+          case (Some(LongNumber(l)), _) =>
+            Some((Some(l), max.map(_.longValue())))
+          case (_, Some(LongNumber(l))) =>
+            Some((min.map(_.longValue()), Some(l)))
+          case _ => None
+        }
+      case _ => None
+    }
+  }
+
+  object IntRange {
+    def unapply(sch: Schema): Option[(Option[Int], Option[Int])] = sch match {
+      case s: NumberSchema if s.requiresInteger() =>
+        val min = Option(s.getMinimum())
+        val max = Option(s.getMaximum())
+        (min, max) match {
+          case (Some(IntNumber(mn)), None) => Some((Some(mn), None))
+          case (None, Some(IntNumber(mx))) => Some((None, Some(mx)))
+          case (Some(IntNumber(mn)), Some(IntNumber(mx))) =>
+            Some((Some(mn), Some(mx)))
+          case _ => None
+        }
+      case _ => None
+    }
+  }
+
+  object DoubleRange {
+    def unapply(sch: Schema): Option[(Option[Double], Option[Double])] =
+      sch match {
+        case s: NumberSchema if !s.requiresInteger() =>
+          val min = Option(s.getMinimum())
+          val max = Option(s.getMaximum())
+          Some((min.map(_.doubleValue()), max.map(_.doubleValue())))
+        case _ => None
+      }
+  }
+
+  object LongNumber {
+    def unapply(number: Number): Option[Long] =
+      Option(number.longValue())
+        .filter(x => x > Int.MaxValue || x < Int.MinValue)
+  }
+
+  object IntNumber {
+    def unapply(a: Number): Option[Int] =
+      Option(a.longValue())
+        .filter(x => x < Int.MaxValue && x > Int.MinValue)
+        .map(_.toInt)
   }
 
 }
