@@ -3,7 +3,7 @@ package build
 import mill.scalalib.*
 
 object Deps {
-  val alloyVersion = "0.3.36"
+  val alloyVersion = "0.3.40"
   private val alloyOrg = "com.disneystreaming.alloy"
   val alloyCore = mvn"$alloyOrg:alloy-core:$alloyVersion"
   val alloyProtobuf = mvn"$alloyOrg:alloy-protobuf:$alloyVersion"
@@ -17,7 +17,7 @@ object Deps {
     mvn"org.mozilla:rhino:1.7.14"
   )
 
-  private val smithyVersion = "1.66.0"
+  private val smithyVersion = "1.72.0"
   val smithyModel = mvn"software.amazon.smithy:smithy-model:$smithyVersion"
   val smithyBuild = mvn"software.amazon.smithy:smithy-build:$smithyVersion"
   val smithyDiff = mvn"software.amazon.smithy:smithy-diff:$smithyVersion"
