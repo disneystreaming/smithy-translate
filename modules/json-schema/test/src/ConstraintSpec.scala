@@ -79,6 +79,68 @@ final class ConstraintSpec extends munit.FunSuite {
     TestUtils.runConversionTest(jsonSchString, expectedString)
   }
 
+  test("min max : integer with bounds at the int32 limits") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": -2147483648,
+         |      "maximum": 2147483647
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    min: -2147483648,
+                            |    max: 2147483647
+                            |  )
+                            |  number: Integer
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
+  test("min max : long when a bound is one past the int32 limit") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "Test",
+         |  "type": "object",
+         |  "properties": {
+         |    "number": {
+         |      "type": "integer",
+         |      "minimum": 0,
+         |      "maximum": 2147483648
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+
+    val expectedString = """|namespace foo
+                            |
+                            |structure Test {
+                            |  @range(
+                            |    min: 0,
+                            |    max: 2147483648
+                            |  )
+                            |  number: Long
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
   test("min max : long with big max and small min bounds") {
     val jsonSchString =
       """|{

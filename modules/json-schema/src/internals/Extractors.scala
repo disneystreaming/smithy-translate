@@ -89,13 +89,10 @@ private[json_schema] object Extractors {
             s match {
               case LongRange(min, max) =>
                 (PLong, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
-
               case IntRange(min, max) =>
                 (PInt, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
-
               case DoubleRange(min, max) =>
                 (PDouble, min.map(BigDecimal(_)), max.map(BigDecimal(_)))
-
               case _ if s.requiresInteger()  => (PInt, None, None)
               case _ if !s.requiresInteger() => (PDouble, None, None)
             }
@@ -438,9 +435,13 @@ private[json_schema] object Extractors {
     def unapply(str: String): Option[Int] = str.toIntOption
   }
 
+  // These take a NumberSchema (the call site already matched that), but still own the
+  // `requiresInteger` check themselves: it's part of what makes a value an int/long range
+  // (it distinguishes `type: integer` from a `type: number` with whole bounds), so each
+  // extractor stays a complete, self-contained predicate.
   object LongRange {
-    def unapply(sch: Schema): Option[(Option[Long], Option[Long])] = sch match {
-      case s: NumberSchema if s.requiresInteger() =>
+    def unapply(s: NumberSchema): Option[(Option[Long], Option[Long])] =
+      if (s.requiresInteger()) {
         val min = Option(s.getMinimum())
         val max = Option(s.getMaximum())
         (min, max) match {
@@ -450,13 +451,12 @@ private[json_schema] object Extractors {
             Some((min.map(_.longValue()), Some(l)))
           case _ => None
         }
-      case _ => None
-    }
+      } else None
   }
 
   object IntRange {
-    def unapply(sch: Schema): Option[(Option[Int], Option[Int])] = sch match {
-      case s: NumberSchema if s.requiresInteger() =>
+    def unapply(s: NumberSchema): Option[(Option[Int], Option[Int])] =
+      if (s.requiresInteger()) {
         val min = Option(s.getMinimum())
         val max = Option(s.getMaximum())
         (min, max) match {
@@ -466,31 +466,31 @@ private[json_schema] object Extractors {
             Some((Some(mn), Some(mx)))
           case _ => None
         }
-      case _ => None
-    }
+      } else None
   }
 
   object DoubleRange {
-    def unapply(sch: Schema): Option[(Option[Double], Option[Double])] =
-      sch match {
-        case s: NumberSchema if !s.requiresInteger() =>
-          val min = Option(s.getMinimum())
-          val max = Option(s.getMaximum())
-          Some((min.map(_.doubleValue()), max.map(_.doubleValue())))
-        case _ => None
-      }
+    def unapply(s: NumberSchema): Option[(Option[Double], Option[Double])] =
+      if (!s.requiresInteger()) {
+        val min = Option(s.getMinimum())
+        val max = Option(s.getMaximum())
+        Some((min.map(_.doubleValue()), max.map(_.doubleValue())))
+      } else None
   }
 
+  // A whole-number bound outside the signed 32-bit range implies a Long.
   object LongNumber {
     def unapply(number: Number): Option[Long] =
       Option(number.longValue())
         .filter(x => x > Int.MaxValue || x < Int.MinValue)
   }
 
+  // A whole-number bound within the signed 32-bit range (inclusive of the limits) fits an Int.
+  // Inclusive so that a bound exactly at Int.MaxValue/MinValue is captured rather than dropped.
   object IntNumber {
     def unapply(a: Number): Option[Int] =
       Option(a.longValue())
-        .filter(x => x < Int.MaxValue && x > Int.MinValue)
+        .filter(x => x >= Int.MinValue && x <= Int.MaxValue)
         .map(_.toInt)
   }
 
