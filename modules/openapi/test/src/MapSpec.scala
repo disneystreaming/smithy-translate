@@ -14,7 +14,11 @@
  */
 
 package smithytranslate.compiler.openapi
+
+import TestUtils.OpenApiVersion.V3_0
 final class MapSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 maps.
 
   test("maps") {
     val openapiString = """|openapi: '3.0.'
@@ -38,7 +42,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - external docs") {
@@ -69,7 +73,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - description") {
@@ -96,7 +100,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - nested") {
@@ -128,7 +132,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - double nested") {
@@ -167,7 +171,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - structure member") {
@@ -199,7 +203,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - structure member reference") {
@@ -233,7 +237,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("maps - list member") {
@@ -264,7 +268,7 @@ final class MapSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }

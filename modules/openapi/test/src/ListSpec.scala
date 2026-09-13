@@ -14,7 +14,11 @@
  */
 
 package smithytranslate.compiler.openapi
+
+import TestUtils.OpenApiVersion.V3_0
 final class ListSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 arrays.
 
   test("lists") {
     val openapiString = """|openapi: '3.0.'
@@ -37,7 +41,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - external docs") {
@@ -67,7 +71,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - with description") {
@@ -93,7 +97,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - nested") {
@@ -123,7 +127,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - double nested") {
@@ -159,7 +163,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - structure member") {
@@ -190,7 +194,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("lists - structure member ref") {
@@ -223,7 +227,7 @@ final class ListSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }

@@ -15,6 +15,8 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
+
 final class ExamplesSpec extends munit.FunSuite {
 
   test("example - integer") {
@@ -147,7 +149,8 @@ final class ExamplesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // This example contains an array our converter cannot yet handle in 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("example - array") {
@@ -176,7 +179,8 @@ final class ExamplesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 arrays.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("example - set") {
@@ -207,7 +211,8 @@ final class ExamplesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 set conversion.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("example - map") {
@@ -241,7 +246,8 @@ final class ExamplesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 maps.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("example - map with structure member") {
@@ -285,6 +291,7 @@ final class ExamplesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 maps.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 }

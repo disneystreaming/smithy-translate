@@ -28,6 +28,22 @@ import smithytranslate.compiler.ModelWrapper
 
 object TestUtils {
 
+  sealed abstract class OpenApiVersion(val value: String)
+      extends Product
+      with Serializable {
+    override final def toString(): String = value
+  }
+  object OpenApiVersion {
+    case object Swagger2 extends OpenApiVersion("2.0")
+    case object V3_0 extends OpenApiVersion("3.0.3")
+    case object V3_1 extends OpenApiVersion("3.1.0")
+  }
+
+  // Swagger 2.0 has a different document structure and is tested separately
+  // in OpenapiV2Spec, these versions can share fixtures by changing the header.
+  val allVersions: List[OpenApiVersion] =
+    List(OpenApiVersion.V3_0, OpenApiVersion.V3_1)
+
   sealed trait ExpectedOutput extends Product with Serializable
   object ExpectedOutput {
     final case class StringOutput(str: String) extends ExpectedOutput
@@ -39,7 +55,8 @@ object TestUtils {
       openapiSpec: String,
       smithySpec: ExpectedOutput,
       errorSmithySpec: Option[String],
-      smithyVersion: SmithyVersion
+      smithyVersion: SmithyVersion,
+      versions: List[OpenApiVersion]
   )
 
   object ConversionTestInput {
@@ -55,7 +72,8 @@ object TestUtils {
         openapiSpec,
         ExpectedOutput.StringOutput(smithySpec),
         errorSmithySpec,
-        smithyVersion
+        smithyVersion,
+        versions = allVersions
       )
 
     def apply(
@@ -70,7 +88,8 @@ object TestUtils {
         openapiSpec,
         ExpectedOutput.ModelOutput(smithyModel),
         errorSmithySpec,
-        smithyVersion
+        smithyVersion,
+        versions = allVersions
       )
   }
 
@@ -85,6 +104,8 @@ object TestUtils {
   ): ConversionResult = {
     val inputs = (input0 +: remaining).toList
 
+    // TODO: Enable input/output validation for successful conversion tests,
+    // with explicit exceptions for tests that expect partial output and diagnostics.
     val result =
       OpenApiCompiler.compile(
         ToSmithyCompilerOptions(
@@ -135,30 +156,68 @@ object TestUtils {
     ConversionResult(resultW, expected)
   }
 
+  def runConversionAllVersions(
+      input0: ConversionTestInput,
+      remaining: ConversionTestInput*
+  ): List[(OpenApiVersion, ConversionResult)] = {
+    val inputs = input0 +: remaining
+    val versions = inputs.map(_.versions).reduce(_ intersect _)
+    require(versions.nonEmpty, "Conversion inputs must share a test version")
+    versions.map { version =>
+      val versioned = inputs.map { input =>
+        val spec =
+          if (version == OpenApiVersion.Swagger2) {
+            require(
+              input.openapiSpec.linesIterator.exists(_.startsWith("swagger:"))
+            )
+            input.openapiSpec
+          } else {
+            require(
+              input.openapiSpec.linesIterator.exists(_.startsWith("openapi:"))
+            )
+            input.openapiSpec.replaceFirst(
+              "(?m)^openapi:.*$",
+              s"openapi: '$version'"
+            )
+          }
+        input.copy(openapiSpec = spec)
+      }
+      version -> runConversion(versioned.head, versioned.tail: _*)
+    }
+  }
+
   def runConversionTest(
       input0: ConversionTestInput,
       remaining: ConversionTestInput*
   )(implicit
       loc: Location
   ): Unit = {
-    val ConversionResult(res, expected) = runConversion(
+    runConversionAllVersions(
       input0,
       remaining: _*
-    )
-
-    res match {
-      case ToSmithyResult.Failure(err, errors) =>
-        errors.foreach(println)
-        Assertions.fail("Validating model failed: ", err)
-      case ToSmithyResult.Success(_, output) =>
-        Assertions.assertEquals(output, expected)
+    ).foreach { case (version, ConversionResult(res, expected)) =>
+      res match {
+        case ToSmithyResult.Failure(err, errors) =>
+          errors.foreach(println)
+          Assertions.fail(s"Validating OpenAPI $version model failed: ", err)
+        case ToSmithyResult.Success(_, output) =>
+          Assertions.assertEquals(output, expected, version)
+      }
     }
   }
 
   def runConversionTest(
       openapiSpec: String,
       smithySpec: String,
-      smithyVersion: SmithyVersion = SmithyVersion.Two
+      version: OpenApiVersion
+  )(implicit loc: Location): Unit =
+    runConversionTest(openapiSpec, smithySpec, versions = List(version))
+
+  def runConversionTest(
+      openapiSpec: String,
+      smithySpec: String,
+      smithyVersion: SmithyVersion = SmithyVersion.Two,
+      versions: List[OpenApiVersion] = allVersions
   )(implicit
       loc: Location
   ): Unit = {
@@ -168,14 +227,15 @@ object TestUtils {
         openapiSpec,
         smithySpec,
         smithyVersion = smithyVersion
-      )
+      ).copy(versions = versions)
     )
   }
 
   def runConversionTestWithModel(
       openapiSpec: String,
       smithyModel: Model,
-      smithyVersion: SmithyVersion = SmithyVersion.Two
+      smithyVersion: SmithyVersion = SmithyVersion.Two,
+      versions: List[OpenApiVersion] = allVersions
   )(implicit
       loc: Location
   ): Unit = {
@@ -186,7 +246,7 @@ object TestUtils {
         smithyModel,
         errorSmithySpec = None,
         smithyVersion = smithyVersion
-      )
+      ).copy(versions = versions)
     )
   }
 }

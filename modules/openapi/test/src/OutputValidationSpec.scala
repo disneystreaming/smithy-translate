@@ -24,58 +24,89 @@ import smithytranslate.compiler.FileContents
 
 final class OutputValidationSpec extends munit.FunSuite {
 
-  test("Output should be validated when specified") {
-    val spec = """|openapi: '3.0.'
+  private def convert(
+      spec: String,
+      validateOutput: Boolean,
+      validateInput: Boolean = false
+  ) = OpenApiCompiler.compile(
+    ToSmithyCompilerOptions(
+      useVerboseNames = false,
+      validateInput = validateInput,
+      validateOutput = validateOutput,
+      transformers = List.empty,
+      useEnumTraitSyntax = false,
+      debug = false,
+      allowedRemoteBaseURLs = Set.empty,
+      namespaceRemaps = Map.empty
+    ),
+    OpenApiCompilerInput.UnparsedSpecs(
+      List(FileContents(NonEmptyList.of("input.yaml"), spec))
+    )
+  )
+
+  TestUtils.allVersions.foreach { version =>
+    test(s"$version output should be validated when specified") {
+      val spec = s"""|openapi: '$version'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths:
+                     |  /{test}:
+                     |    get:
+                     |      operationId: test
+                     |      responses:
+                     |        '200':
+                     |          content:
+                     |            application/json:
+                     |              schema:
+                     |                type: string
+                     |""".stripMargin
+
+      val resultExpectingSuccess = convert(spec, validateOutput = false)
+      assert(resultExpectingSuccess.isInstanceOf[Success[_]])
+
+      val resultExpectingFailure = convert(spec, validateOutput = true)
+      resultExpectingFailure match {
+        case Failure(ToSmithyError.SmithyValidationFailed(events), _) =>
+          // Expecting a failure indicating that the "test" operation is invalid due to not having
+          // an input member matching the `{test}` path segment.
+          assertEquals(events.size, 1)
+          assert(events.exists(_.getId() == "HttpLabelTrait"))
+        case Failure(cause, _) =>
+          fail(
+            s"expected a SmithyValidationFailed but got a ${cause.getClass().getSimpleName()}"
+          )
+        case Success(_, _) =>
+          fail("expected a failure")
+      }
+    }
+  }
+
+  test("OpenAPI 3.1 multiple types fail when output validation is enabled") {
+    val spec = """|openapi: '3.1.0'
                   |info:
                   |  title: test
                   |  version: '1.0'
-                  |paths:
-                  |  /{test}:
-                  |    get:
-                  |      operationId: test
-                  |      responses:
-                  |        '200':
-                  |          content:
-                  |            application/json:
-                  |              schema:
-                  |                type: object
+                  |paths: {}
+                  |components:
+                  |  schemas:
+                  |    NullableString:
+                  |      type: [string, 'null']
                   |""".stripMargin
-
-    val input = OpenApiCompilerInput.UnparsedSpecs(
-      List(
-        FileContents(NonEmptyList.of("input.yaml"), spec)
-      )
-    )
-    def convert(validateOutput: Boolean) = OpenApiCompiler.compile(
-      ToSmithyCompilerOptions(
-        useVerboseNames = false,
-        validateInput = false,
-        validateOutput = validateOutput,
-        transformers = List.empty,
-        useEnumTraitSyntax = false,
-        debug = false,
-        allowedRemoteBaseURLs = Set.empty,
-        namespaceRemaps = Map.empty
-      ),
-      input
+    val restriction = ToSmithyError.Restriction(
+      "Unsupported OpenAPI 3.1 schema keywords: type (null and multiple types)."
     )
 
-    val resultExpectingSuccess = convert(validateOutput = false)
-    assert(resultExpectingSuccess.isInstanceOf[Success[_]])
-
-    val resultExpectingFailure = convert(validateOutput = true)
-    resultExpectingFailure match {
-      case Failure(ToSmithyError.SmithyValidationFailed(events), _) =>
-        // Expecting a failure indicating that the "test" operation is invalid due to not having
-        // an input member matching the `{test}` path segment.
-        assertEquals(events.size, 1)
-        assert(events.exists(_.getId() == "HttpLabelTrait"))
-      case Failure(cause, _) =>
-        fail(
-          s"expected a SmithyValidationFailed but got a ${cause.getClass().getSimpleName()}"
-        )
-      case Success(_, _) =>
-        fail("expected a failure")
+    convert(spec, validateOutput = false, validateInput = true) match {
+      case Success(errors, _) => assertEquals(errors, List(restriction))
+      case Failure(cause, _)  => fail("Expected partial output", cause)
+    }
+    convert(spec, validateOutput = true, validateInput = true) match {
+      case Failure(cause: ToSmithyError.Restriction, errors) =>
+        assertEquals(cause, restriction)
+        assertEquals(errors, Nil)
+      case Failure(cause, _) => fail("Expected a restriction failure", cause)
+      case Success(_, _)     => fail("Expected a restriction failure")
     }
   }
 

@@ -15,6 +15,7 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
 import cats.data.NonEmptyList
 import software.amazon.smithy.model.shapes.LongShape
 import software.amazon.smithy.model.shapes.ShapeId
@@ -73,7 +74,8 @@ final class ConstraintSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 collections.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("length - set") {
@@ -102,10 +104,8 @@ final class ConstraintSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(
-      openapiString,
-      expectedString
-    )
+    // The converter does not yet support OpenAPI 3.1 collections.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("length - map") {
@@ -133,7 +133,8 @@ final class ConstraintSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 collections.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("range - long") {
@@ -201,7 +202,12 @@ final class ConstraintSpec extends munit.FunSuite {
     // Tested using this function since the ModelAssembler automatically adds box traits
     // to primitive shapes when loading them from string, but not when loading them using the
     // builders like above.
-    TestUtils.runConversionTestWithModel(openapiString, expectedModel)
+    // OpenAPI 3.0 uses Boolean exclusive bounds, 3.1 requires numeric bounds.
+    TestUtils.runConversionTestWithModel(
+      openapiString,
+      expectedModel,
+      versions = List(V3_0)
+    )
   }
 
   test("range - exclusive on decimal type") {
@@ -236,7 +242,12 @@ final class ConstraintSpec extends munit.FunSuite {
     // Tested using this function since the ModelAssembler automatically adds box traits
     // to primitive shapes when loading them from string, but not when loading them using the
     // builders like above.
-    TestUtils.runConversionTestWithModel(openapiString, expectedModel)
+    // OpenAPI 3.0 uses Boolean exclusive bounds, 3.1 requires numeric bounds.
+    TestUtils.runConversionTestWithModel(
+      openapiString,
+      expectedModel,
+      versions = List(V3_0)
+    )
     val input = TestUtils.ConversionTestInput(
       NonEmptyList.of("foo.smithy"),
       openapiString,

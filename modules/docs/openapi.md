@@ -41,7 +41,9 @@ encountered, the conversion still makes a best effort at converting everything e
 This way, as much of the specification will be translated automatically and the user
 can decide how to translate the rest.
 
-OpenAPI 2.x and 3.x are supported as input formats to this converter.
+OpenAPI 2.x and 3.0.x are supported as input formats to this converter.
+
+OpenAPI 3.1 support is on the way.
 
 Below are examples of how Smithy Translate converts various OpenAPI constructs into
 Smithy.

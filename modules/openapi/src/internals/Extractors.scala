@@ -19,9 +19,9 @@ package openapi
 
 import smithytranslate.compiler._
 import smithytranslate.compiler.internals._
+import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.media._
 import scala.jdk.CollectionConverters._
-import Primitive._
 
 private[openapi] object CaseEnum {
   def unapply(sch: Schema[_]): Option[Vector[String]] = sch match {
@@ -56,10 +56,14 @@ private[openapi] object IsFreeForm {
   }
 }
 
+// Format, XFormat, NoFormat and & are retained for binary compatibility.
+// Primitive conversion uses SchemaReader.
+@deprecated("Use SchemaReader instead.", since = "0.7.9")
 private[openapi] object Format {
   def unapply(sch: Schema[_]): Option[String] = Option(sch.getFormat())
 }
 
+@deprecated("Use SchemaReader instead.", since = "0.7.9")
 private[openapi] object XFormat {
   def unapply(sch: Schema[_]): Option[String] =
     Option(sch.getExtensions().asScala)
@@ -67,10 +71,12 @@ private[openapi] object XFormat {
       .map(_.toString())
 }
 
+@deprecated("Use SchemaReader instead.", since = "0.7.9")
 private[openapi] object NoFormat {
   def unapply(sch: Schema[_]): Boolean = Option(sch.getFormat()).isEmpty
 }
 
+@deprecated("Use SchemaReader instead.", since = "0.7.9")
 private[openapi] object & {
   def unapply[A](a: A): Some[(A, A)] = Some((a, a))
 }
@@ -107,151 +113,11 @@ private[openapi] object NonEmptySegments {
   }
 }
 
+// Retained for binary compatibility; conversion uses SchemaReader.
+@deprecated("Use SchemaReader instead.", since = "0.7.9")
 private[openapi] object CasePrimitive {
-  def unapply(sch: Schema[_]): Option[Primitive] = sch match {
-    // S:
-    //   type: string
-    //   format: timestamp
-    case (_: StringSchema) & Format("timestamp") => Some(PTimestamp)
-
-    // S:
-    //   type: string
-    //   format: local-date
-    case (_: StringSchema) & (Format("local-date") | XFormat("local-date")) =>
-      Some(PLocalDate)
-
-    // S:
-    //   type: string
-    //   format: local-time
-    case (_: StringSchema) & (Format("local-time") | XFormat("local-time")) =>
-      Some(PLocalTime)
-
-    // S:
-    //   type: string
-    //   format: local-date-time
-    case (_: StringSchema) & (Format("local-date-time") |
-        XFormat("local-date-time")) =>
-      Some(PLocalDateTime)
-
-    // S:
-    //   type: string
-    //   format: offset-date-time
-    case (_: StringSchema) & (Format("offset-date-time") |
-        XFormat("offset-date-time")) =>
-      Some(POffsetDateTime)
-
-    // S:
-    //   type: string
-    //   format: offset-time
-    case (_: StringSchema) & (Format("offset-time") | XFormat("offset-time")) =>
-      Some(POffsetTime)
-
-    // S:
-    //   type: string
-    //   format: zone-id
-    case (_: StringSchema) & (Format("zone-id") | XFormat("zone-id")) =>
-      Some(PZoneId)
-
-    // S:
-    //   type: string
-    //   format: zone-offset
-    case (_: StringSchema) & (Format("zone-offset") | XFormat("zone-offset")) =>
-      Some(PZoneOffset)
-
-    // S:
-    //   type: string
-    //   format: zoned-date-time
-    case (_: StringSchema) & (Format("zoned-date-time") |
-        XFormat("zoned-date-time")) =>
-      Some(PZonedDateTime)
-
-    // I:
-    //   type: integer
-    //   format: year
-    case (_: IntegerSchema) & (Format("year") | XFormat("year")) => Some(PYear)
-
-    // S:
-    //   type: string
-    //   format: year-month
-    case (_: StringSchema) & (Format("year-month") | XFormat("year-month")) =>
-      Some(PYearMonth)
-
-    // S:
-    //   type: string
-    //   format: month-day
-    case (_: StringSchema) & (Format("month-day") | XFormat("month-day")) =>
-      Some(PMonthDay)
-
-    // S:
-    //   type: string
-    //   format: password
-    case (_: PasswordSchema) => Some(PString)
-
-    // S:
-    //   type: string
-    case _: StringSchema | _: EmailSchema => Some(PString)
-
-    // S:
-    //   type: string
-    //   format: byte | format: binary
-    case _: ByteArraySchema | _: BinarySchema => Some(PBytes)
-
-    // S:
-    //   type: string
-    //   format: uuid
-    case _: UUIDSchema => Some(PUUID)
-
-    // S:
-    //   type: string
-    //   format: date
-    case _: DateSchema => Some(PDate)
-
-    // S:
-    //   type: string
-    //   format: date-time
-    case _: DateTimeSchema => Some(PDateTime)
-
-    // N:
-    //  type: number
-    //  format: duration
-    case (_: NumberSchema) & (Format("duration") | XFormat("duration")) =>
-      Some(PDuration)
-
-    // N:
-    //   type: number
-    //   format: float
-    case (_: NumberSchema) & Format("float") => Some(PFloat)
-
-    // N:
-    //   type: number
-    //   format: double
-    case (_: NumberSchema) & Format("double") => Some(PDouble)
-
-    // N:
-    //   type: number
-    case (_: NumberSchema) & NoFormat() => Some(PDouble)
-
-    // I:
-    //   type: integer
-    //   format: int16 | noformat
-    case (_: IntegerSchema) & (Format("int16")) => Some(PShort)
-
-    // I:
-    //   type: integer
-    //   format: int32 | noformat
-    case (_: IntegerSchema) & (Format("int32") | NoFormat()) => Some(PInt)
-
-    // I:
-    //   type: integer
-    //   format: int64
-    case (_: IntegerSchema) & Format("int64") => Some(PLong)
-
-    // B:
-    //   type: boolean
-    case _: BooleanSchema => Some(PBoolean)
-
-    case _ => None
-  }
+  private val reader = new SchemaReader(new OpenAPI().openapi("3.0.3"))
+  def unapply(sch: Schema[_]): Option[Primitive] = reader.unapply(sch)
 }
 
 /*

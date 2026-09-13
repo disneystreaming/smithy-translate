@@ -14,7 +14,11 @@
  */
 
 package smithytranslate.compiler.openapi
+
+import TestUtils.OpenApiVersion.V3_0
 final class UnionSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 unions.
 
   test("unions - primitive targets") {
     val openapiString = """|openapi: '3.0.'
@@ -41,7 +45,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - primitive targets - description") {
@@ -71,7 +75,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - structure targets") {
@@ -117,7 +121,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - structure targets - one embedded") {
@@ -170,7 +174,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - untagged due to same field names") {
@@ -222,7 +226,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - tagged") {
@@ -271,7 +275,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - tagged with parent fields") {
@@ -327,7 +331,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - tagged with multiple layers of parent fields") {
@@ -391,7 +395,7 @@ final class UnionSpec extends munit.FunSuite {
          |}
          |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - discriminated targets") {
@@ -443,7 +447,7 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - allOf containing document") {
@@ -507,7 +511,7 @@ final class UnionSpec extends munit.FunSuite {
                             |document NumberParentTwo
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("unions - sanitize names") {
@@ -560,6 +564,6 @@ final class UnionSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 }

@@ -15,9 +15,12 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
 import smithytranslate.compiler.SmithyVersion
 
 final class EnumSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 enums.
 
   test("enum") {
     val openapiString = """|openapi: '3.0.'
@@ -44,7 +47,7 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("enum - number starting name") {
@@ -72,7 +75,7 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("enum - v1") {
@@ -104,7 +107,8 @@ final class EnumSpec extends munit.FunSuite {
     TestUtils.runConversionTest(
       openapiString,
       expectedString,
-      SmithyVersion.One
+      SmithyVersion.One,
+      versions = List(V3_0)
     )
   }
 
@@ -138,7 +142,8 @@ final class EnumSpec extends munit.FunSuite {
     TestUtils.runConversionTest(
       openapiString,
       expectedString,
-      SmithyVersion.Two
+      SmithyVersion.Two,
+      versions = List(V3_0)
     )
   }
 
@@ -168,7 +173,7 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }
