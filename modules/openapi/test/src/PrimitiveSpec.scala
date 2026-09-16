@@ -15,6 +15,8 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_1
+
 final class PrimitiveSpec extends munit.FunSuite {
 
   test("primitive reference") {
@@ -115,5 +117,60 @@ final class PrimitiveSpec extends munit.FunSuite {
                             |""".stripMargin
 
     TestUtils.runConversionTest(openapiString, expectedString)
+  }
+  List(
+    "integer" -> "integer",
+    "integer, format: int16" -> "short",
+    "integer, format: int32" -> "integer",
+    "integer, format: int64" -> "long",
+    "number" -> "double",
+    "number, format: float" -> "float",
+    "number, format: double" -> "double",
+    "boolean" -> "boolean",
+    "string, format: timestamp" -> "timestamp",
+    "string, format: email" -> "string",
+    "string, format: custom" -> "string"
+  ).foreach { case (schema, smithyType) =>
+    test(s"primitive $schema: named, inline and referenced") {
+      val openapiString = s"""|openapi: '3.0.3'
+                              |info: {title: test, version: '1.0'}
+                              |paths: {}
+                              |components:
+                              |  schemas:
+                              |    Scalar: {type: $schema}
+                              |    Values:
+                              |      type: object
+                              |      properties:
+                              |        inline: {type: $schema}
+                              |        reference:
+                              |          $$ref: '#/components/schemas/Scalar'
+                              |""".stripMargin
+      val expectedString = s"""|namespace foo
+                               |$smithyType Scalar
+                               |structure Values {
+                               |  inline: ${smithyType.capitalize}
+                               |  reference: Scalar
+                               |}
+                               |""".stripMargin
+      TestUtils.runConversionTest(openapiString, expectedString)
+    }
+  }
+
+  List("string", "integer", "number", "boolean").foreach { dataType =>
+    test(s"OpenAPI 3.1 singleton type array: $dataType") {
+      val openapiString = s"""|openapi: '3.1.0'
+                              |info: {title: test, version: '1.0'}
+                              |paths: {}
+                              |components:
+                              |  schemas:
+                              |    Scalar: {type: [$dataType]}
+                              |""".stripMargin
+      val smithyType = if (dataType == "number") "double" else dataType
+      TestUtils.runConversionTest(
+        openapiString,
+        s"namespace foo\n$smithyType Scalar",
+        versions = List(V3_1)
+      )
+    }
   }
 }

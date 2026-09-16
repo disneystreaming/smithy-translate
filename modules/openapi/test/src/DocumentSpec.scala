@@ -15,7 +15,11 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
+
 final class DocumentSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 freeform documents.
 
   test("document") {
     val openapiString = """|openapi: '3.0.'
@@ -34,7 +38,7 @@ final class DocumentSpec extends munit.FunSuite {
                             |document MyDoc
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("document - description") {
@@ -56,7 +60,7 @@ final class DocumentSpec extends munit.FunSuite {
                             |document MyDoc
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }

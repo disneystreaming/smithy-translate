@@ -598,17 +598,19 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       expectedString,
       None
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expected
-    ) =
-      TestUtils.runConversion(input)
     val expectedError = ToSmithyError.Restriction(
       "Operation testOperationId contains an unsupported security requirement: `List(BasicAuth, BearerAuth)`. " +
         "Security schemes cannot be ANDed together. BasicAuth will be used and List(BearerAuth) will be ignored."
     )
-    assertEquals(output, expected)
-    assertEquals(errors, List(expectedError))
+    TestUtils.runConversionAllVersions(input).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expected
+        ) = result
+        assertEquals(output, expected, version)
+        assertEquals(errors, List(expectedError), version)
+    }
   }
 
   test("security schemes - ORing security requirements") {
@@ -759,17 +761,19 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       expectedString,
       None
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expected
-    ) =
-      TestUtils.runConversion(input)
     val expectedError = ToSmithyError.Restriction(
       "Operation testOperationId contains an unsupported security requirement: `List(BasicAuth, BearerAuth)`. " +
         "Security schemes cannot be ANDed together. BasicAuth will be used and List(BearerAuth) will be ignored."
     )
-    assertEquals(output, expected)
-    assertEquals(errors, List(expectedError))
+    TestUtils.runConversionAllVersions(input).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expected
+        ) = result
+        assertEquals(output, expected, version)
+        assertEquals(errors, List(expectedError), version)
+    }
   }
 
   test("security schemes - OAuth2/OpenIdConnect - errors") {
@@ -855,18 +859,20 @@ final class SecuritySchemesSpec extends munit.FunSuite {
       expectedString,
       None
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expected
-    ) =
-      TestUtils.runConversion(input)
     val expectedErrors = List(
       ToSmithyError.Restriction(
         "OpenIdConnect is not a supported security scheme."
       ),
       ToSmithyError.Restriction("OAuth2 is not a supported security scheme.")
     )
-    assertEquals(output, expected)
-    assertEquals(errors, expectedErrors)
+    TestUtils.runConversionAllVersions(input).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expected
+        ) = result
+        assertEquals(output, expected, version)
+        assertEquals(errors, expectedErrors, version)
+    }
   }
 }

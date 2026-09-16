@@ -400,18 +400,20 @@ final class MultiFileSpec extends munit.FunSuite {
       binYml,
       expectedBin
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expectedModel
-    ) =
-      TestUtils.runConversion(inOne, inTwo)
     val expectedErrors = List(
       ToSmithyError.Restriction(
         "Ref ../../../bar.yaml#/components/schemas/Test goes too far up"
       )
     )
-    assertEquals(errors, expectedErrors)
-    assertEquals(output, expectedModel)
+    TestUtils.runConversionAllVersions(inOne, inTwo).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expectedModel
+        ) = result
+        assertEquals(errors, expectedErrors, version)
+        assertEquals(output, expectedModel, version)
+    }
   }
 
   /* .

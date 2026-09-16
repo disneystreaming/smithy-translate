@@ -15,7 +15,11 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
+
 final class AllOfSpec extends munit.FunSuite {
+
+  // The converter does not yet support OpenAPI 3.1 allOf schemas.
 
   test("allOf - one ref") {
     val openapiString = """|openapi: '3.0.'
@@ -50,7 +54,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - one ref one embedded") {
@@ -91,7 +95,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - two refs") {
@@ -139,7 +143,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - middle layer") {
@@ -182,7 +186,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - document ref") {
@@ -224,7 +228,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |document Two
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - document ref with two layers") {
@@ -273,7 +277,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |document Two
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - one ref one embedded with another reference") {
@@ -328,7 +332,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - multiple layers") {
@@ -383,7 +387,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - multiple parents") {
@@ -425,7 +429,7 @@ final class AllOfSpec extends munit.FunSuite {
          |}
          |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("allOf - document AND normal parent refs") {
@@ -476,7 +480,7 @@ final class AllOfSpec extends munit.FunSuite {
                             |document Two
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }

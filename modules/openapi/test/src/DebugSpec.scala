@@ -53,6 +53,7 @@ final class DebugSpec extends munit.FunSuite {
   private def testFilteredErrors(debug: Boolean, expectedCount: Int)(implicit
       loc: Location
   ) = {
+    // This 3.0 fixture contains arrays our converter cannot yet handle in 3.1.
     load("issue-23.json", debug) match {
       case Failure(ToSmithyError.SmithyValidationFailed(events), _) =>
         assertEquals(events.size, expectedCount)

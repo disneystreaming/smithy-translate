@@ -73,6 +73,8 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
 
   private val CaseRef = new CaseRefBuilder(namespace) {}
 
+  private val ReadSchema = new SchemaReader(openApi)
+
   private val (securityErrors, securitySchemes) =
     ParseSecuritySchemes(openApi)
 
@@ -446,6 +448,13 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
    * not fit in our metamodel.
    */
   def unfold(local: Local): F[OpenApiPattern[Local]] = {
+    ReadSchema.restriction(local.schema) match {
+      case Some(error) => F.pure(OpenApiShortStop(local.context, error))
+      case None        => unfoldSupported(local)
+    }
+  }
+
+  private def unfoldSupported(local: Local): F[OpenApiPattern[Local]] = {
     local.schema match {
       // S:
       //   type: string
@@ -457,7 +466,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
         )
 
       // Primitive types
-      case CasePrimitive(prim) =>
+      case ReadSchema(prim) =>
         val (hints, errors) = {
           val minL = Option(local.schema.getMinLength()).map(_.toLong)
           val maxL = Option(local.schema.getMaxLength()).map(_.toLong)

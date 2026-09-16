@@ -14,6 +14,8 @@
  */
 
 package smithytranslate.compiler.openapi
+
+import TestUtils.OpenApiVersion.Swagger2
 final class OpenapiV2Spec extends munit.FunSuite {
 
   test("operation - simple response") {
@@ -80,7 +82,8 @@ final class OpenapiV2Spec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiV2String, expectedString)
+    // Swagger 2 uses a different document structure, so keep the original fixture.
+    TestUtils.runConversionTest(openapiV2String, expectedString, Swagger2)
   }
 
 }

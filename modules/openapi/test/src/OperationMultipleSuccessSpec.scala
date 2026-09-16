@@ -107,18 +107,20 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
       expectedString,
       Some(expectedError)
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expectedModel
-    ) =
-      TestUtils.runConversion(input)
     val expectedErrors = List(
       ToSmithyError.Restriction(
         "Multiple success responses are not supported. Found status code 202 when 200 was already recorded"
       )
     )
-    assertEquals(errors, expectedErrors)
-    assertEquals(output, expectedModel)
+    TestUtils.runConversionAllVersions(input).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expectedModel
+        ) = result
+        assertEquals(errors, expectedErrors, version)
+        assertEquals(output, expectedModel, version)
+    }
   }
 
   test("operation - multiple success responses with references") {
@@ -207,18 +209,20 @@ final class OperationMultipleSuccessSpec extends munit.FunSuite {
       expectedString,
       None // no error namespace shapes because `alsoOkay` is defined as a reusable response
     )
-    val TestUtils.ConversionResult(
-      ToSmithyResult.Success(errors, output),
-      expectedModel
-    ) =
-      TestUtils.runConversion(input)
     val expectedErrors = List(
       ToSmithyError.Restriction(
         "Multiple success responses are not supported. Found status code 202 when 200 was already recorded"
       )
     )
-    assertEquals(errors, expectedErrors)
-    assertEquals(output, expectedModel)
+    TestUtils.runConversionAllVersions(input).foreach {
+      case (version, result) =>
+        val TestUtils.ConversionResult(
+          ToSmithyResult.Success(errors, output),
+          expectedModel
+        ) = result
+        assertEquals(errors, expectedErrors, version)
+        assertEquals(output, expectedModel, version)
+    }
   }
 
 }

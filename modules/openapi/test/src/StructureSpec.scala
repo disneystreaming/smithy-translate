@@ -15,6 +15,8 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
+
 final class StructureSpec extends munit.FunSuite {
 
   test("structures") {
@@ -67,7 +69,8 @@ final class StructureSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter cannot yet convert this freeform member in OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("structures - inline uuid example") {
@@ -296,7 +299,8 @@ final class StructureSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 arrays.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("structures - map member") {
@@ -328,7 +332,8 @@ final class StructureSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support OpenAPI 3.1 maps.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("reference hinted newtype from struct") {

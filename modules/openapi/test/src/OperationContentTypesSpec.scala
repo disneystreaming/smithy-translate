@@ -15,6 +15,8 @@
 
 package smithytranslate.compiler.openapi
 
+import TestUtils.OpenApiVersion.V3_0
+
 final class OperationContentTypesSpec extends munit.FunSuite {
 
   test("operation - application/octet-stream") {
@@ -77,7 +79,8 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support format: binary for OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("operation - custom application/json") {
@@ -262,7 +265,8 @@ final class OperationContentTypesSpec extends munit.FunSuite {
          |}
          |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support format: binary for OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("operation - multiple content types with same target shape") {
@@ -445,7 +449,8 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support format: binary for OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("operation - multiple content types in error response") {
@@ -541,7 +546,8 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support format: binary for OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
   test("operation - multiple content types in success and error response") {
@@ -648,7 +654,8 @@ final class OperationContentTypesSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString)
+    // The converter does not yet support format: binary for OpenAPI 3.1.
+    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
   }
 
 }
