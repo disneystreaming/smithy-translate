@@ -459,9 +459,20 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       // S:
       //   type: string
       //   enum: [a, b ,c]
-      case CaseEnum(values) =>
+      case ReadSchema.StringEnum(values) =>
+        val min = Option(local.schema.getMinLength).map(_.toLong)
+        val max = Option(local.schema.getMaxLength).map(_.toLong)
+        val length =
+          if (min.isDefined || max.isDefined) List(Hint.Length(min, max))
+          else Nil
+        val hints = length ++
+          Option(local.schema.getPattern).map(Hint.Pattern(_)).toList ++
+          Option(local.schema.getFormat)
+            .filter(_ == "password")
+            .map(_ => Hint.Sensitive)
+            .toList
         F.pure(
-          OpenApiEnum(local.context.copy(hints = Nil), values)
+          OpenApiEnum(local.context.copy(hints = hints), values)
             .withDescription(local)
         )
 

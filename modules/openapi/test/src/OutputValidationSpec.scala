@@ -24,6 +24,60 @@ import smithytranslate.compiler.FileContents
 
 final class OutputValidationSpec extends munit.FunSuite {
 
+  List(
+    ("mixed values", "type: string\nenum: [red, 1]", "enum"),
+    ("empty string value", "type: string\nenum: [red, '']", "enum"),
+    ("null-only enum", "type: string\nenum: [null]", "enum"),
+    ("enum containing null", "type: string\nenum: [red, null]", "enum"),
+    ("untyped enum containing null", "enum: [red, null]", "enum"),
+    ("nullable enum", "type: [string, 'null']\nenum: [red, null]", "type"),
+    (
+      "reference sibling",
+      "$ref: '#/components/schemas/Other'\nenum: [red]",
+      "$ref siblings"
+    ),
+    (
+      "formatted enum",
+      "type: string\nformat: date\nenum: ['2026-09-17']",
+      "enum with format"
+    ),
+    ("enum default", "type: string\nenum: [red]\ndefault: red", "default")
+  ).foreach { case (name, schema, keyword) =>
+    test(
+      s"OpenAPI 3.1 unsupported $name reports a restriction and fails validation"
+    ) {
+      val indented = schema.linesIterator.map("      " + _).mkString("\n")
+      val spec = s"""|openapi: '3.1.0'
+                     |info:
+                     |  title: enum validation
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Other:
+                     |      type: string
+                     |      enum: [red, green]
+                     |    Value:
+                     |$indented
+                     |""".stripMargin
+      convert(spec, validateOutput = false, validateInput = true) match {
+        case Success(errors, _) =>
+          assert(errors.exists {
+            case error: ToSmithyError.Restriction =>
+              error.message.contains(keyword)
+            case _ => false
+          })
+        case Failure(cause, _) => fail("Expected partial output", cause)
+      }
+      convert(spec, validateOutput = true, validateInput = true) match {
+        case Failure(cause: ToSmithyError.Restriction, _) =>
+          assert(cause.message.contains(keyword))
+        case Failure(cause, _) => fail("Expected a restriction failure", cause)
+        case Success(_, _)     => fail("Expected a restriction failure")
+      }
+    }
+  }
+
   private def convert(
       spec: String,
       validateOutput: Boolean,
