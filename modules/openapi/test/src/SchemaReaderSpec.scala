@@ -153,4 +153,75 @@ final class SchemaReaderSpec extends munit.FunSuite {
     assertEquals(reader31.unapply(null), None)
     assert(reader31.restriction(null).isDefined)
   }
+
+  private def stringEnum(values: Vector[AnyRef]): Schema[AnyRef] = {
+    val schema = generic("integer")
+    schema.setTypes(singleton("string"))
+    schema.setEnum(values.asJava)
+    schema
+  }
+
+  test("OpenAPI 3.1 string enums use types and retain exact wire values") {
+    val schema = stringEnum(Vector("red", "a-b", "/", "red"))
+    assertEquals(
+      reader31.StringEnum.unapply(schema),
+      Some(Vector("red", "a-b", "/"))
+    )
+    assertEquals(reader31.restriction(schema), None)
+  }
+
+  test("OpenAPI 3.1 enums do not infer types from enum values or getType") {
+    val schema = generic("string")
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assertEquals(reader31.StringEnum.unapply(schema), None)
+    schema.setTypes(singleton("integer"))
+    assertEquals(reader31.StringEnum.unapply(schema), None)
+    assertEquals(reader31.StringEnum.unapply(null), None)
+  }
+
+  List(
+    "empty" -> Vector.empty[AnyRef],
+    "empty string value" -> Vector[AnyRef]("red", ""),
+    "null only" -> Vector[AnyRef](null),
+    "string and null" -> Vector[AnyRef]("red", null),
+    "mixed" -> Vector[AnyRef]("red", Int.box(1)),
+    "boolean" -> Vector[AnyRef](Boolean.box(true))
+  ).foreach { case (name, values) =>
+    test(s"OpenAPI 3.1 reports unsupported $name string enums") {
+      val schema = stringEnum(values)
+      assertEquals(reader31.StringEnum.unapply(schema), None)
+      assert(reader31.restriction(schema).exists(_.message.contains("enum")))
+    }
+  }
+
+  test("OpenAPI 3.1 enum extraction does not bypass schema restrictions") {
+    val schema = stringEnum(Vector("red"))
+    schema.setTypes(Set("string", "null").asJava)
+    assertEquals(reader31.StringEnum.unapply(schema), None)
+    assert(reader31.restriction(schema).exists(_.message.contains("type")))
+    schema.setTypes(singleton("string"))
+    schema.setAllOf(singletonList[Schema[_]](generic("string")))
+    assert(reader31.restriction(schema).exists(_.message.contains("allOf")))
+  }
+
+  test("OpenAPI 3.1 diagnoses enum siblings on otherwise untyped references") {
+    val schema = new Schema[AnyRef]()
+    schema.set$ref("#/components/schemas/Other")
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assert(
+      reader31.restriction(schema).exists(_.message.contains("$ref siblings"))
+    )
+  }
+
+  List("uuid", "date", "date-time", "local-date").foreach { format =>
+    test(s"OpenAPI 3.1 reports enum with unsupported $format mapping") {
+      val schema = stringEnum(Vector("red"))
+      schema.setFormat(format)
+      assert(
+        reader31
+          .restriction(schema)
+          .exists(_.message.contains("enum with format"))
+      )
+    }
+  }
 }

@@ -43,7 +43,21 @@ can decide how to translate the rest.
 
 OpenAPI 2.x and 3.0.x are supported as input formats to this converter.
 
-OpenAPI 3.1 support is on the way.
+OpenAPI 3.1 supports scalar types and string enums. A schema with `type: string`
+(or `type: [string]`) and a nonempty string `enum` produces a Smithy enum,
+including when used inline or through a reference. Descriptions, string length
+and pattern constraints are retained. `--enum-trait-syntax` produces the legacy
+string shape with an enum trait instead.
+
+Enum wire values are preserved when generating valid Smithy member names;
+colliding names receive numeric suffixes. OpenAPI 3.1 enums containing null or
+mixed value types, nullable type declarations, empty string values, and enums
+with formats that require a different Smithy mapping are reported as unsupported.
+Null entries are rejected even with an explicit string type: the pinned Swagger
+parser infers that same type for untyped enums containing strings and null, so
+dropping null would lose valid values. The parser also discards empty enum arrays
+before conversion, so those cannot be reliably diagnosed. Integer enums remain
+unsupported (their enum constraints are currently ignored).
 
 Below are examples of how Smithy Translate converts various OpenAPI constructs into
 Smithy.

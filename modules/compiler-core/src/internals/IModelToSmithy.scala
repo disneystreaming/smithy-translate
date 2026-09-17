@@ -22,6 +22,7 @@ import alloy.openapi.OpenApiExtensionsTrait
 import alloy.UntaggedUnionTrait
 import alloy.UuidFormatTrait
 import cats.syntax.all._
+import org.typelevel.ci.CIString
 import smithytranslate.ContentTypeDiscriminatedTrait
 import smithytranslate.ContentTypeTrait
 import smithytranslate.ErrorMessageTrait
@@ -211,7 +212,8 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
   }
 
   private def buildEnum(e: Enumeration): JShape = {
-    val Enumeration(id, values, hints) = e
+    val Enumeration(id, rawValues, hints) = e
+    val values = rawValues.distinct
     if (useEnumTraitSyntax) {
       val enumTraitBuilder = EnumTrait.builder(): @annotation.nowarn(
         "msg=class EnumTrait in package traits is deprecated"
@@ -219,15 +221,15 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       values.foreach(v =>
         enumTraitBuilder.addEnum(EnumDefinition.builder.value(v).build())
       )
-      StringShape
+      val builder = StringShape
         .builder()
         .id(id.toSmithy)
         .addTrait(enumTraitBuilder.build())
-        .build()
+      hintsToTraits(hints).foreach(builder.addTrait(_))
+      builder.build()
     } else {
       val enumBuilder = EnumShape.builder().id(id.toSmithy)
-      values.zipWithIndex.foreach { case (value, idx) =>
-        val name = sanitizeEnumMember(value, idx)
+      enumMembers(values).foreach { case (name, value) =>
         enumBuilder.addMember(name, value)
       }
 
@@ -304,8 +306,38 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
 
   private def sanitizeEnumMember(value: String, idx: Int): String = {
     val out = sanitizeMemberName(value)
-    if (out.isEmpty()) s"MEMBER_$idx"
+    if (!ShapeId.isValidIdentifier(out)) s"MEMBER_$idx"
     else out
+  }
+
+  private def enumMembers(values: Vector[String]): Vector[(String, String)] = {
+    val names = values.zipWithIndex.map { case (value, idx) =>
+      sanitizeEnumMember(value, idx)
+    }
+    // Reserve all base names before allocating suffixes, preferring values
+    // that already have a valid member name over values requiring sanitization.
+    val preferred = names.indices.groupBy(idx => CIString(names(idx))).map {
+      case (name, indices) =>
+        name -> indices
+          .find(idx => names(idx) == values(idx))
+          .getOrElse(indices.head)
+    }
+    val used = scala.collection.mutable.Set.empty[CIString]
+    names.zipWithIndex.map { case (base, idx) =>
+      val name =
+        if (preferred(CIString(base)) == idx) base
+        else
+          Iterator
+            .from(1)
+            .map(suffix => s"${base}_$suffix")
+            .find { candidate =>
+              val key = CIString(candidate)
+              !preferred.contains(key) && !used.contains(key)
+            }
+            .get
+      used.add(CIString(name))
+      name -> values(idx)
+    }
   }
 
   /** Used to replace things like `/path/{some-case}/rest with
