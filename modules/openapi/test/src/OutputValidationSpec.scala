@@ -82,31 +82,43 @@ final class OutputValidationSpec extends munit.FunSuite {
     }
   }
 
-  test("OpenAPI 3.1 multiple types fail when output validation is enabled") {
-    val spec = """|openapi: '3.1.0'
-                  |info:
-                  |  title: test
-                  |  version: '1.0'
-                  |paths: {}
-                  |components:
-                  |  schemas:
-                  |    NullableString:
-                  |      type: [string, 'null']
-                  |""".stripMargin
-    val restriction = ToSmithyError.Restriction(
-      "Unsupported OpenAPI 3.1 schema keywords: type (null and multiple types)."
+  List(
+    (
+      "multiple types",
+      "type: [string, 'null']",
+      "type (null and multiple types)"
+    ),
+    (
+      "formatted enum",
+      "type: string, format: date, enum: ['2026-09-17']",
+      "enum with format or x-format"
     )
+  ).foreach { case (name, schema, keyword) =>
+    test(s"OpenAPI 3.1 $name fails when output validation is enabled") {
+      val spec = s"""|openapi: '3.1.0'
+                     |info:
+                     |  title: test
+                     |  version: '1.0'
+                     |paths: {}
+                     |components:
+                     |  schemas:
+                     |    Value: {$schema}
+                     |""".stripMargin
+      val restriction = ToSmithyError.Restriction(
+        s"Unsupported OpenAPI 3.1 schema keywords: $keyword."
+      )
 
-    convert(spec, validateOutput = false, validateInput = true) match {
-      case Success(errors, _) => assertEquals(errors, List(restriction))
-      case Failure(cause, _)  => fail("Expected partial output", cause)
-    }
-    convert(spec, validateOutput = true, validateInput = true) match {
-      case Failure(cause: ToSmithyError.Restriction, errors) =>
-        assertEquals(cause, restriction)
-        assertEquals(errors, Nil)
-      case Failure(cause, _) => fail("Expected a restriction failure", cause)
-      case Success(_, _)     => fail("Expected a restriction failure")
+      convert(spec, validateOutput = false, validateInput = true) match {
+        case Success(errors, _) => assertEquals(errors, List(restriction))
+        case Failure(cause, _)  => fail("Expected partial output", cause)
+      }
+      convert(spec, validateOutput = true, validateInput = true) match {
+        case Failure(cause: ToSmithyError.Restriction, errors) =>
+          assertEquals(cause, restriction)
+          assertEquals(errors, Nil)
+        case Failure(cause, _) => fail("Expected a restriction failure", cause)
+        case Success(_, _)     => fail("Expected a restriction failure")
+      }
     }
   }
 

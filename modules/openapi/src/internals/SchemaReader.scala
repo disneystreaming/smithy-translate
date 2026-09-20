@@ -35,7 +35,28 @@ private[openapi] final class SchemaReader(openApi: OpenAPI) {
     else Option(schema.getType).toSet
   }
 
-  // TODO: Support integer enums in both versions and string enums in 3.1.
+  object StringEnum {
+    def unapply(schema: Schema[_]): Option[Vector[String]] =
+      if (schema == null) None
+      // In 3.0 Swagger creates a generic Schema for `enum: [blue, null] instead of StringSchema
+      // so our 3.0 logic misses this. Using SchemaReader instead, eventually 3.0
+      // should be migrated to SchemaReader.
+      else if (!is31 && !SchemaReader.this.unapply(schema).contains(PString))
+        CaseEnum.unapply(schema)
+      else if (types(schema) == Set("string")) {
+        // TODO: Currently we apply the same logic as for 3.0,
+        // as a result we drop nulls and emtpy enums which is incorrect.
+        Option(schema.getEnum)
+          .filterNot(_.isEmpty)
+          .map(
+            _.asScala
+              .map(value => Option(value).map(_.toString).orNull)
+              .toVector
+          )
+      } else None
+  }
+
+  // TODO: Support integer enums in both versions.
   // Their enum constraints are currently ignored.
   def unapply(schema: Schema[_]): Option[Primitive] =
     if (schema == null) None
@@ -125,6 +146,7 @@ private[openapi] final class SchemaReader(openApi: OpenAPI) {
       val unsupported = unsupportedKeywords(schema)
       val refSiblings = unsupported ++ present(
         "type" -> schema.getTypes,
+        "enum" -> schema.getEnum,
         "format" -> schema.getFormat,
         "minimum" -> schema.getMinimum,
         "maximum" -> schema.getMaximum,
@@ -151,7 +173,14 @@ private[openapi] final class SchemaReader(openApi: OpenAPI) {
         else if (isScalar) {
           val diagnosticFormat =
             if (primitive(schema).isEmpty) List("format") else Nil
-          unsupported ++ diagnosticFormat
+          val enumRestrictions =
+            if (
+              declaredTypes == Set("string") &&
+              StringEnum.unapply(schema).isDefined &&
+              !primitive(schema).contains(PString)
+            ) List("enum with format or x-format")
+            else Nil
+          unsupported ++ diagnosticFormat ++ enumRestrictions
         } else Nil
 
       if (keywords.isEmpty) None

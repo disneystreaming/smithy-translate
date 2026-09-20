@@ -16,11 +16,10 @@
 package smithytranslate.compiler.openapi
 
 import TestUtils.OpenApiVersion.V3_0
+import TestUtils.OpenApiVersion.V3_1
 import smithytranslate.compiler.SmithyVersion
 
 final class EnumSpec extends munit.FunSuite {
-
-  // The converter does not yet support OpenAPI 3.1 enums.
 
   test("enum") {
     val openapiString = """|openapi: '3.0.'
@@ -47,7 +46,7 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
+    TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("enum - number starting name") {
@@ -75,7 +74,7 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
+    TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("enum - v1") {
@@ -87,6 +86,7 @@ final class EnumSpec extends munit.FunSuite {
                            |components:
                            |  schemas:
                            |    Color:
+                           |      description: Test
                            |      type: string
                            |      enum:
                            |        - red
@@ -96,6 +96,7 @@ final class EnumSpec extends munit.FunSuite {
 
     val expectedString = """|namespace foo
                             |
+                            |@documentation("Test")
                             |@enum([
                             | {value: "red"},
                             | {value: "green"},
@@ -107,8 +108,7 @@ final class EnumSpec extends munit.FunSuite {
     TestUtils.runConversionTest(
       openapiString,
       expectedString,
-      SmithyVersion.One,
-      versions = List(V3_0)
+      SmithyVersion.One
     )
   }
 
@@ -173,7 +173,61 @@ final class EnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("enum - Swagger coercion, inference and empty array behavior") {
+    val openapiString = """|openapi: '3.0.3'
+                           |info: {title: test, version: '1.0'}
+                           |paths: {}
+                           |components:
+                           |  schemas:
+                           |    MixedScalars:
+                           |      type: string
+                           |      enum: [red, null, 1, true]
+                           |    Inferred:
+                           |      enum: [blue, null]
+                           |    Empty:
+                           |      type: string
+                           |      enum: []
+                           |""".stripMargin
+    val expectedString = """|namespace foo
+                            |enum MixedScalars {
+                            |    red
+                            |    n1 = "1"
+                            |    true
+                            |}
+                            |enum Inferred { blue }
+                            |string Empty
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString)
+  }
+
+  test("enum - OpenAPI 3.1 type array and references") {
+    val openapiString =
+      """|openapi: '3.1.0'
+         |info: {title: test, version: '1.0'}
+         |paths: {}
+         |components:
+         |  schemas:
+         |    Color:
+         |      type: [string] # 3.0 requires just "string" not "[string]"
+         |      enum: [red, green]
+         |    Palette:
+         |      type: object
+         |      properties:
+         |        color:
+         |          $ref: '#/components/schemas/Color'
+         |""".stripMargin
+    val expectedString = """|namespace foo
+                            |enum Color { red, green }
+                            |structure Palette {
+                            |    color: Color
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(openapiString, expectedString, V3_1)
   }
 
 }

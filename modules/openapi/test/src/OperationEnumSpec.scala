@@ -15,11 +15,7 @@
 
 package smithytranslate.compiler.openapi
 
-import TestUtils.OpenApiVersion.V3_0
-
 final class OperationEnumSpec extends munit.FunSuite {
-
-  // The converter does not yet support OpenAPI 3.1 enums.
 
   test("operation - request and response with enum") {
     val openapiString = """|openapi: '3.0.'
@@ -121,7 +117,7 @@ final class OperationEnumSpec extends munit.FunSuite {
                             |
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
+    TestUtils.runConversionTest(openapiString, expectedString)
   }
 
   test("operation - request and response with required enum field") {
@@ -226,7 +222,7 @@ final class OperationEnumSpec extends munit.FunSuite {
                             |}
                             |""".stripMargin
 
-    TestUtils.runConversionTest(openapiString, expectedString, V3_0)
+    TestUtils.runConversionTest(openapiString, expectedString)
   }
 
 }

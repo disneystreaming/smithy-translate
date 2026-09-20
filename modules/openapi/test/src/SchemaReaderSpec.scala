@@ -59,6 +59,11 @@ final class SchemaReaderSpec extends munit.FunSuite {
 
     assertEquals(schema.getTypes, singleton("string"))
     assertEquals(reader30.unapply(schema), Some(PInt))
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assertEquals(reader30.StringEnum.unapply(schema), None)
+    schema.setType("string")
+    schema.setTypes(singleton("integer"))
+    assertEquals(reader30.StringEnum.unapply(schema), Some(Vector("red")))
   }
 
   test("OpenAPI 3.1 types remains authoritative when type conflicts") {
@@ -66,10 +71,17 @@ final class SchemaReaderSpec extends munit.FunSuite {
     schema.setTypes(singleton("string"))
 
     assertEquals(reader31.unapply(schema), Some(PString))
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assertEquals(reader31.StringEnum.unapply(schema), Some(Vector("red")))
   }
 
   test("OpenAPI 3.1 does not infer types from the OpenAPI 3.0 type field") {
-    assertEquals(reader31.unapply(generic("string")), None)
+    val schema = generic("string")
+    assertEquals(reader31.unapply(schema), None)
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assertEquals(reader31.StringEnum.unapply(schema), None)
+    schema.setTypes(singleton("integer"))
+    assertEquals(reader31.StringEnum.unapply(schema), None)
   }
 
   List("byte", "binary").foreach { format =>
@@ -84,6 +96,8 @@ final class SchemaReaderSpec extends munit.FunSuite {
       assertEquals(reader30.restriction(schema), None)
       assertEquals(reader31.unapply(schema), None)
       assert(reader31.restriction(schema).exists(_.message.contains("format")))
+      schema.setEnum(Vector[AnyRef]("Ymx1ZQ==").asJava)
+      assertEquals(reader30.StringEnum.unapply(schema), None)
     }
   }
 
@@ -151,6 +165,25 @@ final class SchemaReaderSpec extends munit.FunSuite {
 
   test("OpenAPI 3.1 reports a missing schema") {
     assertEquals(reader31.unapply(null), None)
+    assertEquals(reader31.StringEnum.unapply(null), None)
     assert(reader31.restriction(null).isDefined)
+  }
+
+  test("OpenAPI 3.1 empty enum arrays fall back to the primitive") {
+    val schema = generic("string")
+    schema.setTypes(singleton("string"))
+    schema.setEnum(Vector.empty[AnyRef].asJava)
+    assertEquals(reader31.StringEnum.unapply(schema), None)
+    assertEquals(reader31.restriction(schema), None)
+    assertEquals(reader31.unapply(schema), Some(PString))
+  }
+
+  test("OpenAPI 3.1 diagnoses enum siblings on otherwise untyped references") {
+    val schema = new Schema[AnyRef]()
+    schema.set$ref("#/components/schemas/Other")
+    schema.setEnum(Vector[AnyRef]("red").asJava)
+    assert(
+      reader31.restriction(schema).exists(_.message.contains("$ref siblings"))
+    )
   }
 }

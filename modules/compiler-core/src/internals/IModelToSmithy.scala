@@ -219,13 +219,17 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       values.foreach(v =>
         enumTraitBuilder.addEnum(EnumDefinition.builder.value(v).build())
       )
-      StringShape
+      val builder = StringShape
         .builder()
         .id(id.toSmithy)
         .addTrait(enumTraitBuilder.build())
-        .build()
+      hintsToTraits(hints).foreach(builder.addTrait(_))
+      builder.build()
     } else {
       val enumBuilder = EnumShape.builder().id(id.toSmithy)
+      // TODO: Resolve case-insensitive enum member name collisions after sanitization,
+      // preserving wire values and preferring existing valid names. Reserve all base
+      // names before assigning unused numeric suffixes.
       values.zipWithIndex.foreach { case (value, idx) =>
         val name = sanitizeEnumMember(value, idx)
         enumBuilder.addMember(name, value)

@@ -459,7 +459,7 @@ private[openapi] class OpenApiToIModel[F[_]: Parallel: TellShape: TellError](
       // S:
       //   type: string
       //   enum: [a, b ,c]
-      case CaseEnum(values) =>
+      case ReadSchema.StringEnum(values) =>
         F.pure(
           OpenApiEnum(local.context.copy(hints = Nil), values)
             .withDescription(local)
