@@ -227,8 +227,22 @@ private[compiler] final class IModelToSmithy(useEnumTraitSyntax: Boolean)
       builder.build()
     } else {
       val enumBuilder = EnumShape.builder().id(id.toSmithy)
-      values.zipWithIndex.foreach { case (value, idx) =>
-        val name = sanitizeEnumMember(value, idx)
+      val members = values.zipWithIndex.map { case (value, idx) =>
+        sanitizeEnumMember(value, idx) -> value
+      }.distinct
+      // Reserve the original names so suffixes cannot take a later member's name.
+      val reservedNames = members.map(_._1).toSet
+      val usedNames = scala.collection.mutable.Set.empty[String]
+      members.foreach { case (baseName, value) =>
+        val name =
+          if (usedNames(baseName))
+            Iterator
+              .from(1)
+              .map(suffix => s"${baseName}_$suffix")
+              .dropWhile(name => reservedNames(name) || usedNames(name))
+              .next()
+          else baseName
+        usedNames += name
         enumBuilder.addMember(name, value)
       }
 
