@@ -19,6 +19,35 @@ import smithytranslate.compiler.SmithyVersion
 
 final class EnumSpec extends munit.FunSuite {
 
+  test("enums preserve values when member names collide") {
+    val jsonSchString =
+      """|{
+         |  "$id": "test.json",
+         |  "$schema": "http://json-schema.org/draft-07/schema#",
+         |  "title": "TestIt",
+         |  "type": "object",
+         |  "properties": {
+         |    "someValue": {
+         |      "type": "string",
+         |      "enum": ["a-b", "a_b", "a_b_1"]
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val expectedString = """|namespace foo
+                            |enum SomeValue {
+                            |    a_b = "a-b"
+                            |    a_b_2 = "a_b"
+                            |    a_b_1
+                            |}
+                            |structure TestIt {
+                            |    someValue: SomeValue
+                            |}
+                            |""".stripMargin
+
+    TestUtils.runConversionTest(jsonSchString, expectedString)
+  }
+
   test("enums") {
     val jsonSchString =
       """|{
