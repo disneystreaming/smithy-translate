@@ -52,6 +52,29 @@ final class SchemaReaderSpec extends munit.FunSuite {
     }
   }
 
+  List(OpenApiVersion.V3_0, OpenApiVersion.V3_1).foreach { version =>
+    test(s"$version single or matching formats preserve scalar mappings") {
+      val schemaReader = reader(version)
+      List(
+        ("string", "local-date", PLocalDate),
+        ("integer", "year", PYear),
+        ("number", "duration", PDuration),
+        ("string", "custom", PString)
+      ).foreach { case (dataType, format, expected) =>
+        // set format, set x-format, set both
+        List((true, false), (false, true), (true, true)).foreach {
+          case (withFormat, withXFormat) =>
+            val schema = generic(dataType)
+            schema.setTypes(singleton(dataType))
+            if (withFormat) schema.setFormat(format)
+            if (withXFormat) schema.addExtension("x-format", format)
+            assertEquals(schemaReader.restriction(schema), None)
+            assertEquals(schemaReader.unapply(schema), Some(expected))
+        }
+      }
+    }
+  }
+
   test("OpenAPI 3.0 setType remains authoritative when types is stale") {
     val schema = generic("string")
     schema.setTypes(singleton("string"))

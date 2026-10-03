@@ -143,6 +143,41 @@ final class OutputValidationSpec extends munit.FunSuite {
     }
   }
 
+  TestUtils.allVersions.foreach { version =>
+    List(
+      "string" -> "type: string, format: uuid, x-format: local-date",
+      "integer" -> "type: integer, format: int32, x-format: year",
+      "number" -> "type: number, format: double, x-format: duration",
+      "unknown numeric format" -> "type: integer, format: custom, x-format: other",
+      "enum" -> "type: string, format: email, x-format: password, enum: [red]"
+    ).foreach { case (name, schema) =>
+      test(s"$version reports conflicting formats on $name schemas") {
+        val spec = s"""|openapi: '$version'
+                       |info: {title: test, version: '1.0'}
+                       |paths: {}
+                       |components:
+                       |  schemas:
+                       |    Value: {$schema}
+                       |""".stripMargin
+        val restriction = ToSmithyError.Restriction(
+          "Conflicting OpenAPI schema formats: format and x-format must match."
+        )
+        convert(spec, validateOutput = false, validateInput = true) match {
+          case Success(errors, _) => assertEquals(errors, List(restriction))
+          case Failure(cause, _)  => fail("Expected partial output", cause)
+        }
+        convert(spec, validateOutput = true, validateInput = true) match {
+          case Failure(cause: ToSmithyError.Restriction, errors) =>
+            assertEquals(cause, restriction)
+            assertEquals(errors, Nil)
+          case Failure(cause, _) =>
+            fail("Expected a restriction failure", cause)
+          case Success(_, _) => fail("Expected a restriction failure")
+        }
+      }
+    }
+  }
+
   List(
     (
       "multiple types",
