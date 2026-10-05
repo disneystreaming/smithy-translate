@@ -59,28 +59,24 @@ private[openapi] final class SchemaReader(openApi: OpenAPI) {
   // TODO: Support integer enums in both versions.
   // Their enum constraints are currently ignored.
   def unapply(schema: Schema[_]): Option[Primitive] =
-    if (schema == null) None
-    // These schemas belong to other conversion branches.
-    else if (
-      schema.get$ref != null ||
-      schema.getAllOf != null || schema.getOneOf != null ||
-      schema.getAnyOf != null || (is31 && schema.getNot != null)
-    ) None
-    else primitive(schema)
+    if (isScalarSchema(schema)) primitive(schema) else None
+
+  private def isScalarSchema(schema: Schema[_]): Boolean =
+    schema != null &&
+      types(schema).size == 1 && types(schema).exists(scalarTypes) &&
+      // References and compositions belong to other conversion branches.
+      schema.get$ref == null &&
+      schema.getAllOf == null && schema.getOneOf == null &&
+      schema.getAnyOf == null && (!is31 || schema.getNot == null)
 
   private def primitive(schema: Schema[_]): Option[Primitive] = {
     val format = Option(schema.getFormat)
-    val xFormat = Option(schema.getExtensions)
-      .flatMap(extensions => Option(extensions.get("x-format")))
-      .map(_.toString)
+    val xFormat = getXFormat(schema)
     def hasFormat(value: String): Boolean =
       format.contains(value) || xFormat.contains(value)
 
     types(schema).toList match {
       case "string" :: Nil =>
-        // Preserve existing format/x-format precedence for compatibility.
-        // TODO: Define a consistent, documented policy for conflicting
-        // format and x-format values.
         format match {
           case Some("uuid")               => Some(PUUID)
           case Some("date")               => Some(PDate)
@@ -129,13 +125,29 @@ private[openapi] final class SchemaReader(openApi: OpenAPI) {
     }
   }
 
+  private def getXFormat(schema: Schema[_]): Option[String] =
+    Option(schema.getExtensions)
+      .flatMap(extensions => Option(extensions.get("x-format")))
+      .map(_.toString)
+
+  private def hasConflictingFormats(schema: Schema[_]): Boolean =
+    Option(schema.getFormat).exists(format =>
+      getXFormat(schema).exists(_ != format)
+    )
+
   /** Check whether a schema is supported.
     */
   def restriction(schema: Schema[_]): Option[ToSmithyError.Restriction] = {
     // TODO: Support converting 3.0 scalar constraints such as `not` and
     // `multipleOf`, or report them as errors.
     // For now, primitive conversion ignores these constraints.
-    if (!is31) None
+    if (isScalarSchema(schema) && hasConflictingFormats(schema))
+      Some(
+        ToSmithyError.Restriction(
+          "Conflicting OpenAPI schema formats: format and x-format must match."
+        )
+      )
+    else if (!is31) None
     else if (schema == null)
       Some(ToSmithyError.Restriction("Schema not supported:\nnull"))
     // OpenAPI 3.1 handling
